@@ -24,7 +24,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet("{slug}")]
-    public async Task<ActionResult<Category>> Get(string slug)
+    public async Task<IActionResult> Get(string slug)
     {
         var category = await _categoryRepo.GetBySlugAsync(slug);
         if (category is null)
@@ -36,15 +36,16 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Category>> Create(CreateCategoryRequestDto categoryDto)
+    public async Task<IActionResult> Create(CreateCategoryRequestDto categoryDto)
     {
         var category = categoryDto.CreateCategoryFromDto();
         await _categoryRepo.CreateAsync(category);
+        
         return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
     }
 
     [HttpPut("{slug}")]
-    public async Task<ActionResult<Category>> Update(string slug, UpdateCategoryRequestDto categoryDto)
+    public async Task<IActionResult> Update(string slug, UpdateCategoryRequestDto categoryDto)
     {
         var category = await _categoryRepo.UpdateAsync(slug, categoryDto);
         if (category == null)

@@ -23,7 +23,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> GetBySlugAsync(string slug)
     {
-        return await _context.Category.SingleOrDefaultAsync(c => c.Slug == slug);
+        return await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
     }
 
     public async Task<Category> CreateAsync(Category category)
@@ -35,7 +35,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> UpdateAsync(string slug, UpdateCategoryRequestDto categoryDto)
     {
-        var existingCategory = await _context.Category.SingleOrDefaultAsync(c => c.Slug == slug);
+        var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
         if (existingCategory == null)
         {
             return null;
@@ -46,6 +46,7 @@ public class CategoryRepository : ICategoryRepository
         existingCategory.Name = name;
         existingCategory.Slug = SlugHelper.GenerateSlug(name);
         existingCategory.ImageUrl = categoryDto.ImageUrl;
+        
         await _context.SaveChangesAsync();
 
         return existingCategory;
@@ -53,7 +54,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> DeleteAsync(string slug)
     {
-        var category = await _context.Category.SingleOrDefaultAsync(c => c.Slug == slug);
+        var category = await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
         if (category == null)
         {
             return null;
