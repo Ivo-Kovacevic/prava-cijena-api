@@ -1,4 +1,7 @@
+using api;
 using api.Database;
+using api.Interfaces;
+using api.Repository;
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +29,8 @@ builder.Services.AddSwaggerGen();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 var app = builder.Build();
 
