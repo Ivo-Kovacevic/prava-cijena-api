@@ -8,6 +8,6 @@ public interface ICategoryRepository
     Task<List<Category>> GetAllAsync();
     Task<Category?> GetBySlugAsync(string slug);
     Task<Category> CreateAsync(Category category);
-    Task<Category?> UpdateAsync(string slug, UpdateCategoryRequestDto categoryDto);
+    Task<Category?> UpdateAsync(string slug, Category categoryDto);
     Task<Category?> DeleteAsync(string slug);
 }

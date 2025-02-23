@@ -19,4 +19,17 @@ public static class CategoryMapper
             ImageUrl = categoryDto.ImageUrl
         };
     }
+    
+    public static Category UpdateCategoryFromDto(this UpdateCategoryRequestDto categoryDto)
+    {
+        var name = categoryDto.Name.Trim();
+        var slug = SlugHelper.GenerateSlug(name);
+
+        return new Category
+        {
+            Name = name,
+            Slug = slug,
+            ImageUrl = categoryDto.ImageUrl
+        };
+    }
 }

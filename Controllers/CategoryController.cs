@@ -38,22 +38,49 @@ public class CategoryController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateCategoryRequestDto categoryDto)
     {
-        var category = categoryDto.CreateCategoryFromDto();
-        await _categoryRepo.CreateAsync(category);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         
-        return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
+        var category = categoryDto.CreateCategoryFromDto();
+        
+        try
+        {
+            await _categoryRepo.CreateAsync(category);
+            
+            return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
+        }
+        catch (Exception e)
+        {
+            return BadRequest("Error creating category");
+        }
     }
 
     [HttpPut("{slug}")]
     public async Task<IActionResult> Update(string slug, UpdateCategoryRequestDto categoryDto)
     {
-        var category = await _categoryRepo.UpdateAsync(slug, categoryDto);
-        if (category == null)
+        if (!ModelState.IsValid)
         {
-            return NotFound($"Category with slug '{slug}' not found.");
+            return BadRequest(ModelState);
         }
+        
+        var category = categoryDto.UpdateCategoryFromDto();
 
-        return Ok(category);
+        try
+        {
+            var updatedCategory = await _categoryRepo.UpdateAsync(slug, category);
+            if (updatedCategory == null)
+            {
+                return NotFound($"Category with slug '{slug}' not found.");
+            }
+
+            return Ok(updatedCategory);
+        }
+        catch (Exception e)
+        {
+            return BadRequest("Error updating category");
+        }
     }
 
     [HttpDelete("{slug}")]

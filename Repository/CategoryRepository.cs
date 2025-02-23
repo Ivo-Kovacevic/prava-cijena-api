@@ -33,18 +33,15 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task<Category?> UpdateAsync(string slug, UpdateCategoryRequestDto categoryDto)
+    public async Task<Category?> UpdateAsync(string slug, Category categoryDto)
     {
         var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
         if (existingCategory == null)
         {
             return null;
         }
-
-        var name = categoryDto.Name.Trim();
-        
-        existingCategory.Name = name;
-        existingCategory.Slug = SlugHelper.GenerateSlug(name);
+        existingCategory.Name = categoryDto.Name;
+        existingCategory.Slug = categoryDto.Slug;
         existingCategory.ImageUrl = categoryDto.ImageUrl;
         
         await _context.SaveChangesAsync();
