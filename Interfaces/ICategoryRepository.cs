@@ -5,9 +5,9 @@ namespace api.Interfaces;
 
 public interface ICategoryRepository
 {
-    Task<List<Category>> GetAllAsync();
-    Task<Category?> GetBySlugAsync(string slug);
+    Task<List<CategoryDto>> GetAllAsync();
+    Task<CategoryDto?> GetBySlugAsync(string slug);
     Task<Category> CreateAsync(Category category);
-    Task<Category?> UpdateAsync(string slug, Category categoryDto);
-    Task<Category?> DeleteAsync(string slug);
+    Task<Category?> UpdateAsync(int id, Category categoryDto);
+    Task<Category?> DeleteAsync(int id);
 }

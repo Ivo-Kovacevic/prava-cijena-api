@@ -2,6 +2,7 @@ using api.Database;
 using api.DTOs.Category;
 using api.Helpers;
 using api.Interfaces;
+using api.Mappers;
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,14 +17,19 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
     
-    public Task<List<Category>> GetAllAsync()
+    public async Task<List<CategoryDto>> GetAllAsync()
     {
-        return _context.Category.ToListAsync();
+        return await _context.Category
+            .Select(c => c.ToCategoryDto())
+            .ToListAsync();
     }
 
-    public async Task<Category?> GetBySlugAsync(string slug)
+    public async Task<CategoryDto?> GetBySlugAsync(string slug)
     {
-        return await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
+        return await _context.Category
+            .Where(c => c.Slug == slug)
+            .Select(c => c.ToCategoryDto())
+            .FirstOrDefaultAsync();
     }
 
     public async Task<Category> CreateAsync(Category category)
@@ -33,9 +39,9 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task<Category?> UpdateAsync(string slug, Category categoryDto)
+    public async Task<Category?> UpdateAsync(int id, Category categoryDto)
     {
-        var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
+        var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
         if (existingCategory == null)
         {
             return null;
@@ -49,9 +55,9 @@ public class CategoryRepository : ICategoryRepository
         return existingCategory;
     }
 
-    public async Task<Category?> DeleteAsync(string slug)
+    public async Task<Category?> DeleteAsync(int id)
     {
-        var category = await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
+        var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
         if (category == null)
         {
             return null;

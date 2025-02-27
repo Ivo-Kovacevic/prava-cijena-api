@@ -18,7 +18,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<Category>> GetAll()
+    public async Task<IEnumerable<CategoryDto>> GetAll()
     {
         return await _categoryRepo.GetAllAsync();
     }
@@ -26,13 +26,22 @@ public class CategoryController : ControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> Get(string slug)
     {
-        var category = await _categoryRepo.GetBySlugAsync(slug);
-        if (category is null)
+        try
         {
-            return NotFound($"Category with slug '{slug}' not found.");
-        }
+            var category = await _categoryRepo.GetBySlugAsync(slug);
+            if (category is null)
+            {
+                return NotFound($"Category with slug '{slug}' not found.");
+            }
 
-        return Ok(category);
+            return Ok(category);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return BadRequest("Error getting category");
+        }
+        
     }
 
     [HttpPost]
@@ -44,21 +53,13 @@ public class CategoryController : ControllerBase
         }
         
         var category = categoryDto.CreateCategoryFromDto();
-        
-        try
-        {
-            await _categoryRepo.CreateAsync(category);
+        await _categoryRepo.CreateAsync(category);
             
-            return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
-        }
-        catch (Exception e)
-        {
-            return BadRequest("Error creating category");
-        }
+        return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
     }
 
-    [HttpPut("{slug}")]
-    public async Task<IActionResult> Update(string slug, UpdateCategoryRequestDto categoryDto)
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, UpdateCategoryRequestDto categoryDto)
     {
         if (!ModelState.IsValid)
         {
@@ -67,29 +68,22 @@ public class CategoryController : ControllerBase
         
         var category = categoryDto.UpdateCategoryFromDto();
 
-        try
+        var updatedCategory = await _categoryRepo.UpdateAsync(id, category);
+        if (updatedCategory == null)
         {
-            var updatedCategory = await _categoryRepo.UpdateAsync(slug, category);
-            if (updatedCategory == null)
-            {
-                return NotFound($"Category with slug '{slug}' not found.");
-            }
+            return NotFound($"Category with id '{id}' not found.");
+        }
 
-            return Ok(updatedCategory);
-        }
-        catch (Exception e)
-        {
-            return BadRequest("Error updating category");
-        }
+        return Ok(updatedCategory);
     }
 
-    [HttpDelete("{slug}")]
-    public async Task<IActionResult> Delete(string slug)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var category = await _categoryRepo.DeleteAsync(slug);
+        var category = await _categoryRepo.DeleteAsync(id);
         if (category == null)
         {
-            return NotFound($"Category with slug '{slug}' not found.");
+            return NotFound($"Category with id '{id}' not found.");
         }
 
         return NoContent();
