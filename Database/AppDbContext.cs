@@ -14,19 +14,8 @@ namespace api.Database
         {
             base.OnModelCreating(builder);
             
-            builder.Entity<Product>()
-                .HasOne<Category>(p => p.Category)
-                .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId)
-                .IsRequired();
-
-            builder.Entity<Category>()
-                .HasIndex(c => c.Slug)
-                .IsUnique();
-            
-            builder.Entity<Product>()
-                .HasIndex(p => p.Slug)
-                .IsUnique();
+            builder.ApplyConfiguration(new CategoryConfiguration());
+            builder.ApplyConfiguration(new ProductConfiguration());
         }
     }
 }

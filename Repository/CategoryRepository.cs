@@ -24,12 +24,9 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
-    public async Task<CategoryDto?> GetBySlugAsync(string slug)
+    public async Task<Category?> GetBySlugAsync(string slug)
     {
-        return await _context.Category
-            .Where(c => c.Slug == slug)
-            .Select(c => c.ToCategoryDto())
-            .FirstOrDefaultAsync();
+        return await _context.Category.FirstOrDefaultAsync();
     }
 
     public async Task<Category> CreateAsync(Category category)

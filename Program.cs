@@ -1,26 +1,20 @@
 using api;
+using api.Config;
 using api.Database;
 using api.Interfaces;
+using api.Models;
 using api.Repository;
 using DotNetEnv;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
-// Load environment variables
-Env.Load();
-string dbHost = Environment.GetEnvironmentVariable("DB_HOST");
-string dbDatabase = Environment.GetEnvironmentVariable("DB_DATABASE");
-string dbUsername = Environment.GetEnvironmentVariable("DB_USERNAME");
-string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
-string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    .Replace("{DB_HOST}", dbHost)
-    .Replace("{DB_DATABASE}", dbDatabase)
-    .Replace("{DB_USERNAME}", dbUsername)
-    .Replace("{DB_PASSWORD}", dbPassword);
+// Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(DatabaseConfig.GetConnectionString(builder.Configuration)));
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
