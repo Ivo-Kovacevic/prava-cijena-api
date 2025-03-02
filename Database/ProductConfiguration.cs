@@ -10,19 +10,20 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
     {
         builder.HasOne<Category>(p => p.Category)
             .WithMany(c => c.Products)
-            .HasForeignKey(p => p.CategoryId)
-            .IsRequired();
-            
-        builder.HasIndex(p => p.Name)
-            .IsUnique();
-        
+            .HasForeignKey(p => p.CategoryId);
+
         builder.HasIndex(p => p.Slug)
             .IsUnique();
-        
+            
+        builder.HasIndex(p => new { p.Name, p.Slug })
+            .HasMethod("GIN")
+            .IsTsVectorExpressionIndex("croatian");
+            
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValue(DateTime.Now);
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
         builder.Property(p => p.UpdatedAt)
-            .HasDefaultValue(DateTime.Now);
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
     }
 }

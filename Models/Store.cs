@@ -7,7 +7,7 @@ public class Store
     public required string Slug { get; set; }
     public required string StoreUrl { get; set; }
     public required string ImageUrl { get; set; }
-    public ICollection<ProductStore> Products { get; set; } = new List<ProductStore>();
+    public ICollection<ProductStore> StoreProducts { get; set; } = new List<ProductStore>();
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

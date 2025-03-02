@@ -16,6 +16,9 @@ namespace api.Database
             
             builder.ApplyConfiguration(new CategoryConfiguration());
             builder.ApplyConfiguration(new ProductConfiguration());
+            builder.ApplyConfiguration(new StoreConfiguration());
+            builder.ApplyConfiguration(new ProductStoreConfiguration());
+            builder.ApplyConfiguration(new PriceConfiguration());
         }
     }
 }

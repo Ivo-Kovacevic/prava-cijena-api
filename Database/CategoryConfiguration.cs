@@ -10,19 +10,19 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
     {
         builder.HasOne<Category>(c => c.ParentCategory)
             .WithMany(c => c.Subcategories)
-            .HasForeignKey(c => c.ParentCategoryId)
-            .OnDelete(DeleteBehavior.Restrict);
-        
-        builder.HasIndex(c => c.Slug)
-            .IsUnique();
+            .HasForeignKey(c => c.ParentCategoryId);
         
         builder.HasIndex(c => c.Slug)
             .IsUnique();
 
+        builder.HasIndex(c => new { c.Name, c.Slug })
+            .HasMethod("GIN")
+            .IsTsVectorExpressionIndex("croatian");
+
         builder.Property(c => c.CreatedAt)
-            .HasDefaultValue(DateTime.Now);
-            
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
         builder.Property(c => c.UpdatedAt)
-            .HasDefaultValue(DateTime.Now);
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 }
