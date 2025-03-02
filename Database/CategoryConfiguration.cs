@@ -17,7 +17,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasIndex(c => new { c.Name, c.Slug })
             .HasMethod("GIN")
-            .IsTsVectorExpressionIndex("croatian");
+            .IsTsVectorExpressionIndex("english");
 
         builder.Property(c => c.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

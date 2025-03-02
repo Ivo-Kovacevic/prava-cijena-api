@@ -26,14 +26,19 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> GetBySlugAsync(string slug)
     {
-        return await _context.Category.FirstOrDefaultAsync();
+        return await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
     }
 
-    public async Task<Category> CreateAsync(Category category)
+    public async Task<Category?> GetByIdAsync(int id)
     {
-        _context.Category.Add(category);
+        return await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<Category> CreateAsync(Category categoryDto)
+    {
+        _context.Category.Add(categoryDto);
         await _context.SaveChangesAsync();
-        return category;
+        return categoryDto;
     }
 
     public async Task<Category?> UpdateAsync(int id, Category categoryDto)

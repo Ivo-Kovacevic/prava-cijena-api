@@ -12,4 +12,6 @@ public class CreateCategoryRequestDto
     [Required]
     [Url(ErrorMessage = "Image URL must be in URL format")]
     public required string ImageUrl { get; set; }
+    
+    public int? ParentCategoryId { get; set; }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using api;
 using api.Config;
 using api.Database;
@@ -26,6 +27,12 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 var app = builder.Build();
 

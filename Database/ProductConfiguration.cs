@@ -17,7 +17,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             
         builder.HasIndex(p => new { p.Name, p.Slug })
             .HasMethod("GIN")
-            .IsTsVectorExpressionIndex("croatian");
+            .IsTsVectorExpressionIndex("english");
             
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

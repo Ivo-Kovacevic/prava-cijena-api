@@ -26,36 +26,36 @@ public class CategoryController : ControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> Get(string slug)
     {
-        try
+        var category = await _categoryRepo.GetBySlugAsync(slug);
+        if (category is null)
         {
-            var category = await _categoryRepo.GetBySlugAsync(slug);
-            if (category is null)
-            {
-                return NotFound($"Category with slug '{slug}' not found.");
-            }
+            return NotFound($"Category with slug '{slug}' not found.");
+        }
 
-            return Ok(category);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return BadRequest("Error getting category");
-        }
-        
+        return Ok(category);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateCategoryRequestDto categoryDto)
+    public async Task<IActionResult> Create(CreateCategoryRequestDto categoryRequestDto)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-        
-        var category = categoryDto.CreateCategoryFromDto();
-        await _categoryRepo.CreateAsync(category);
+
+        if (categoryRequestDto.ParentCategoryId.HasValue)
+        {
+            var parentCategory = await _categoryRepo.GetByIdAsync(categoryRequestDto.ParentCategoryId.Value);
+            if (parentCategory == null)
+            {
+                return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
+            }
+        }
+
+        var category = categoryRequestDto.CategoryFromRequestDto();
+        var createdCategory = await _categoryRepo.CreateAsync(category);
             
-        return CreatedAtAction(nameof(Get), new { slug = category.Slug }, category);
+        return CreatedAtAction(nameof(Get), new { slug = category.Slug }, createdCategory);
     }
 
     [HttpPut("{id:int}")]
@@ -64,6 +64,15 @@ public class CategoryController : ControllerBase
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
+        }
+        
+        if (categoryDto.ParentCategoryId.HasValue)
+        {
+            var parentCategory = await _categoryRepo.GetByIdAsync(categoryDto.ParentCategoryId.Value);
+            if (parentCategory == null)
+            {
+                return NotFound($"Parent category with id '{categoryDto.ParentCategoryId}' not found.");
+            }
         }
         
         var category = categoryDto.UpdateCategoryFromDto();

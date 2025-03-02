@@ -18,16 +18,17 @@ public static class CategoryMapper
         };
     }
     
-    public static Category CreateCategoryFromDto(this CreateCategoryRequestDto categoryDto)
+    public static Category CategoryFromRequestDto(this CreateCategoryRequestDto categoryDto)
     {
         var name = categoryDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);
 
-        return new Category
+        return new Category()
         {
             Name = name,
             Slug = slug,
-            ImageUrl = categoryDto.ImageUrl
+            ImageUrl = categoryDto.ImageUrl,
+            ParentCategoryId = categoryDto.ParentCategoryId
         };
     }
     
