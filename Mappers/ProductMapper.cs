@@ -14,7 +14,9 @@ public static class ProductMapper
             Name = product.Name,
             Slug = product.Slug,
             ImageUrl = product.ImageUrl,
-            CategoryId = product.CategoryId
+            CategoryId = product.CategoryId,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt
         };
     }
     

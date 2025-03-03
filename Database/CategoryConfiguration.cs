@@ -24,9 +24,11 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .IsTsVectorExpressionIndex("english");
 
         builder.Property(c => c.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
 
         builder.Property(c => c.UpdatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAddOrUpdate();
     }
 }

@@ -20,5 +20,18 @@ namespace api.Database
             builder.ApplyConfiguration(new ProductStoreConfiguration());
             builder.ApplyConfiguration(new PriceConfiguration());
         }
+        
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.Entity is not null && entry.State is EntityState.Modified)
+                {
+                    entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
     }
 }

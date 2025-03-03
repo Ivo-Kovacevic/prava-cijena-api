@@ -15,7 +15,9 @@ public static class CategoryMapper
             Name = category.Name,
             Slug = category.Slug,
             ImageUrl = category.ImageUrl,
-            ParentCategoryId = category.ParentCategoryId
+            ParentCategoryId = category.ParentCategoryId,
+            CreatedAt = category.CreatedAt,
+            UpdatedAt = category.UpdatedAt
         };
     }
     
