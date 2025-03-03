@@ -45,8 +45,8 @@ public class CategoryController : ControllerBase
 
         if (categoryRequestDto.ParentCategoryId.HasValue)
         {
-            var parentCategory = await _categoryRepo.GetByIdAsync(categoryRequestDto.ParentCategoryId.Value);
-            if (parentCategory == null)
+            var parentCategoryExists = await _categoryRepo.CategoryExists(categoryRequestDto.ParentCategoryId.Value);
+            if (!parentCategoryExists)
             {
                 return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
             }
@@ -68,8 +68,8 @@ public class CategoryController : ControllerBase
         
         if (categoryRequestDto.ParentCategoryId.HasValue)
         {
-            var parentCategory = await _categoryRepo.GetByIdAsync(categoryRequestDto.ParentCategoryId.Value);
-            if (parentCategory == null)
+            var parentCategoryExists = await _categoryRepo.CategoryExists(categoryRequestDto.ParentCategoryId.Value);
+            if (!parentCategoryExists)
             {
                 return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
             }

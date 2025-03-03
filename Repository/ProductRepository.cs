@@ -64,7 +64,7 @@ public class ProductRepository : IProductRepository
             return null;
         }
 
-        _context.Remove(productId);
+        _context.Remove(product);
         await _context.SaveChangesAsync();
 
         return product.ToProductDto();

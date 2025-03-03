@@ -18,7 +18,7 @@ public static class ProductMapper
         };
     }
     
-    public static Product ToProductFromCreateDto(this CreateProductRequestDto productRequestDto, Guid categoryId)
+    public static Product ProductFromCreateRequestDto(this CreateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);

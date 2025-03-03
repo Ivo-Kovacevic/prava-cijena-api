@@ -2,26 +2,28 @@ using api.DTOs;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
+using api.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
 [ApiController]
-[Route("/api/categories/{categoryId:guid}/[controller]")]
+[Route("/api/categories/{categoryId:guid}/products")]
 public class ProductController : ControllerBase
 {
+    private readonly ICategoryRepository _categoryRepo;
     private readonly IProductRepository _productRepo;
 
-    public ProductController(IProductRepository productRepository)
+    public ProductController(ICategoryRepository categoryRepository, IProductRepository productRepository)
     {
+        _categoryRepo = categoryRepository;
         _productRepo = productRepository;
     }
     
     [HttpGet]
     public async Task<IEnumerable<ProductDto>> GetProductsByCategory(Guid categoryId)
     {
-        var products = await _productRepo.GetProductsByCategoryIdAsync(categoryId);
-        return products;
+        return await _productRepo.GetProductsByCategoryIdAsync(categoryId);
     }
 
     [HttpGet("{productId:guid}")]
@@ -44,10 +46,17 @@ public class ProductController : ControllerBase
             return BadRequest(ModelState);
         }
         
-        var product = productRequestDto.ToProductFromCreateDto(categoryId);
-        await _productRepo.CreateAsync(product);
+        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
+        if (!categoryExists)
+        {
+            return NotFound($"Category with id '{categoryId}' not found.");
+        }
+        
+        var product = productRequestDto.ProductFromCreateRequestDto(categoryId);
+        
+        var createdProduct = await _productRepo.CreateAsync(product);
 
-        return CreatedAtAction(nameof(Get), new { categoryId = categoryId, productId = product.Id }, product);
+        return CreatedAtAction(nameof(Get), new { categoryId = categoryId, productId = product.Id }, createdProduct);
     }
     
     [HttpPut("{productId:guid}")]
@@ -56,6 +65,12 @@ public class ProductController : ControllerBase
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
+        }
+        
+        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
+        if (!categoryExists)
+        {
+            return NotFound($"Category with id '{categoryId}' not found.");
         }
         
         var product = productRequestDto.ToProductFromUpdateDto(categoryId);
