@@ -8,6 +8,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
     public void Configure(EntityTypeBuilder<Category> builder)
     {
+        builder.Property(c => c.Id)
+            .HasDefaultValueSql("gen_random_uuid()")
+            .IsRequired();
+        
         builder.HasOne<Category>(c => c.ParentCategory)
             .WithMany(c => c.Subcategories)
             .HasForeignKey(c => c.ParentCategoryId);

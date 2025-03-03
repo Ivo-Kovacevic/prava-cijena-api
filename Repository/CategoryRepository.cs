@@ -24,40 +24,39 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
-    public async Task<Category?> GetBySlugAsync(string slug)
+    public async Task<CategoryDto?> GetByIdAsync(Guid id)
     {
-        return await _context.Category.FirstOrDefaultAsync(c => c.Slug == slug);
+        return await _context.Category
+            .Where(c => c.Id == id)
+            .Select(s => s.ToCategoryDto())
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<Category?> GetByIdAsync(int id)
+    public async Task<CategoryDto> CreateAsync(Category category)
     {
-        return await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
-    }
-
-    public async Task<Category> CreateAsync(Category categoryDto)
-    {
-        _context.Category.Add(categoryDto);
+        _context.Category.Add(category);
         await _context.SaveChangesAsync();
-        return categoryDto;
+        return category.ToCategoryDto();
     }
 
-    public async Task<Category?> UpdateAsync(int id, Category categoryDto)
+    public async Task<CategoryDto?> UpdateAsync(Guid id, Category category)
     {
         var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
         if (existingCategory == null)
         {
             return null;
         }
-        existingCategory.Name = categoryDto.Name;
-        existingCategory.Slug = categoryDto.Slug;
-        existingCategory.ImageUrl = categoryDto.ImageUrl;
+        existingCategory.Name = category.Name;
+        existingCategory.Slug = category.Slug;
+        existingCategory.ImageUrl = category.ImageUrl;
+        existingCategory.ParentCategoryId = category.ParentCategoryId;
         
         await _context.SaveChangesAsync();
 
-        return existingCategory;
+        return existingCategory.ToCategoryDto();
     }
 
-    public async Task<Category?> DeleteAsync(int id)
+    public async Task<CategoryDto?> DeleteAsync(Guid id)
     {
         var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
         if (category == null)
@@ -68,6 +67,6 @@ public class CategoryRepository : ICategoryRepository
         _context.Category.Remove(category);
         await _context.SaveChangesAsync();
 
-        return category;
+        return category.ToCategoryDto();
     }
 }

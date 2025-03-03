@@ -5,9 +5,9 @@ namespace api.Interfaces;
 
 public interface IProductRepository
 {
-    Task<List<Product>> GetProductsByCategoryAsync(string categorySlug);
-    Task<Product?> GetBySlugAsync(string productSlug);
-    Task<Product> CreateAsync(Product product);
-    Task<Product?> UpdateAsync(int productId, Product product);
-    Task<Product?> DeleteAsync(int productId);
+    Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId);
+    Task<ProductDto?> GetProductByIdAsync(Guid productId);
+    Task<ProductDto> CreateAsync(Product product);
+    Task<ProductDto?> UpdateAsync(Guid productId, Product product);
+    Task<ProductDto?> DeleteAsync(Guid productId);
 }

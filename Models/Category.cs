@@ -5,11 +5,11 @@ namespace api.Models;
 
 public class Category
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public required string Name { get; set; }
     public required string Slug { get; set; }
-    public required string ImageUrl { get; set; }
-    public int? ParentCategoryId { get; set; }
+    public string? ImageUrl { get; set; }
+    public Guid? ParentCategoryId { get; set; }
     public Category? ParentCategory { get; set; }
     public ICollection<Category> Subcategories { get; set; } = new List<Category>();
     public ICollection<Product> Products { get; set; } = new List<Product>();

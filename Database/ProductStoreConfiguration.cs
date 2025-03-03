@@ -8,6 +8,10 @@ public class ProductStoreConfiguration : IEntityTypeConfiguration<ProductStore>
 {
     public void Configure(EntityTypeBuilder<ProductStore> builder)
     {
+        builder.Property(p => p.Id)
+            .HasDefaultValueSql("gen_random_uuid()")
+            .IsRequired();
+        
         builder.HasOne<Product>(p => p.Product)
             .WithMany(p => p.ProductStores)
             .HasForeignKey(p => p.ProductId);

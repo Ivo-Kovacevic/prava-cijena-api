@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/categories")]
 [ApiController]
 public class CategoryController : ControllerBase
 {
@@ -23,13 +23,13 @@ public class CategoryController : ControllerBase
         return await _categoryRepo.GetAllAsync();
     }
 
-    [HttpGet("{slug}")]
-    public async Task<IActionResult> Get(string slug)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> Get(Guid id)
     {
-        var category = await _categoryRepo.GetBySlugAsync(slug);
+        var category = await _categoryRepo.GetByIdAsync(id);
         if (category is null)
         {
-            return NotFound($"Category with slug '{slug}' not found.");
+            return NotFound($"Category with id '{id}' not found.");
         }
 
         return Ok(category);
@@ -52,30 +52,30 @@ public class CategoryController : ControllerBase
             }
         }
 
-        var category = categoryRequestDto.CategoryFromRequestDto();
+        var category = categoryRequestDto.CategoryFromCreateRequestDto();
         var createdCategory = await _categoryRepo.CreateAsync(category);
             
-        return CreatedAtAction(nameof(Get), new { slug = category.Slug }, createdCategory);
+        return CreatedAtAction(nameof(Get), new { id = category.Id }, createdCategory);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, UpdateCategoryRequestDto categoryDto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, UpdateCategoryRequestDto categoryRequestDto)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
         
-        if (categoryDto.ParentCategoryId.HasValue)
+        if (categoryRequestDto.ParentCategoryId.HasValue)
         {
-            var parentCategory = await _categoryRepo.GetByIdAsync(categoryDto.ParentCategoryId.Value);
+            var parentCategory = await _categoryRepo.GetByIdAsync(categoryRequestDto.ParentCategoryId.Value);
             if (parentCategory == null)
             {
-                return NotFound($"Parent category with id '{categoryDto.ParentCategoryId}' not found.");
+                return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
             }
         }
         
-        var category = categoryDto.UpdateCategoryFromDto();
+        var category = categoryRequestDto.CategoryFromUpdateRequestDto();
 
         var updatedCategory = await _categoryRepo.UpdateAsync(id, category);
         if (updatedCategory == null)
@@ -86,8 +86,8 @@ public class CategoryController : ControllerBase
         return Ok(updatedCategory);
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
     {
         var category = await _categoryRepo.DeleteAsync(id);
         if (category == null)

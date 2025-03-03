@@ -8,6 +8,10 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
 {
     public void Configure(EntityTypeBuilder<Store> builder)
     {
+        builder.Property(s => s.Id)
+            .HasDefaultValueSql("gen_random_uuid()")
+            .IsRequired();
+        
         builder.HasIndex(s => s.Slug)
             .IsUnique();
             

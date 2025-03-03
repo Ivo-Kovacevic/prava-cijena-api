@@ -6,7 +6,19 @@ namespace api.Mappers;
 
 public static class ProductMapper
 {
-    public static Product CreateProductFromDto(this CreateProductRequestDto productRequestDto, int categoryId)
+    public static ProductDto ToProductDto(this Product product)
+    {
+        return new ProductDto
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Slug = product.Slug,
+            ImageUrl = product.ImageUrl,
+            CategoryId = product.CategoryId
+        };
+    }
+    
+    public static Product ToProductFromCreateDto(this CreateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);
@@ -20,7 +32,7 @@ public static class ProductMapper
         };
     }
     
-    public static Product UpdateProductFromDto(this UpdateProductRequestDto productRequestDto, int categoryId)
+    public static Product ToProductFromUpdateDto(this UpdateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);

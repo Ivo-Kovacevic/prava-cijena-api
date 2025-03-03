@@ -8,6 +8,10 @@ public class PriceConfiguration : IEntityTypeConfiguration<Price>
 {
     public void Configure(EntityTypeBuilder<Price> builder)
     {
+        builder.Property(p => p.Id)
+            .HasDefaultValueSql("gen_random_uuid()")
+            .IsRequired();
+        
         builder.HasOne<ProductStore>(p => p.ProductStore)
             .WithMany(p => p.Prices)
             .HasForeignKey(p => p.ProductStoreId);

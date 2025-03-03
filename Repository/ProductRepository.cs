@@ -1,5 +1,7 @@
 using api.Database;
+using api.DTOs;
 using api.Interfaces;
+using api.Mappers;
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,27 +16,30 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
     
-    public async Task<List<Product>> GetProductsByCategoryAsync(string categorySlug)
+    public async Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Product
-            .Include(p => p.Category)
-            .Where(p => p.Category.Slug == categorySlug)
+            .Where(p => p.CategoryId == categoryId)
+            .Select(p => p.ToProductDto())
             .ToListAsync();
     }
 
-    public async Task<Product?> GetBySlugAsync(string slug)
+    public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
     {
-        return await _context.Product.SingleOrDefaultAsync(p => p.Slug == slug);
+        return await _context.Product
+            .Where(p => p.Id == productId)
+            .Select(p => p.ToProductDto())
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<Product> CreateAsync(Product product)
+    public async Task<ProductDto> CreateAsync(Product product)
     {
         _context.Product.Add(product);
         await _context.SaveChangesAsync();
-        return product;
+        return product.ToProductDto();
     }
 
-    public async Task<Product?> UpdateAsync(int productId, Product product)
+    public async Task<ProductDto?> UpdateAsync(Guid productId, Product product)
     {
         var existingProduct = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId);
         if (existingProduct == null)
@@ -48,10 +53,10 @@ public class ProductRepository : IProductRepository
         
         await _context.SaveChangesAsync();
 
-        return existingProduct;
+        return existingProduct.ToProductDto();
     }
 
-    public async Task<Product?> DeleteAsync(int productId)
+    public async Task<ProductDto?> DeleteAsync(Guid productId)
     {
         var product = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId);
         if (product == null)
@@ -62,6 +67,6 @@ public class ProductRepository : IProductRepository
         _context.Remove(productId);
         await _context.SaveChangesAsync();
 
-        return product;
+        return product.ToProductDto();
     }
 }
