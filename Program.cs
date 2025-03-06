@@ -1,21 +1,18 @@
 using System.Text.Json.Serialization;
-using api;
 using api.Config;
 using api.Database;
 using api.Interfaces;
-using api.Models;
 using api.Repository;
-using DotNetEnv;
-using Microsoft.AspNetCore.Identity;
+using api.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(DatabaseConfig.GetConnectionString(builder.Configuration)));
+    options.UseNpgsql(DatabaseConfig.GetConnectionString(builder.Configuration))
+);
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
@@ -26,6 +23,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

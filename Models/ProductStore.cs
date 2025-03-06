@@ -11,7 +11,7 @@ public class ProductStore
     public Store Store { get; set; }
     public required string ProductUrl { get; set; }
     public required decimal LatestPrice { get; set; }
-    public ICollection<Price> Prices = new List<Price>();
+    public ICollection<Price> Prices = [];
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

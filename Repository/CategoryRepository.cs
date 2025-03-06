@@ -1,6 +1,5 @@
 using api.Database;
 using api.DTOs.Category;
-using api.Helpers;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
@@ -16,7 +15,7 @@ public class CategoryRepository : ICategoryRepository
     {
         _context = context;
     }
-    
+
     public async Task<List<CategoryDto>> GetAllAsync()
     {
         return await _context.Category
@@ -39,39 +38,33 @@ public class CategoryRepository : ICategoryRepository
         return category.ToCategoryDto();
     }
 
-    public async Task<CategoryDto?> UpdateAsync(Guid id, Category category)
+    public async Task<CategoryDto> UpdateAsync(Guid id, Category category)
     {
-        var existingCategory = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
-        if (existingCategory == null)
-        {
-            return null;
-        }
-        existingCategory.Name = category.Name;
-        existingCategory.Slug = category.Slug;
-        existingCategory.ImageUrl = category.ImageUrl;
-        existingCategory.ParentCategoryId = category.ParentCategoryId;
-        
-        await _context.SaveChangesAsync();
-
-        return existingCategory.ToCategoryDto();
-    }
-
-    public async Task<CategoryDto?> DeleteAsync(Guid id)
-    {
-        var category = await _context.Category.FirstOrDefaultAsync(c => c.Id == id);
-        if (category == null)
-        {
-            return null;
-        }
-
-        _context.Category.Remove(category);
-        await _context.SaveChangesAsync();
+        await _context.Category
+            .Where(c => c.Id == id)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(c => c.Name, category.Name)
+                .SetProperty(c => c.Slug, category.Slug)
+                .SetProperty(c => c.ImageUrl, category.ImageUrl)
+                .SetProperty(c => c.ParentCategoryId, category.ParentCategoryId));
 
         return category.ToCategoryDto();
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        await _context.Category
+            .Where(c => c.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     public async Task<bool> CategoryExists(Guid id)
     {
         return await _context.Category.AnyAsync(c => c.Id == id);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 }
