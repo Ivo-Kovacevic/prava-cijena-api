@@ -11,7 +11,7 @@ public class Product
     public required string ImageUrl { get; set; }
     public required Guid CategoryId { get; set; }
     public Category Category { get; set; }
-    public ICollection<ProductStore> ProductStores = new List<ProductStore>();
+    public ICollection<ProductStore> ProductStores = [];
     
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

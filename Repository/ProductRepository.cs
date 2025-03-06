@@ -16,7 +16,7 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
     
-    public async Task<List<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
+    public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Product
             .Where(p => p.CategoryId == categoryId)
@@ -56,17 +56,17 @@ public class ProductRepository : IProductRepository
         return existingProduct.ToProductDto();
     }
 
-    public async Task<ProductDto?> DeleteAsync(Guid productId)
+    public async Task<bool> DeleteAsync(Guid productId)
     {
         var product = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId);
         if (product == null)
         {
-            return null;
+            return false;
         }
 
         _context.Remove(product);
         await _context.SaveChangesAsync();
 
-        return product.ToProductDto();
+        return true;
     }
 }
