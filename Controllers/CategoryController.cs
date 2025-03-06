@@ -1,4 +1,4 @@
-using api.DTOs.Category;
+using api.Dto.Category;
 using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,7 +24,7 @@ public class CategoryController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Show(Guid id)
     {
-        var category = await _categoryService.GetByCategoryIdAsync(id);
+        var category = await _categoryService.GetCategoryByIdAsync(id);
         if (category is null)
         {
             return NotFound($"Category with id '{id}' not found.");

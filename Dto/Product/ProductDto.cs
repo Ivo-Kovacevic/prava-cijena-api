@@ -1,13 +1,13 @@
-namespace api.DTOs.Category;
+namespace api.Dto.Product;
 
-public class CategoryDto
+public class ProductDto
 {
     public Guid Id { get; set; }
     public required string Name { get; set; }
     public required string Slug { get; set; }
-    public string? ImageUrl { get; set; }
-    public Guid? ParentCategoryId { get; set; }
-    
+    public required string ImageUrl { get; set; }
+    public required Guid CategoryId { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -1,4 +1,4 @@
-using api.DTOs;
+using api.Dto.Product;
 using api.Helpers;
 using api.Models;
 
@@ -19,7 +19,7 @@ public static class ProductMapper
             UpdatedAt = product.UpdatedAt
         };
     }
-    
+
     public static Product ProductFromCreateRequestDto(this CreateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();
@@ -33,7 +33,7 @@ public static class ProductMapper
             CategoryId = categoryId
         };
     }
-    
+
     public static Product ToProductFromUpdateDto(this UpdateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();

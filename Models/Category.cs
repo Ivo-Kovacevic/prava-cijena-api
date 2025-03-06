@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-
 namespace api.Models;
 
 public class Category
@@ -13,7 +10,7 @@ public class Category
     public Category? ParentCategory { get; set; }
     public ICollection<Category> Subcategories { get; set; } = [];
     public ICollection<Product> Products { get; set; } = [];
-    
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

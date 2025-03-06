@@ -1,5 +1,5 @@
 using api.Database;
-using api.DTOs.Category;
+using api.Dto.Category;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;

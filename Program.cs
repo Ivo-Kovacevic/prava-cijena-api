@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using api.Config;
 using api.Database;
 using api.Interfaces;
+using api.Middlewares;
 using api.Repository;
 using api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -42,6 +47,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => options.EnableTryItOutByDefault());
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.MapControllers();
 

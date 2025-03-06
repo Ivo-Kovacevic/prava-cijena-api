@@ -1,4 +1,4 @@
-using api.DTOs.Category;
+using api.Dto.Category;
 using api.Interfaces;
 using api.Mappers;
 
@@ -18,7 +18,7 @@ public class CategoryService : ICategoryService
         return await _categoryRepo.GetAllAsync();
     }
 
-    public async Task<CategoryDto?> GetByCategoryIdAsync(Guid id)
+    public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
     {
         return await _categoryRepo.GetByIdAsync(id);
     }

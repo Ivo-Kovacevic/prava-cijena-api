@@ -1,4 +1,4 @@
-using api.DTOs;
+using api.Dto.Product;
 using api.Interfaces;
 using api.Mappers;
 using Microsoft.AspNetCore.Mvc;
@@ -9,100 +9,47 @@ namespace api.Controllers;
 [Route("/api/categories/{categoryId:guid}/products")]
 public class ProductController : ControllerBase
 {
-    private readonly ICategoryRepository _categoryRepo;
-    private readonly IProductRepository _productRepo;
+    private readonly ICategoryService _categoryService;
+    private readonly IProductService _productService;
 
-    public ProductController(ICategoryRepository categoryRepository, IProductRepository productRepository)
+    public ProductController(ICategoryService categoryService, IProductService productService)
     {
-        _categoryRepo = categoryRepository;
-        _productRepo = productRepository;
+        _categoryService = categoryService;
+        _productService = productService;
     }
 
     [HttpGet]
-    public async Task<IEnumerable<ProductDto>> Index(Guid categoryId)
+    public async Task<ActionResult<IEnumerable<ProductDto>>> Index(Guid categoryId)
     {
-        return await _productRepo.GetProductsByCategoryIdAsync(categoryId);
+        var products = await _productService.GetProductsByCategoryIdAsync(categoryId);
+        return Ok(products);
     }
 
     [HttpGet("{productId:guid}")]
-    public async Task<IActionResult> Show(Guid categoryId, Guid productId)
+    public async Task<ActionResult<ProductDto>> Show(Guid categoryId, Guid productId)
     {
-        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{categoryId}' not found.");
-        }
-
-        var productDto = await _productRepo.GetProductByIdAsync(productId);
-        if (productDto == null)
-        {
-            return NotFound($"Product with Id '{productId}' not found.");
-        }
-
-        return Ok(productDto);
+        var product = await _productService.GetProductByIdAsync(categoryId, productId);
+        return Ok(product);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Store(Guid categoryId, CreateProductRequestDto productRequestDto)
+    public async Task<ActionResult<ProductDto>> Store(Guid categoryId, CreateProductRequestDto productRequestDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{categoryId}' not found.");
-        }
-
-        var product = productRequestDto.ProductFromCreateRequestDto(categoryId);
-
-        var createdProduct = await _productRepo.CreateAsync(product);
-
-        return CreatedAtAction(nameof(Show), new { categoryId, productId = product.Id }, createdProduct);
+        var createdProduct = await _productService.CreateProductAsync(categoryId, productRequestDto);
+        return CreatedAtAction(nameof(Show), new { categoryId, productId = createdProduct.Id }, createdProduct);
     }
 
     [HttpPut("{productId:guid}")]
-    public async Task<IActionResult> Update(Guid categoryId, Guid productId, UpdateProductRequestDto productRequestDto)
+    public async Task<ActionResult<ProductDto>> Update(Guid categoryId, Guid productId, UpdateProductRequestDto productRequestDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{categoryId}' not found.");
-        }
-
-        var product = productRequestDto.ToProductFromUpdateDto(categoryId);
-
-        var updatedProduct = await _productRepo.UpdateAsync(productId, product);
-        if (updatedProduct == null)
-        {
-            return NotFound($"Product with ID '{productId}' not found.");
-        }
-
+        var updatedProduct = await _productService.UpdateProductAsync(categoryId, productId, productRequestDto);
         return Ok(updatedProduct);
     }
 
     [HttpDelete("{productId:guid}")]
     public async Task<IActionResult> Destroy(Guid categoryId, Guid productId)
     {
-        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{categoryId}' not found.");
-        }
-
-        var productDeleted = await _productRepo.DeleteAsync(productId);
-        if (productDeleted == false)
-        {
-            return NotFound($"Product with ID '{productId}' not found.");
-        }
-
+        await _productService.DeleteProductAsync(categoryId, productId);
         return NoContent();
     }
 }

@@ -1,4 +1,4 @@
-using api.DTOs.Category;
+using api.Dto.Category;
 using api.Models;
 
 namespace api.Interfaces;

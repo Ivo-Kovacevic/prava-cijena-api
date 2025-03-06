@@ -1,5 +1,4 @@
-using System.Text.RegularExpressions;
-using api.DTOs.Category;
+using api.Dto.Category;
 using api.Helpers;
 using api.Models;
 
@@ -20,13 +19,13 @@ public static class CategoryMapper
             UpdatedAt = category.UpdatedAt
         };
     }
-    
+
     public static Category CategoryFromCreateRequestDto(this CreateCategoryRequestDto categoryDto)
     {
         var name = categoryDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);
 
-        return new Category()
+        return new Category
         {
             Name = name,
             Slug = slug,
@@ -34,7 +33,7 @@ public static class CategoryMapper
             ParentCategoryId = categoryDto.ParentCategoryId
         };
     }
-    
+
     public static Category CategoryFromUpdateRequestDto(this UpdateCategoryRequestDto categoryDto)
     {
         var name = categoryDto.Name.Trim();

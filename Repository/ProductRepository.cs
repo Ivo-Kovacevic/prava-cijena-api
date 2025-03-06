@@ -1,5 +1,5 @@
 using api.Database;
-using api.DTOs;
+using api.Dto.Product;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
@@ -15,7 +15,7 @@ public class ProductRepository : IProductRepository
     {
         _context = context;
     }
-    
+
     public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Product
@@ -46,11 +46,11 @@ public class ProductRepository : IProductRepository
         {
             return null;
         }
-        
+
         existingProduct.Name = product.Name;
         existingProduct.Slug = product.Slug;
         existingProduct.ImageUrl = product.ImageUrl;
-        
+
         await _context.SaveChangesAsync();
 
         return existingProduct.ToProductDto();
@@ -58,15 +58,8 @@ public class ProductRepository : IProductRepository
 
     public async Task<bool> DeleteAsync(Guid productId)
     {
-        var product = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId);
-        if (product == null)
-        {
-            return false;
-        }
-
-        _context.Remove(product);
-        await _context.SaveChangesAsync();
-
-        return true;
+        await _context.Product
+            .Where(p => p.Id == productId)
+            .ExecuteDeleteAsync();
     }
 }
