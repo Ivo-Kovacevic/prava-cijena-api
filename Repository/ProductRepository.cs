@@ -1,5 +1,6 @@
 using api.Database;
 using api.Dto.Product;
+using api.Exceptions;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
@@ -39,27 +40,36 @@ public class ProductRepository : IProductRepository
         return product.ToProductDto();
     }
 
-    public async Task<ProductDto?> UpdateAsync(Guid productId, Product product)
+    public async Task<ProductDto> UpdateAsync(Guid productId, Product product)
     {
-        var existingProduct = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId);
-        if (existingProduct == null)
-        {
-            return null;
-        }
+        var affectedRows = await _context.Product
+            .Where(p => p.Id == productId)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(p => p.Name, product.Name)
+                .SetProperty(p => p.Slug, product.Slug)
+                .SetProperty(p => p.ImageUrl, product.ImageUrl)
+                .SetProperty(p => p.CategoryId, product.CategoryId)
+            );
 
-        existingProduct.Name = product.Name;
-        existingProduct.Slug = product.Slug;
-        existingProduct.ImageUrl = product.ImageUrl;
+        ThrowErrorIfNoRowsWereAffected(affectedRows, productId);
 
-        await _context.SaveChangesAsync();
-
-        return existingProduct.ToProductDto();
+        return product.ToProductDto();
     }
 
     public async Task DeleteAsync(Guid productId)
     {
-        await _context.Product
+        var affectedRows = await _context.Product
             .Where(p => p.Id == productId)
             .ExecuteDeleteAsync();
+
+        ThrowErrorIfNoRowsWereAffected(affectedRows, productId);
+    }
+
+    private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
+    {
+        if (numOfAffectedRows == 0)
+        {
+            throw new NotFoundException($"Product with ID '{id}' not found.");
+        }
     }
 }

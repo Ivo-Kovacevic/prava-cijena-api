@@ -34,17 +34,17 @@ public static class CategoryMapper
         };
     }
 
-    public static Category CategoryFromUpdateRequestDto(this UpdateCategoryRequestDto categoryDto)
+    public static Category CategoryFromUpdateRequestDto(this UpdateCategoryRequestDto categoryRequestDto, Guid categoryId)
     {
-        var name = categoryDto.Name.Trim();
+        var name = categoryRequestDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);
 
         return new Category
         {
             Name = name,
             Slug = slug,
-            ImageUrl = categoryDto.ImageUrl,
-            ParentCategoryId = categoryDto.ParentCategoryId
+            ImageUrl = categoryRequestDto.ImageUrl,
+            ParentCategoryId = categoryRequestDto.ParentCategoryId ?? categoryId
         };
     }
 }

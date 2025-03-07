@@ -1,5 +1,6 @@
 using api.Database;
 using api.Dto.Category;
+using api.Exceptions;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
@@ -40,22 +41,27 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<CategoryDto> UpdateAsync(Guid id, Category category)
     {
-        await _context.Category
+        var affectedRows = await _context.Category
             .Where(c => c.Id == id)
             .ExecuteUpdateAsync(set => set
                 .SetProperty(c => c.Name, category.Name)
                 .SetProperty(c => c.Slug, category.Slug)
                 .SetProperty(c => c.ImageUrl, category.ImageUrl)
-                .SetProperty(c => c.ParentCategoryId, category.ParentCategoryId));
+                .SetProperty(c => c.ParentCategoryId, category.ParentCategoryId)
+            );
+
+        ThrowErrorIfNoRowsWereAffected(affectedRows, id);
 
         return category.ToCategoryDto();
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        await _context.Category
+        var affectedRows = await _context.Category
             .Where(c => c.Id == id)
             .ExecuteDeleteAsync();
+
+        ThrowErrorIfNoRowsWereAffected(affectedRows, id);
     }
 
     public async Task<bool> CategoryExists(Guid id)
@@ -66,5 +72,13 @@ public class CategoryRepository : ICategoryRepository
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
+    }
+
+    private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
+    {
+        if (numOfAffectedRows == 0)
+        {
+            throw new NotFoundException($"Category with ID '{id}' not found.");
+        }
     }
 }

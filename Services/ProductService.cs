@@ -23,21 +23,33 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> GetProductByIdAsync(Guid categoryId, Guid productId)
     {
-        var product = await _productRepo.GetProductByIdAsync(productId);
-        if (product.CategoryId != categoryId)
+        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
+        if (!categoryExists)
         {
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
         }
 
-        if (product.Id != productId)
+        var productDto = await _productRepo.GetProductByIdAsync(productId);
+        if (productDto == null)
         {
             throw new NotFoundException($"Product with id '{productId}' not found.");
         }
 
-        return product;
+        return productDto;
     }
 
     public async Task<ProductDto> CreateProductAsync(Guid categoryId, CreateProductRequestDto productRequestDto)
+    {
+        var product = productRequestDto.ProductFromCreateRequestDto(categoryId);
+
+        return await _productRepo.CreateAsync(product);
+    }
+
+    public async Task<ProductDto> UpdateProductAsync(
+        Guid categoryId,
+        Guid productId,
+        UpdateProductRequestDto productRequestDto
+    )
     {
         var categoryExists = await _categoryRepo.CategoryExists(categoryId);
         if (!categoryExists)
@@ -45,44 +57,17 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
         }
 
-        var product = productRequestDto.ProductFromCreateRequestDto(categoryId);
-
-        var productDto = await _productRepo.CreateAsync(product);
-
-        return productDto;
-    }
-
-    public async Task<ProductDto> UpdateProductAsync(Guid categoryId, Guid productId, UpdateProductRequestDto productRequestDto)
-    {
-        var existingProduct = await _productRepo.GetProductByIdAsync(productId);
-        if (existingProduct.CategoryId != categoryId)
-        {
-            throw new NotFoundException($"Category with id '{categoryId}' not found.");
-        }
-
-        if (existingProduct.Id != productId)
-        {
-            throw new NotFoundException($"Product with id '{productId}' not found.");
-        }
-
         var product = productRequestDto.ToProductFromUpdateDto(categoryId);
 
-        var productDto = await _productRepo.UpdateAsync(productId, product);
-
-        return productDto;
+        return await _productRepo.UpdateAsync(productId, product);
     }
 
     public async Task DeleteProductAsync(Guid categoryId, Guid productId)
     {
-        var product = await _productRepo.GetProductByIdAsync(productId);
-        if (product.CategoryId != categoryId)
+        var categoryExists = await _categoryRepo.CategoryExists(categoryId);
+        if (!categoryExists)
         {
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
-        }
-
-        if (product.Id != productId)
-        {
-            throw new NotFoundException($"Product with id '{productId}' not found.");
         }
 
         await _productRepo.DeleteAsync(productId);

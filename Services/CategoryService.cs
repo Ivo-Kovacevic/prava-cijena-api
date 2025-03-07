@@ -39,26 +39,12 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto> UpdateCategoryAsync(Guid id, UpdateCategoryRequestDto categoryRequestDto)
     {
-        var categoryDto = await _categoryRepo.GetByIdAsync(id);
-
-        if (categoryDto == null)
-        {
-            throw new NotFoundException($"Category with ID '{id}' not found.");
-        }
-
-        var category = categoryRequestDto.CategoryFromUpdateRequestDto();
+        var category = categoryRequestDto.CategoryFromUpdateRequestDto(id);
         return await _categoryRepo.UpdateAsync(id, category);
     }
 
     public async Task DeleteCategoryAsync(Guid id)
     {
-        var categoryDto = await _categoryRepo.GetByIdAsync(id);
-
-        if (categoryDto == null)
-        {
-            throw new NotFoundException($"Category with ID '{id}' not found.");
-        }
-
         await _categoryRepo.DeleteAsync(id);
     }
 

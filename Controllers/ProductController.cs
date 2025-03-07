@@ -39,8 +39,11 @@ public class ProductController : ControllerBase
     }
 
     [HttpPut("{productId:guid}")]
-    public async Task<ActionResult<ProductDto>> Update(Guid categoryId, Guid productId,
-        UpdateProductRequestDto productRequestDto)
+    public async Task<ActionResult<ProductDto>> Update(
+        Guid categoryId,
+        Guid productId,
+        UpdateProductRequestDto productRequestDto
+    )
     {
         var productDto = await _productService.UpdateProductAsync(categoryId, productId, productRequestDto);
         return Ok(productDto);

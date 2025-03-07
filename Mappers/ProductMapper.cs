@@ -44,7 +44,7 @@ public static class ProductMapper
             Name = name,
             Slug = slug,
             ImageUrl = productRequestDto.ImageUrl,
-            CategoryId = categoryId
+            CategoryId = productRequestDto.CategoryId ?? categoryId
         };
     }
 }
