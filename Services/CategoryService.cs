@@ -1,4 +1,5 @@
 using api.Dto.Category;
+using api.Exceptions;
 using api.Interfaces;
 using api.Mappers;
 
@@ -20,26 +21,44 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
     {
-        return await _categoryRepo.GetByIdAsync(id);
+        var categoryDto = await _categoryRepo.GetByIdAsync(id);
+
+        if (categoryDto == null)
+        {
+            throw new NotFoundException($"Category with ID '{id}' not found.");
+        }
+
+        return categoryDto;
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryRequestDto categoryRequestDto)
     {
         var category = categoryRequestDto.CategoryFromCreateRequestDto();
-
         return await _categoryRepo.CreateAsync(category);
     }
 
     public async Task<CategoryDto> UpdateCategoryAsync(Guid id, UpdateCategoryRequestDto categoryRequestDto)
     {
-        var category = categoryRequestDto.CategoryFromUpdateRequestDto();
-        var updatedCategory = await _categoryRepo.UpdateAsync(id, category);
+        var categoryDto = await _categoryRepo.GetByIdAsync(id);
 
-        return updatedCategory;
+        if (categoryDto == null)
+        {
+            throw new NotFoundException($"Category with ID '{id}' not found.");
+        }
+
+        var category = categoryRequestDto.CategoryFromUpdateRequestDto();
+        return await _categoryRepo.UpdateAsync(id, category);
     }
 
     public async Task DeleteCategoryAsync(Guid id)
     {
+        var categoryDto = await _categoryRepo.GetByIdAsync(id);
+
+        if (categoryDto == null)
+        {
+            throw new NotFoundException($"Category with ID '{id}' not found.");
+        }
+
         await _categoryRepo.DeleteAsync(id);
     }
 

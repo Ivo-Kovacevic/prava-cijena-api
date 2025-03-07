@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
 
-[Route("api/categories")]
 [ApiController]
+[Route("api/categories")]
 public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -16,84 +16,37 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IEnumerable<CategoryDto>> Index()
+    public async Task<ActionResult<IEnumerable<CategoryDto>>> Index()
     {
-        return await _categoryService.GetCategoriesAsync();
+        var categoriesDto = await _categoryService.GetCategoriesAsync();
+        return Ok(categoriesDto);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Show(Guid id)
+    public async Task<ActionResult<CategoryDto>> Show(Guid id)
     {
-        var category = await _categoryService.GetCategoryByIdAsync(id);
-        if (category is null)
-        {
-            return NotFound($"Category with id '{id}' not found.");
-        }
-
-        return Ok(category);
+        var categoryDto = await _categoryService.GetCategoryByIdAsync(id);
+        return Ok(categoryDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Store(CreateCategoryRequestDto categoryRequestDto)
+    public async Task<ActionResult<CategoryDto>> Store(CreateCategoryRequestDto categoryRequestDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (categoryRequestDto.ParentCategoryId.HasValue)
-        {
-            var parentCategoryExists = await _categoryService.CategoryExists(categoryRequestDto.ParentCategoryId.Value);
-            if (!parentCategoryExists)
-            {
-                return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
-            }
-        }
-
-        var createdCategory = await _categoryService.CreateCategoryAsync(categoryRequestDto);
-
-        return CreatedAtAction(nameof(Show), new { id = createdCategory.Id }, createdCategory);
+        var categoryDto = await _categoryService.CreateCategoryAsync(categoryRequestDto);
+        return CreatedAtAction(nameof(Show), new { id = categoryDto.Id }, categoryDto);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, UpdateCategoryRequestDto categoryRequestDto)
+    public async Task<ActionResult<CategoryDto>> Update(Guid id, UpdateCategoryRequestDto categoryRequestDto)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (categoryRequestDto.ParentCategoryId.HasValue)
-        {
-            var parentCategoryExists = await _categoryService.CategoryExists(categoryRequestDto.ParentCategoryId.Value);
-            if (!parentCategoryExists)
-            {
-                return NotFound($"Parent category with id '{categoryRequestDto.ParentCategoryId}' not found.");
-            }
-        }
-
-        var categoryExists = await _categoryService.CategoryExists(id);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{id}' not found.");
-        }
-
-        var updatedCategory = await _categoryService.UpdateCategoryAsync(id, categoryRequestDto);
-
-        return Ok(updatedCategory);
+        var categoryDto = await _categoryService.UpdateCategoryAsync(id, categoryRequestDto);
+        return Ok(categoryDto);
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Destroy(Guid id)
     {
-        var categoryExists = await _categoryService.CategoryExists(id);
-        if (!categoryExists)
-        {
-            return NotFound($"Category with id '{id}' not found.");
-        }
-
         await _categoryService.DeleteCategoryAsync(id);
-
         return NoContent();
     }
 }

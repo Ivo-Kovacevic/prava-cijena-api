@@ -56,7 +56,7 @@ public class ProductRepository : IProductRepository
         return existingProduct.ToProductDto();
     }
 
-    public async Task<bool> DeleteAsync(Guid productId)
+    public async Task DeleteAsync(Guid productId)
     {
         await _context.Product
             .Where(p => p.Id == productId)
