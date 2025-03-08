@@ -9,6 +9,7 @@ namespace api.Database
 
         public DbSet<Category> Category { get; set; }
         public DbSet<Product> Product { get; set; }
+        public DbSet<Store> Store { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

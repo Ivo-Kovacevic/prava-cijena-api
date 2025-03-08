@@ -11,5 +11,4 @@ public interface ICategoryRepository
     Task<CategoryDto> UpdateAsync(Guid id, Category category);
     Task DeleteAsync(Guid id);
     Task<bool> CategoryExists(Guid id);
-    Task SaveChangesAsync();
 }

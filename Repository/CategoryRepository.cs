@@ -28,7 +28,7 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Category
             .Where(c => c.Id == id)
-            .Select(s => s.ToCategoryDto())
+            .Select(c => c.ToCategoryDto())
             .FirstOrDefaultAsync();
     }
 
