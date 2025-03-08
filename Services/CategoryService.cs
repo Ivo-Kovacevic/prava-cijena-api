@@ -16,31 +16,37 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
-        return await _categoryRepo.GetAllAsync();
+        var categories = await _categoryRepo.GetAllAsync();
+
+        return categories.Select(c => c.ToCategoryDto());
     }
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
     {
-        var categoryDto = await _categoryRepo.GetByIdAsync(id);
+        var category = await _categoryRepo.GetByIdAsync(id);
 
-        if (categoryDto == null)
+        if (category == null)
         {
             throw new NotFoundException($"Category with ID '{id}' not found.");
         }
 
-        return categoryDto;
+        return category.ToCategoryDto();
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryRequestDto categoryRequestDto)
     {
         var category = categoryRequestDto.CategoryFromCreateRequestDto();
-        return await _categoryRepo.CreateAsync(category);
+        category = await _categoryRepo.CreateAsync(category);
+
+        return category.ToCategoryDto();
     }
 
     public async Task<CategoryDto> UpdateCategoryAsync(Guid id, UpdateCategoryRequestDto categoryRequestDto)
     {
         var category = categoryRequestDto.CategoryFromUpdateRequestDto(id);
-        return await _categoryRepo.UpdateAsync(id, category);
+        category = await _categoryRepo.UpdateAsync(id, category);
+
+        return category.ToCategoryDto();
     }
 
     public async Task DeleteCategoryAsync(Guid id)

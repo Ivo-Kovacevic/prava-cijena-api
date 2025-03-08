@@ -16,7 +16,8 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
             .IsUnique();
             
         builder.Property(s => s.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
 
         builder.Property(s => s.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

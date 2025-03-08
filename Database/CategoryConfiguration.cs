@@ -28,7 +28,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .ValueGeneratedOnAdd();
 
         builder.Property(c => c.UpdatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
-            .ValueGeneratedOnAddOrUpdate();
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 }

@@ -21,7 +21,8 @@ public class ProductStoreConfiguration : IEntityTypeConfiguration<ProductStore>
             .HasForeignKey(p => p.StoreId);
         
         builder.Property(ps => ps.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
             
         builder.Property(ps => ps.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

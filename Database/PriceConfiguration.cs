@@ -19,7 +19,8 @@ public class PriceConfiguration : IEntityTypeConfiguration<Price>
         builder.HasIndex(p => p.Amount);
             
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
         
         builder.Property(p => p.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

@@ -24,7 +24,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsTsVectorExpressionIndex("english");
             
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .ValueGeneratedOnAdd();
             
         builder.Property(p => p.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

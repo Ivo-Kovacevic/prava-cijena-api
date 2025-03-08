@@ -17,42 +17,44 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<List<CategoryDto>> GetAllAsync()
+    public async Task<List<Category>> GetAllAsync()
     {
-        return await _context.Category
-            .Select(c => c.ToCategoryDto())
-            .ToListAsync();
+        return await _context.Category.ToListAsync();
     }
 
-    public async Task<CategoryDto?> GetByIdAsync(Guid id)
+    public async Task<Category?> GetByIdAsync(Guid id)
     {
         return await _context.Category
             .Where(c => c.Id == id)
-            .Select(c => c.ToCategoryDto())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<CategoryDto> CreateAsync(Category category)
+    public async Task<Category> CreateAsync(Category category)
     {
         _context.Category.Add(category);
         await _context.SaveChangesAsync();
-        return category.ToCategoryDto();
+        return category;
     }
 
-    public async Task<CategoryDto> UpdateAsync(Guid id, Category category)
+    public async Task<Category> UpdateAsync(Guid id, Category category)
     {
-        var affectedRows = await _context.Category
+        var existingCategory = await _context.Category
             .Where(c => c.Id == id)
-            .ExecuteUpdateAsync(set => set
-                .SetProperty(c => c.Name, category.Name)
-                .SetProperty(c => c.Slug, category.Slug)
-                .SetProperty(c => c.ImageUrl, category.ImageUrl)
-                .SetProperty(c => c.ParentCategoryId, category.ParentCategoryId)
-            );
+            .FirstOrDefaultAsync();
 
-        ThrowErrorIfNoRowsWereAffected(affectedRows, id);
+        if (existingCategory == null)
+        {
+            throw new KeyNotFoundException($"Category with ID {id} not found.");
+        }
 
-        return category.ToCategoryDto();
+        existingCategory.Name = category.Name;
+        existingCategory.Slug = category.Slug;
+        existingCategory.ImageUrl = category.ImageUrl;
+        existingCategory.ParentCategoryId = category.ParentCategoryId;
+        
+        await _context.SaveChangesAsync();
+
+        return existingCategory;
     }
 
     public async Task DeleteAsync(Guid id)
