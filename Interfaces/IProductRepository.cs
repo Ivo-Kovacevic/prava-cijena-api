@@ -5,9 +5,9 @@ namespace api.Interfaces;
 
 public interface IProductRepository
 {
-    Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId);
-    Task<ProductDto?> GetProductByIdAsync(Guid productId);
-    Task<ProductDto> CreateAsync(Product product);
-    Task<ProductDto> UpdateAsync(Guid productId, Product product);
+    Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId);
+    Task<Product?> GetProductByIdAsync(Guid productId);
+    Task<Product> CreateAsync(Product product);
+    Task<Product> UpdateAsync(Guid productId, Product product);
     Task DeleteAsync(Guid productId);
 }

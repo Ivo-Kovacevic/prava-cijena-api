@@ -24,7 +24,6 @@ public class CategoryService : ICategoryService
     public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
     {
         var category = await _categoryRepo.GetByIdAsync(id);
-
         if (category == null)
         {
             throw new NotFoundException($"Category with ID '{id}' not found.");

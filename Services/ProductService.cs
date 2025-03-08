@@ -18,7 +18,9 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
-        return await _productRepo.GetProductsByCategoryIdAsync(categoryId);
+        var products = await _productRepo.GetProductsByCategoryIdAsync(categoryId);
+
+        return products.Select(p => p.ToProductDto());
     }
 
     public async Task<ProductDto> GetProductByIdAsync(Guid categoryId, Guid productId)
@@ -29,20 +31,21 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
         }
 
-        var productDto = await _productRepo.GetProductByIdAsync(productId);
-        if (productDto == null)
+        var product = await _productRepo.GetProductByIdAsync(productId);
+        if (product == null)
         {
             throw new NotFoundException($"Product with id '{productId}' not found.");
         }
 
-        return productDto;
+        return product.ToProductDto();
     }
 
     public async Task<ProductDto> CreateProductAsync(Guid categoryId, CreateProductRequestDto productRequestDto)
     {
         var product = productRequestDto.ProductFromCreateRequestDto(categoryId);
+        product = await _productRepo.CreateAsync(product);
 
-        return await _productRepo.CreateAsync(product);
+        return product.ToProductDto();
     }
 
     public async Task<ProductDto> UpdateProductAsync(
@@ -58,8 +61,9 @@ public class ProductService : IProductService
         }
 
         var product = productRequestDto.ToProductFromUpdateDto(categoryId);
+        product = await _productRepo.UpdateAsync(productId, product);
 
-        return await _productRepo.UpdateAsync(productId, product);
+        return product.ToProductDto();
     }
 
     public async Task DeleteProductAsync(Guid categoryId, Guid productId)

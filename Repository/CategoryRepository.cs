@@ -38,10 +38,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category> UpdateAsync(Guid id, Category category)
     {
-        var existingCategory = await _context.Category
-            .Where(c => c.Id == id)
-            .FirstOrDefaultAsync();
-
+        var existingCategory = await GetByIdAsync(id);
         if (existingCategory == null)
         {
             throw new KeyNotFoundException($"Category with ID {id} not found.");
@@ -51,7 +48,7 @@ public class CategoryRepository : ICategoryRepository
         existingCategory.Slug = category.Slug;
         existingCategory.ImageUrl = category.ImageUrl;
         existingCategory.ParentCategoryId = category.ParentCategoryId;
-        
+
         await _context.SaveChangesAsync();
 
         return existingCategory;

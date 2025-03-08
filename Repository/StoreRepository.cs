@@ -17,33 +17,41 @@ public class StoreRepository : IStoreRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<StoreDto>> GetAllAsync()
+    public async Task<IEnumerable<Store>> GetAllAsync()
     {
-        return await _context.Store
-            .Select(s => s.ToStoreDto())
-            .ToListAsync();
+        return await _context.Store.ToListAsync();
     }
 
-    public async Task<StoreDto?> GetByIdAsync(Guid id)
+    public async Task<Store?> GetByIdAsync(Guid id)
     {
         return await _context.Store
             .Where(s => s.Id == id)
-            .Select(s => s.ToStoreDto())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<StoreDto> CreateAsync(Store store)
+    public async Task<Store> CreateAsync(Store store)
     {
         _context.Store.Add(store);
         await _context.SaveChangesAsync();
-        return store.ToStoreDto();
+        return store;
     }
 
-    public async Task<StoreDto> UpdateAsync(Guid id, Store store)
+    public async Task<Store> UpdateAsync(Guid id, Store store)
     {
-        _context.Store.Update(store);
+        var existingStore = await GetByIdAsync(id);
+        if (existingStore == null)
+        {
+            throw new KeyNotFoundException($"Store with ID {id} not found.");
+        }
+
+        existingStore.Name = store.Name;
+        existingStore.Slug = store.Slug;
+        existingStore.StoreUrl = store.StoreUrl;
+        existingStore.ImageUrl = store.ImageUrl;
+
         await _context.SaveChangesAsync();
-        return store.ToStoreDto();
+
+        return store;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -54,7 +62,7 @@ public class StoreRepository : IStoreRepository
 
         ThrowErrorIfNoRowsWereAffected(affectedRows, id);
     }
-    
+
     private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
     {
         if (numOfAffectedRows == 0)

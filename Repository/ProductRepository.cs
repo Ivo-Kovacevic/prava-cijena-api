@@ -17,43 +17,43 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
+    public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Product
             .Where(p => p.CategoryId == categoryId)
-            .Select(p => p.ToProductDto())
             .ToListAsync();
     }
 
-    public async Task<ProductDto?> GetProductByIdAsync(Guid productId)
+    public async Task<Product?> GetProductByIdAsync(Guid productId)
     {
         return await _context.Product
             .Where(p => p.Id == productId)
-            .Select(p => p.ToProductDto())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<ProductDto> CreateAsync(Product product)
+    public async Task<Product> CreateAsync(Product product)
     {
         _context.Product.Add(product);
         await _context.SaveChangesAsync();
-        return product.ToProductDto();
+        return product;
     }
 
-    public async Task<ProductDto> UpdateAsync(Guid productId, Product product)
+    public async Task<Product> UpdateAsync(Guid productId, Product product)
     {
-        var affectedRows = await _context.Product
-            .Where(p => p.Id == productId)
-            .ExecuteUpdateAsync(set => set
-                .SetProperty(p => p.Name, product.Name)
-                .SetProperty(p => p.Slug, product.Slug)
-                .SetProperty(p => p.ImageUrl, product.ImageUrl)
-                .SetProperty(p => p.CategoryId, product.CategoryId)
-            );
+        var existingProduct = await GetProductByIdAsync(productId);
+        if (existingProduct == null)
+        {
+            throw new KeyNotFoundException($"Product with ID {productId} not found.");
+        }
 
-        ThrowErrorIfNoRowsWereAffected(affectedRows, productId);
+        existingProduct.Name = product.Name;
+        existingProduct.Slug = product.Slug;
+        existingProduct.ImageUrl = product.ImageUrl;
+        existingProduct.CategoryId = product.CategoryId;
 
-        return product.ToProductDto();
+        await _context.SaveChangesAsync();
+
+        return product;
     }
 
     public async Task DeleteAsync(Guid productId)

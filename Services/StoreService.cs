@@ -16,7 +16,9 @@ public class StoreService : IStoreService
 
     public async Task<IEnumerable<StoreDto>> GetStoresAsync()
     {
-        return await _storeRepo.GetAllAsync();
+        var stores = await _storeRepo.GetAllAsync();
+
+        return stores.Select(s => s.ToStoreDto());
     }
 
     public async Task<StoreDto> GetStoreByIdAsync(Guid id)
@@ -27,19 +29,23 @@ public class StoreService : IStoreService
             throw new NotFoundException($"Store with id '{id}' not found.");
         }
 
-        return store;
+        return store.ToStoreDto();
     }
 
     public async Task<StoreDto> CreateStoreAsync(CreateStoreRequestDto storeRequestDto)
     {
         var store = storeRequestDto.StoreFromCreateRequestDto();
-        return await _storeRepo.CreateAsync(store);
+        store = await _storeRepo.CreateAsync(store);
+
+        return store.ToStoreDto();
     }
 
     public async Task<StoreDto> UpdateStoreAsync(Guid id, UpdateStoreRequestDto storeRequestDto)
     {
         var store = storeRequestDto.StoreFromUpdateRequestDto();
-        return await _storeRepo.UpdateAsync(id, store);
+        store = await _storeRepo.UpdateAsync(id, store);
+
+        return store.ToStoreDto();
     }
 
     public async Task DeleteStoreAsync(Guid id)

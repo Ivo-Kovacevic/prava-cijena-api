@@ -5,9 +5,9 @@ namespace api.Interfaces;
 
 public interface IStoreRepository
 {
-    Task<IEnumerable<StoreDto>> GetAllAsync();
-    Task<StoreDto?> GetByIdAsync(Guid id);
-    Task<StoreDto> CreateAsync(Store category);
-    Task<StoreDto> UpdateAsync(Guid id, Store category);
+    Task<IEnumerable<Store>> GetAllAsync();
+    Task<Store?> GetByIdAsync(Guid id);
+    Task<Store> CreateAsync(Store category);
+    Task<Store> UpdateAsync(Guid id, Store category);
     Task DeleteAsync(Guid id);
 }
