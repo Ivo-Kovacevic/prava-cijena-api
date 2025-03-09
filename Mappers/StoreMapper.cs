@@ -34,17 +34,10 @@ public static class StoreMapper
         };
     }
 
-    public static Store StoreFromUpdateRequestDto(this UpdateStoreRequestDto storeRequestDto)
+    public static void StoreFromUpdateRequestDto(this Store existingStore, UpdateStoreRequestDto storeRequestDto)
     {
-        var name = storeRequestDto.Name.Trim();
-        var slug = SlugHelper.GenerateSlug(name);
-
-        return new Store
-        {
-            Name = name,
-            Slug = slug,
-            StoreUrl = storeRequestDto.StoreUrl,
-            ImageUrl = storeRequestDto.ImageUrl,
-        };
+        existingStore.Name = storeRequestDto.Name.Trim();
+        existingStore.Slug = SlugHelper.GenerateSlug(existingStore.Name);
+        existingStore.ImageUrl = storeRequestDto.ImageUrl;
     }
 }

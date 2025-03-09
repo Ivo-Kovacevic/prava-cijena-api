@@ -36,38 +36,16 @@ public class StoreRepository : IStoreRepository
         return store;
     }
 
-    public async Task<Store> UpdateAsync(Guid id, Store store)
+    public async Task<Store> UpdateAsync(Store existingStore)
     {
-        var existingStore = await GetByIdAsync(id);
-        if (existingStore == null)
-        {
-            throw new KeyNotFoundException($"Store with ID {id} not found.");
-        }
-
-        existingStore.Name = store.Name;
-        existingStore.Slug = store.Slug;
-        existingStore.StoreUrl = store.StoreUrl;
-        existingStore.ImageUrl = store.ImageUrl;
-
+        _context.Store.Update(existingStore);
         await _context.SaveChangesAsync();
-
-        return store;
+        return existingStore;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Store existingStore)
     {
-        var affectedRows = await _context.Store
-            .Where(c => c.Id == id)
-            .ExecuteDeleteAsync();
-
-        ThrowErrorIfNoRowsWereAffected(affectedRows, id);
-    }
-
-    private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
-    {
-        if (numOfAffectedRows == 0)
-        {
-            throw new NotFoundException($"Store with ID '{id}' not found.");
-        }
+        _context.Store.Remove(existingStore);
+        await _context.SaveChangesAsync();
     }
 }

@@ -22,10 +22,10 @@ public class StoreController : ControllerBase
         return Ok(storesDto);
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<StoreDto>> Show(Guid id)
+    [HttpGet("{storeId:guid}")]
+    public async Task<ActionResult<StoreDto>> Show(Guid storeId)
     {
-        var storeDto = await _storeService.GetStoreByIdAsync(id);
+        var storeDto = await _storeService.GetStoreByIdAsync(storeId);
         return Ok(storeDto);
     }
 
@@ -33,20 +33,20 @@ public class StoreController : ControllerBase
     public async Task<ActionResult<StoreDto>> Store(CreateStoreRequestDto storeRequestDto)
     {
         var storeDto = await _storeService.CreateStoreAsync(storeRequestDto);
-        return CreatedAtAction(nameof(Show), new { id = storeDto.Id }, storeDto);
+        return CreatedAtAction(nameof(Show), new { storeId = storeDto.Id }, storeDto);
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<ActionResult<StoreDto>> Update(Guid id, UpdateStoreRequestDto storeRequestDto)
+    [HttpPut("{storeId:guid}")]
+    public async Task<ActionResult<StoreDto>> Update(Guid storeId, UpdateStoreRequestDto storeRequestDto)
     {
-        var storeDto = await _storeService.UpdateStoreAsync(id, storeRequestDto);
+        var storeDto = await _storeService.UpdateStoreAsync(storeId, storeRequestDto);
         return Ok(storeDto);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Destroy(Guid id)
+    [HttpDelete("{storeId:guid}")]
+    public async Task<IActionResult> Destroy(Guid storeId)
     {
-        await _storeService.DeleteStoreAsync(id);
+        await _storeService.DeleteStoreAsync(storeId);
         return NoContent();
     }
 }

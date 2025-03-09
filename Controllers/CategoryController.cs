@@ -22,10 +22,10 @@ public class CategoryController : ControllerBase
         return Ok(categoriesDto);
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<CategoryDto>> Show(Guid id)
+    [HttpGet("{categoryId:guid}")]
+    public async Task<ActionResult<CategoryDto>> Show(Guid categoryId)
     {
-        var categoryDto = await _categoryService.GetCategoryByIdAsync(id);
+        var categoryDto = await _categoryService.GetCategoryByIdAsync(categoryId);
         return Ok(categoryDto);
     }
 
@@ -33,20 +33,20 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<CategoryDto>> Store(CreateCategoryRequestDto categoryRequestDto)
     {
         var categoryDto = await _categoryService.CreateCategoryAsync(categoryRequestDto);
-        return CreatedAtAction(nameof(Show), new { id = categoryDto.Id }, categoryDto);
+        return CreatedAtAction(nameof(Show), new { categoryId = categoryDto.Id }, categoryDto);
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<ActionResult<CategoryDto>> Update(Guid id, UpdateCategoryRequestDto categoryRequestDto)
+    [HttpPut("{categoryId:guid}")]
+    public async Task<ActionResult<CategoryDto>> Update(Guid categoryId, UpdateCategoryRequestDto categoryRequestDto)
     {
-        var categoryDto = await _categoryService.UpdateCategoryAsync(id, categoryRequestDto);
+        var categoryDto = await _categoryService.UpdateCategoryAsync(categoryId, categoryRequestDto);
         return Ok(categoryDto);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Destroy(Guid id)
+    [HttpDelete("{categoryId:guid}")]
+    public async Task<IActionResult> Destroy(Guid categoryId)
     {
-        await _categoryService.DeleteCategoryAsync(id);
+        await _categoryService.DeleteCategoryAsync(categoryId);
         return NoContent();
     }
 }

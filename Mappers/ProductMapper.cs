@@ -34,17 +34,15 @@ public static class ProductMapper
         };
     }
 
-    public static Product ToProductFromUpdateDto(this UpdateProductRequestDto productRequestDto, Guid categoryId)
+    public static void ToProductFromUpdateDto(
+        this Product existingProduct,
+        UpdateProductRequestDto productRequestDto,
+        Guid categoryId
+    )
     {
-        var name = productRequestDto.Name.Trim();
-        var slug = SlugHelper.GenerateSlug(name);
-
-        return new Product
-        {
-            Name = name,
-            Slug = slug,
-            ImageUrl = productRequestDto.ImageUrl,
-            CategoryId = productRequestDto.CategoryId ?? categoryId
-        };
+        existingProduct.Name = productRequestDto.Name.Trim();
+        existingProduct.Slug = SlugHelper.GenerateSlug(existingProduct.Name);
+        existingProduct.ImageUrl = productRequestDto.ImageUrl;
+        existingProduct.CategoryId = productRequestDto.CategoryId ?? categoryId;
     }
 }

@@ -30,8 +30,8 @@ namespace api.Database
             {
                 if (entry.State == EntityState.Modified)
                 {
+                    // entry.Property("CreatedAt").IsModified = false;
                     entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
-                    entry.Property("CreatedAt").IsModified = false;
                 }
             }
 

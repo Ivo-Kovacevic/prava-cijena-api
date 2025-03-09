@@ -34,19 +34,14 @@ public static class CategoryMapper
         };
     }
 
-    public static Category CategoryFromUpdateRequestDto(this UpdateCategoryRequestDto categoryRequestDto,
-        Guid categoryId)
+    public static void CategoryFromUpdateRequestDto(
+        this Category existingCategory,
+        UpdateCategoryRequestDto categoryRequestDto
+    )
     {
-        var name = categoryRequestDto.Name.Trim();
-        var slug = SlugHelper.GenerateSlug(name);
-
-        return new Category
-        {
-            Id = categoryId,
-            Name = name,
-            Slug = slug,
-            ImageUrl = categoryRequestDto.ImageUrl,
-            ParentCategoryId = categoryRequestDto.ParentCategoryId ?? null
-        };
+        existingCategory.Name = categoryRequestDto.Name.Trim();
+        existingCategory.Slug = SlugHelper.GenerateSlug(existingCategory.Name);
+        existingCategory.ImageUrl = categoryRequestDto.ImageUrl;
+        existingCategory.ParentCategoryId = categoryRequestDto.ParentCategoryId;
     }
 }

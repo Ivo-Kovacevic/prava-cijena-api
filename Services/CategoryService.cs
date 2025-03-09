@@ -21,12 +21,12 @@ public class CategoryService : ICategoryService
         return categories.Select(c => c.ToCategoryDto());
     }
 
-    public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
+    public async Task<CategoryDto> GetCategoryByIdAsync(Guid categoryId)
     {
-        var category = await _categoryRepo.GetByIdAsync(id);
+        var category = await _categoryRepo.GetByIdAsync(categoryId);
         if (category == null)
         {
-            throw new NotFoundException($"Category with ID '{id}' not found.");
+            throw new NotFoundException($"Category with id '{categoryId}' not found.");
         }
 
         return category.ToCategoryDto();
@@ -40,21 +40,28 @@ public class CategoryService : ICategoryService
         return category.ToCategoryDto();
     }
 
-    public async Task<CategoryDto> UpdateCategoryAsync(Guid id, UpdateCategoryRequestDto categoryRequestDto)
+    public async Task<CategoryDto> UpdateCategoryAsync(Guid categoryId, UpdateCategoryRequestDto categoryRequestDto)
     {
-        var category = categoryRequestDto.CategoryFromUpdateRequestDto(id);
-        category = await _categoryRepo.UpdateAsync(id, category);
+        var existingCategory = await _categoryRepo.GetByIdAsync(categoryId);
+        if (existingCategory == null)
+        {
+            throw new NotFoundException($"Category with id '{categoryId}' not found.");
+        }
 
-        return category.ToCategoryDto();
+        existingCategory.CategoryFromUpdateRequestDto(categoryRequestDto);
+        existingCategory = await _categoryRepo.UpdateAsync(existingCategory);
+
+        return existingCategory.ToCategoryDto();
     }
 
-    public async Task DeleteCategoryAsync(Guid id)
+    public async Task DeleteCategoryAsync(Guid categoryId)
     {
-        await _categoryRepo.DeleteAsync(id);
-    }
+        var existingCategory = await _categoryRepo.GetByIdAsync(categoryId);
+        if (existingCategory == null)
+        {
+            throw new NotFoundException($"Category with id '{categoryId}' not found.");
+        }
 
-    public async Task<bool> CategoryExists(Guid id)
-    {
-        return await _categoryRepo.CategoryExists(id);
+        await _categoryRepo.DeleteAsync(existingCategory);
     }
 }

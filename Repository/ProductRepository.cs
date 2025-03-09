@@ -38,38 +38,16 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
-    public async Task<Product> UpdateAsync(Guid productId, Product product)
+    public async Task<Product> UpdateAsync(Product existingProduct)
     {
-        var existingProduct = await GetProductByIdAsync(productId);
-        if (existingProduct == null)
-        {
-            throw new KeyNotFoundException($"Product with ID {productId} not found.");
-        }
-
-        existingProduct.Name = product.Name;
-        existingProduct.Slug = product.Slug;
-        existingProduct.ImageUrl = product.ImageUrl;
-        existingProduct.CategoryId = product.CategoryId;
-
+        _context.Product.Update(existingProduct);
         await _context.SaveChangesAsync();
-
-        return product;
+        return existingProduct;
     }
 
-    public async Task DeleteAsync(Guid productId)
+    public async Task DeleteAsync(Product existingProduct)
     {
-        var affectedRows = await _context.Product
-            .Where(p => p.Id == productId)
-            .ExecuteDeleteAsync();
-
-        ThrowErrorIfNoRowsWereAffected(affectedRows, productId);
-    }
-
-    private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
-    {
-        if (numOfAffectedRows == 0)
-        {
-            throw new NotFoundException($"Product with ID '{id}' not found.");
-        }
+        _context.Product.Remove(existingProduct);
+        await _context.SaveChangesAsync();
     }
 }

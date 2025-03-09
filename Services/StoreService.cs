@@ -21,12 +21,12 @@ public class StoreService : IStoreService
         return stores.Select(s => s.ToStoreDto());
     }
 
-    public async Task<StoreDto> GetStoreByIdAsync(Guid id)
+    public async Task<StoreDto> GetStoreByIdAsync(Guid storeId)
     {
-        var store = await _storeRepo.GetByIdAsync(id);
+        var store = await _storeRepo.GetByIdAsync(storeId);
         if (store == null)
         {
-            throw new NotFoundException($"Store with id '{id}' not found.");
+            throw new NotFoundException($"Store with id '{storeId}' not found.");
         }
 
         return store.ToStoreDto();
@@ -40,16 +40,28 @@ public class StoreService : IStoreService
         return store.ToStoreDto();
     }
 
-    public async Task<StoreDto> UpdateStoreAsync(Guid id, UpdateStoreRequestDto storeRequestDto)
+    public async Task<StoreDto> UpdateStoreAsync(Guid storeId, UpdateStoreRequestDto storeRequestDto)
     {
-        var store = storeRequestDto.StoreFromUpdateRequestDto();
-        store = await _storeRepo.UpdateAsync(id, store);
+        var existingStore = await _storeRepo.GetByIdAsync(storeId);
+        if (existingStore == null)
+        {
+            throw new NotFoundException($"Store with id '{storeId}' not found.");
+        }
+        
+        existingStore.StoreFromUpdateRequestDto(storeRequestDto);
+        existingStore = await _storeRepo.UpdateAsync(existingStore);
 
-        return store.ToStoreDto();
+        return existingStore.ToStoreDto();
     }
 
-    public async Task DeleteStoreAsync(Guid id)
+    public async Task DeleteStoreAsync(Guid storeId)
     {
-        await _storeRepo.DeleteAsync(id);
+        var existingStore = await _storeRepo.GetByIdAsync(storeId);
+        if (existingStore == null)
+        {
+            throw new NotFoundException($"Store with id '{storeId}' not found.");
+        }
+        
+        await _storeRepo.DeleteAsync(existingStore);
     }
 }

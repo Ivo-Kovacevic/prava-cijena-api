@@ -22,10 +22,10 @@ public class CategoryRepository : ICategoryRepository
         return await _context.Category.ToListAsync();
     }
 
-    public async Task<Category?> GetByIdAsync(Guid id)
+    public async Task<Category?> GetByIdAsync(Guid categoryId)
     {
         return await _context.Category
-            .Where(c => c.Id == id)
+            .Where(c => c.Id == categoryId)
             .FirstOrDefaultAsync();
     }
 
@@ -36,48 +36,21 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task<Category> UpdateAsync(Guid id, Category category)
+    public async Task<Category> UpdateAsync(Category existingCategory)
     {
-        var existingCategory = await GetByIdAsync(id);
-        if (existingCategory == null)
-        {
-            throw new KeyNotFoundException($"Category with ID {id} not found.");
-        }
-
-        existingCategory.Name = category.Name;
-        existingCategory.Slug = category.Slug;
-        existingCategory.ImageUrl = category.ImageUrl;
-        existingCategory.ParentCategoryId = category.ParentCategoryId;
-
+        _context.Update(existingCategory);
         await _context.SaveChangesAsync();
-
         return existingCategory;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Category existingCategory)
     {
-        var affectedRows = await _context.Category
-            .Where(c => c.Id == id)
-            .ExecuteDeleteAsync();
-
-        ThrowErrorIfNoRowsWereAffected(affectedRows, id);
+        _context.Remove(existingCategory);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<bool> CategoryExists(Guid id)
     {
         return await _context.Category.AnyAsync(c => c.Id == id);
-    }
-
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
-
-    private void ThrowErrorIfNoRowsWereAffected(int numOfAffectedRows, Guid id)
-    {
-        if (numOfAffectedRows == 0)
-        {
-            throw new NotFoundException($"Category with ID '{id}' not found.");
-        }
     }
 }
