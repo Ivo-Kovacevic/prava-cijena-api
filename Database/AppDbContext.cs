@@ -1,5 +1,6 @@
 using api.Models;
 using Microsoft.EntityFrameworkCore;
+using Attribute = api.Models.Attribute;
 
 namespace api.Database
 {
@@ -9,9 +10,14 @@ namespace api.Database
         {
         }
 
-        public DbSet<Category> Category { get; set; }
-        public DbSet<Product> Product { get; set; }
-        public DbSet<Store> Store { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Store> Stores { get; set; }
+        public DbSet<ProductStore> ProductStores { get; set; }
+        public DbSet<Price> Prices { get; set; }
+        public DbSet<Attribute> Attributes { get; set; }
+        public DbSet<Option> Options { get; set; }
+        public DbSet<ProductOption> ProductOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

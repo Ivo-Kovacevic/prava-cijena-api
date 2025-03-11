@@ -19,19 +19,19 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<List<Category>> GetAllAsync()
     {
-        return await _context.Category.ToListAsync();
+        return await _context.Categories.ToListAsync();
     }
 
     public async Task<Category?> GetByIdAsync(Guid categoryId)
     {
-        return await _context.Category
+        return await _context.Categories
             .Where(c => c.Id == categoryId)
             .FirstOrDefaultAsync();
     }
 
     public async Task<Category> CreateAsync(Category category)
     {
-        _context.Category.Add(category);
+        _context.Categories.Add(category);
         await _context.SaveChangesAsync();
         return category;
     }
@@ -51,6 +51,6 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<bool> CategoryExists(Guid id)
     {
-        return await _context.Category.AnyAsync(c => c.Id == id);
+        return await _context.Categories.AnyAsync(c => c.Id == id);
     }
 }

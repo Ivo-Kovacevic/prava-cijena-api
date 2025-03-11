@@ -19,33 +19,33 @@ public class StoreRepository : IStoreRepository
 
     public async Task<IEnumerable<Store>> GetAllAsync()
     {
-        return await _context.Store.ToListAsync();
+        return await _context.Stores.ToListAsync();
     }
 
     public async Task<Store?> GetByIdAsync(Guid id)
     {
-        return await _context.Store
+        return await _context.Stores
             .Where(s => s.Id == id)
             .FirstOrDefaultAsync();
     }
 
     public async Task<Store> CreateAsync(Store store)
     {
-        _context.Store.Add(store);
+        _context.Stores.Add(store);
         await _context.SaveChangesAsync();
         return store;
     }
 
     public async Task<Store> UpdateAsync(Store existingStore)
     {
-        _context.Store.Update(existingStore);
+        _context.Stores.Update(existingStore);
         await _context.SaveChangesAsync();
         return existingStore;
     }
 
     public async Task DeleteAsync(Store existingStore)
     {
-        _context.Store.Remove(existingStore);
+        _context.Stores.Remove(existingStore);
         await _context.SaveChangesAsync();
     }
 }

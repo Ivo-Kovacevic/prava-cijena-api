@@ -19,35 +19,35 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
-        return await _context.Product
+        return await _context.Products
             .Where(p => p.CategoryId == categoryId)
             .ToListAsync();
     }
 
     public async Task<Product?> GetProductByIdAsync(Guid productId)
     {
-        return await _context.Product
+        return await _context.Products
             .Where(p => p.Id == productId)
             .FirstOrDefaultAsync();
     }
 
     public async Task<Product> CreateAsync(Product product)
     {
-        _context.Product.Add(product);
+        _context.Products.Add(product);
         await _context.SaveChangesAsync();
         return product;
     }
 
     public async Task<Product> UpdateAsync(Product existingProduct)
     {
-        _context.Product.Update(existingProduct);
+        _context.Products.Update(existingProduct);
         await _context.SaveChangesAsync();
         return existingProduct;
     }
 
     public async Task DeleteAsync(Product existingProduct)
     {
-        _context.Product.Remove(existingProduct);
+        _context.Products.Remove(existingProduct);
         await _context.SaveChangesAsync();
     }
 }
