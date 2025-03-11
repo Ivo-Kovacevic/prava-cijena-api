@@ -1,4 +1,3 @@
-using api.Dto.Product;
 using api.Models;
 
 namespace api.Interfaces;

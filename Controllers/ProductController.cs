@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.Controllers;
 
 [ApiController]
-[Route("/api/categories/{categoryId:guid}/products")]
+[Route("api/categories/{categoryId:guid}/products")]
 public class ProductController : ControllerBase
 {
     private readonly ICategoryService _categoryService;

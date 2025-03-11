@@ -47,7 +47,7 @@ public class StoreService : IStoreService
         {
             throw new NotFoundException($"Store with id '{storeId}' not found.");
         }
-        
+
         existingStore.StoreFromUpdateRequestDto(storeRequestDto);
         existingStore = await _storeRepo.UpdateAsync(existingStore);
 
@@ -61,7 +61,7 @@ public class StoreService : IStoreService
         {
             throw new NotFoundException($"Store with id '{storeId}' not found.");
         }
-        
+
         await _storeRepo.DeleteAsync(existingStore);
     }
 }
