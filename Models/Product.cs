@@ -10,6 +10,6 @@ public class Product
     public Category Category { get; set; }
     public ICollection<ProductStore> ProductStores = [];
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; set; }
 }

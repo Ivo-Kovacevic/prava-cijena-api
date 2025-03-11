@@ -9,6 +9,6 @@ public class Store
     public required string ImageUrl { get; set; }
     public ICollection<ProductStore> StoreProducts { get; set; } = [];
     
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; set; }
 }

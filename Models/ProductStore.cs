@@ -13,6 +13,6 @@ public class ProductStore
     public required decimal LatestPrice { get; set; }
     public ICollection<Price> Prices = [];
     
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; set; }
 }
