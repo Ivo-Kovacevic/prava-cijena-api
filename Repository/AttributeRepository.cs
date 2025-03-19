@@ -47,4 +47,9 @@ public class AttributeRepository : IAttributeRepository
         _context.Attributes.Remove(existingAttribute);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<bool> AttributeExists(Guid attributeId)
+    {
+        return await _context.Attributes.AnyAsync(a => a.Id == attributeId);
+    }
 }

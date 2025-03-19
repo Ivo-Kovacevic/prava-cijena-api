@@ -50,7 +50,7 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
                 break;
 
             // Database errors
-            case DbUpdateException dbEx when dbEx.InnerException is PostgresException pgEx:
+            case DbUpdateException { InnerException: PostgresException pgEx }:
 
                 // Handle specific postgre errors
                 HandlePostgreExceptions(pgEx, problemDetails);

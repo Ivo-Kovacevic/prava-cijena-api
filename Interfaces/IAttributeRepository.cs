@@ -11,4 +11,5 @@ public interface IAttributeRepository
     Task<Attribute> CreateAsync(Attribute product);
     Task<Attribute> UpdateAsync(Attribute existingAttribute);
     Task DeleteAsync(Attribute existingProduct);
+    Task<bool> AttributeExists(Guid attributeId);
 }
