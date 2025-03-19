@@ -8,12 +8,10 @@ namespace api.Controllers;
 [Route("api/categories/{categoryId:guid}/products")]
 public class ProductController : ControllerBase
 {
-    private readonly ICategoryService _categoryService;
     private readonly IProductService _productService;
 
-    public ProductController(ICategoryService categoryService, IProductService productService)
+    public ProductController(IProductService productService)
     {
-        _categoryService = categoryService;
         _productService = productService;
     }
 
