@@ -36,7 +36,7 @@ public class AttributeController : ControllerBase
         return CreatedAtAction(nameof(Show), new { categoryId, attributeId = attributeDto.Id }, attributeDto);
     }
 
-    [HttpPut("{attributeId:guid}")]
+    [HttpPatch("{attributeId:guid}")]
     public async Task<ActionResult<AttributeDto>> Update(
         Guid categoryId,
         Guid attributeId,

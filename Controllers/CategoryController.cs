@@ -36,7 +36,7 @@ public class CategoryController : ControllerBase
         return CreatedAtAction(nameof(Show), new { categoryId = categoryDto.Id }, categoryDto);
     }
 
-    [HttpPut("{categoryId:guid}")]
+    [HttpPatch("{categoryId:guid}")]
     public async Task<ActionResult<CategoryDto>> Update(Guid categoryId, UpdateCategoryRequestDto categoryRequestDto)
     {
         var categoryDto = await _categoryService.UpdateCategoryAsync(categoryId, categoryRequestDto);

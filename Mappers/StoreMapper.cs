@@ -30,14 +30,14 @@ public static class StoreMapper
             Name = name,
             Slug = slug,
             StoreUrl = storeRequestDto.StoreUrl,
-            ImageUrl = storeRequestDto.ImageUrl,
+            ImageUrl = storeRequestDto.ImageUrl
         };
     }
 
     public static void StoreFromUpdateRequestDto(this Store existingStore, UpdateStoreRequestDto storeRequestDto)
     {
-        existingStore.Name = storeRequestDto.Name.Trim();
+        existingStore.Name = storeRequestDto.Name ?? existingStore.Name;
         existingStore.Slug = SlugHelper.GenerateSlug(existingStore.Name);
-        existingStore.ImageUrl = storeRequestDto.ImageUrl;
+        existingStore.ImageUrl = storeRequestDto.ImageUrl ?? existingStore.ImageUrl;
     }
 }

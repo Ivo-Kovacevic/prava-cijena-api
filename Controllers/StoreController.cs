@@ -36,7 +36,7 @@ public class StoreController : ControllerBase
         return CreatedAtAction(nameof(Show), new { storeId = storeDto.Id }, storeDto);
     }
 
-    [HttpPut("{storeId:guid}")]
+    [HttpPatch("{storeId:guid}")]
     public async Task<ActionResult<StoreDto>> Update(Guid storeId, UpdateStoreRequestDto storeRequestDto)
     {
         var storeDto = await _storeService.UpdateStoreAsync(storeId, storeRequestDto);

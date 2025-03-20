@@ -78,7 +78,7 @@ public class OptionService : IOptionService
             throw new NotFoundException($"Option with id '{optionId}' not found.");
         }
 
-        existingOption.ToOptionFromUpdateDto(optionRequestDto, attributeId);
+        existingOption.ToOptionFromUpdateDto(optionRequestDto);
         existingOption = await _optionRepo.UpdateAsync(existingOption);
 
         return existingOption.ToOptionDto();

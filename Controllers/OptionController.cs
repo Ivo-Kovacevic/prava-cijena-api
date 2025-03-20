@@ -36,7 +36,7 @@ public class OptionController : ControllerBase
         return CreatedAtAction(nameof(Show), new { attributeId, optionId = optionDto.Id }, optionDto);
     }
 
-    [HttpPut("{optionId:guid}")]
+    [HttpPatch("{optionId:guid}")]
     public async Task<ActionResult<OptionDto>> Update(
         Guid attributeId,
         Guid optionId,

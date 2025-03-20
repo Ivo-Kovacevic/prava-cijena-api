@@ -36,13 +36,12 @@ public static class ProductMapper
 
     public static void ToProductFromUpdateDto(
         this Product existingProduct,
-        UpdateProductRequestDto productRequestDto,
-        Guid categoryId
+        UpdateProductRequestDto productRequestDto
     )
     {
-        existingProduct.Name = productRequestDto.Name.Trim();
+        existingProduct.Name = productRequestDto.Name ?? existingProduct.Name;
         existingProduct.Slug = SlugHelper.GenerateSlug(existingProduct.Name);
-        existingProduct.ImageUrl = productRequestDto.ImageUrl;
-        existingProduct.CategoryId = productRequestDto.CategoryId ?? categoryId;
+        existingProduct.ImageUrl = productRequestDto.ImageUrl ?? existingProduct.ImageUrl;
+        existingProduct.CategoryId = productRequestDto.CategoryId ?? existingProduct.CategoryId;
     }
 }

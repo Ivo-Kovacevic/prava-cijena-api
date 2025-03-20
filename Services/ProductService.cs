@@ -78,7 +78,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product with id '{productId}' not found.");
         }
 
-        existingProduct.ToProductFromUpdateDto(productRequestDto, categoryId);
+        existingProduct.ToProductFromUpdateDto(productRequestDto);
         existingProduct = await _productRepo.UpdateAsync(existingProduct);
 
         return existingProduct.ToProductDto();

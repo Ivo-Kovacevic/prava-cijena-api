@@ -78,7 +78,7 @@ public class AttributeService : IAttributeService
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
         }
 
-        existingAttribute.ToAttributeFromUpdateDto(attributeRequestDto, categoryId);
+        existingAttribute.ToAttributeFromUpdateDto(attributeRequestDto);
         existingAttribute = await _attributeRepo.UpdateAsync(existingAttribute);
 
         return existingAttribute.ToAttributeDto();

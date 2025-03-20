@@ -32,12 +32,11 @@ public static class OptionMapper
 
     public static void ToOptionFromUpdateDto(
         this Option existingOption,
-        UpdateOptionRequestDto optionRequestDto,
-        Guid attributeId
+        UpdateOptionRequestDto optionRequestDto
     )
     {
-        existingOption.Name = optionRequestDto.Name.Trim();
+        existingOption.Name = optionRequestDto.Name ?? existingOption.Name;
         existingOption.Slug = SlugHelper.GenerateSlug(existingOption.Name);
-        existingOption.AttributeId = optionRequestDto.AttributeId ?? attributeId;
+        existingOption.AttributeId = optionRequestDto.AttributeId ?? existingOption.AttributeId;
     }
 }

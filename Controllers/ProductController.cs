@@ -36,7 +36,7 @@ public class ProductController : ControllerBase
         return CreatedAtAction(nameof(Show), new { categoryId, productId = productDto.Id }, productDto);
     }
 
-    [HttpPut("{productId:guid}")]
+    [HttpPatch("{productId:guid}")]
     public async Task<ActionResult<ProductDto>> Update(
         Guid categoryId,
         Guid productId,

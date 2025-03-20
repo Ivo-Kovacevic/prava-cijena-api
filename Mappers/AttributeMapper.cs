@@ -32,12 +32,11 @@ public static class AttributeMapper
 
     public static void ToAttributeFromUpdateDto(
         this Attribute existingAttribute,
-        UpdateAttributeRequestDto attributeRequestDto,
-        Guid categoryId
+        UpdateAttributeRequestDto attributeRequestDto
     )
     {
-        existingAttribute.Name = attributeRequestDto.Name.Trim();
+        existingAttribute.Name = attributeRequestDto.Name ?? existingAttribute.Name;
         existingAttribute.Slug = SlugHelper.GenerateSlug(existingAttribute.Name);
-        existingAttribute.CategoryId = attributeRequestDto.CategoryId ?? categoryId;
+        existingAttribute.CategoryId = attributeRequestDto.CategoryId ?? existingAttribute.CategoryId;
     }
 }

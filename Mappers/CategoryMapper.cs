@@ -20,17 +20,17 @@ public static class CategoryMapper
         };
     }
 
-    public static Category CategoryFromCreateRequestDto(this CreateCategoryRequestDto categoryDto)
+    public static Category CategoryFromCreateRequestDto(this CreateCategoryRequestDto categoryRequestDto)
     {
-        var name = categoryDto.Name.Trim();
+        var name = categoryRequestDto.Name.Trim();
         var slug = SlugHelper.GenerateSlug(name);
 
         return new Category
         {
             Name = name,
             Slug = slug,
-            ImageUrl = categoryDto.ImageUrl,
-            ParentCategoryId = categoryDto.ParentCategoryId
+            ImageUrl = categoryRequestDto.ImageUrl,
+            ParentCategoryId = categoryRequestDto.ParentCategoryId
         };
     }
 
@@ -39,9 +39,9 @@ public static class CategoryMapper
         UpdateCategoryRequestDto categoryRequestDto
     )
     {
-        existingCategory.Name = categoryRequestDto.Name.Trim();
+        existingCategory.Name = categoryRequestDto.Name ?? existingCategory.Name;
         existingCategory.Slug = SlugHelper.GenerateSlug(existingCategory.Name);
-        existingCategory.ImageUrl = categoryRequestDto.ImageUrl;
-        existingCategory.ParentCategoryId = categoryRequestDto.ParentCategoryId;
+        existingCategory.ImageUrl = categoryRequestDto.ImageUrl ?? categoryRequestDto.ImageUrl;
+        existingCategory.ParentCategoryId = categoryRequestDto.ParentCategoryId ?? categoryRequestDto.ParentCategoryId;
     }
 }
