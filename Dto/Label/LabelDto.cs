@@ -1,8 +1,8 @@
 using api.Models;
 
-namespace api.Dto.Attribute;
+namespace api.Dto.Label;
 
-public class AttributeDto : BaseEntity
+public class LabelDto : BaseEntity
 {
     public required string Name { get; set; }
     public required string Slug { get; set; }

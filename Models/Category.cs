@@ -9,5 +9,5 @@ public class Category : BaseEntity
     public Category? ParentCategory { get; set; }
     public ICollection<Category> Subcategories { get; set; } = [];
     public ICollection<Product> Products { get; set; } = [];
-    public ICollection<Attribute> Attributes { get; set; } = [];
+    public ICollection<Label> Attributes { get; set; } = [];
 }

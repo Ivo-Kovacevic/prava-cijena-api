@@ -38,11 +38,11 @@ builder.Services.AddScoped<IProductStoreRepository, ProductStoreRepository>();
 builder.Services.AddScoped<IPriceService, PriceService>();
 builder.Services.AddScoped<IPriceRepository, PriceRepository>();
 
-builder.Services.AddScoped<IAttributeService, AttributeService>();
-builder.Services.AddScoped<IAttributeRepository, AttributeRepository>();
+builder.Services.AddScoped<ILabelService, LabelService>();
+builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 
-builder.Services.AddScoped<IOptionService, OptionService>();
-builder.Services.AddScoped<IOptionRepository, OptionRepository>();
+builder.Services.AddScoped<IValueService, ValueService>();
+builder.Services.AddScoped<IValueRepository, ValueRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

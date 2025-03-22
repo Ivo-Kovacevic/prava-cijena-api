@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Option;
+namespace api.Dto.Label;
 
-public class CreateOptionRequestDto
+public class CreateLabelRequestDto
 {
     [Required]
     [MinLength(1, ErrorMessage = "Name cannot be empty")]

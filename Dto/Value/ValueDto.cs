@@ -1,8 +1,8 @@
 using api.Models;
 
-namespace api.Dto.Option;
+namespace api.Dto.Value;
 
-public class OptionDto : BaseEntity
+public class ValueDto : BaseEntity
 {
     public required string Name { get; set; }
     public required string Slug { get; set; }

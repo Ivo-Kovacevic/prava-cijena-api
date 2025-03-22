@@ -1,47 +1,43 @@
 using api.Models;
 using Microsoft.EntityFrameworkCore;
-using Attribute = api.Models.Attribute;
 
-namespace api.Database
+namespace api.Database;
+
+public class AppDbContext : DbContext
 {
-    public class AppDbContext : DbContext
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-        }
+    }
 
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Store> Stores { get; set; }
-        public DbSet<ProductStore> ProductStores { get; set; }
-        public DbSet<Price> Prices { get; set; }
-        public DbSet<Attribute> Attributes { get; set; }
-        public DbSet<Option> Options { get; set; }
-        public DbSet<ProductOption> ProductOptions { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Store> Stores { get; set; }
+    public DbSet<ProductStore> ProductStores { get; set; }
+    public DbSet<Price> Prices { get; set; }
+    public DbSet<Label> Labels { get; set; }
+    public DbSet<Value> Values { get; set; }
+    public DbSet<ProductOption> ProductOptions { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            base.OnModelCreating(builder);
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
 
-            builder.ApplyConfiguration(new CategoryConfiguration());
-            builder.ApplyConfiguration(new ProductConfiguration());
-            builder.ApplyConfiguration(new StoreConfiguration());
-            builder.ApplyConfiguration(new ProductStoreConfiguration());
-            builder.ApplyConfiguration(new PriceConfiguration());
-        }
+        builder.ApplyConfiguration(new CategoryConfiguration());
+        builder.ApplyConfiguration(new ProductConfiguration());
+        builder.ApplyConfiguration(new StoreConfiguration());
+        builder.ApplyConfiguration(new ProductStoreConfiguration());
+        builder.ApplyConfiguration(new PriceConfiguration());
+    }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            foreach (var entry in ChangeTracker.Entries())
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in ChangeTracker.Entries())
+            if (entry.State == EntityState.Modified)
             {
-                if (entry.State == EntityState.Modified)
-                {
-                    // entry.Property("CreatedAt").IsModified = false;
-                    entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
-                }
+                // entry.Property("CreatedAt").IsModified = false;
+                entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
             }
 
-            return await base.SaveChangesAsync(cancellationToken);
-        }
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }
