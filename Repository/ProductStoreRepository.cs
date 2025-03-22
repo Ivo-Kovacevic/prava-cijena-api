@@ -49,4 +49,9 @@ public class ProductStoreRepository : IProductStoreRepository
         _context.ProductStores.Remove(productStore);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<bool> ProductStoreExistsAsync(Guid productStoreId)
+    {
+        return await _context.ProductStores.AnyAsync(ps => ps.Id == productStoreId);
+    }
 }

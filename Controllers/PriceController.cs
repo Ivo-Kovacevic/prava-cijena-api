@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/product-store/{productStoreId:guid}/prices")]
+[Route("api/product-stores/{productStoreId:guid}/prices")]
 public class PriceController : ControllerBase
 {
     private readonly IPriceService _priceService;

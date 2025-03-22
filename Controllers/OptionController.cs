@@ -47,10 +47,10 @@ public class OptionController : ControllerBase
         return Ok(optionDto);
     }
 
-    [HttpDelete("{attributeId:guid}")]
+    [HttpDelete("{optionId:guid}")]
     public async Task<IActionResult> Destroy(Guid attributeId, Guid optionId)
     {
-        await _optionService.DeleteOptionAsync(attributeId, attributeId);
+        await _optionService.DeleteOptionAsync(attributeId, optionId);
         return NoContent();
     }
 }

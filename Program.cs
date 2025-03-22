@@ -32,6 +32,18 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 
+builder.Services.AddScoped<IProductStoreService, ProductStoreService>();
+builder.Services.AddScoped<IProductStoreRepository, ProductStoreRepository>();
+
+builder.Services.AddScoped<IPriceService, PriceService>();
+builder.Services.AddScoped<IPriceRepository, PriceRepository>();
+
+builder.Services.AddScoped<IAttributeService, AttributeService>();
+builder.Services.AddScoped<IAttributeRepository, AttributeRepository>();
+
+builder.Services.AddScoped<IOptionService, OptionService>();
+builder.Services.AddScoped<IOptionRepository, OptionRepository>();
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
