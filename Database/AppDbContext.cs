@@ -1,3 +1,4 @@
+using api.Database.Configuration;
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 

@@ -15,6 +15,7 @@ public static class CategoryMapper
             Slug = category.Slug,
             ImageUrl = category.ImageUrl,
             ParentCategoryId = category.ParentCategoryId,
+            Subcategories = category.Subcategories.Select(c=>c.ToCategoryDto()).ToList(),
             CreatedAt = category.CreatedAt,
             UpdatedAt = category.UpdatedAt
         };

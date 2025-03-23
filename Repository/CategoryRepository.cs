@@ -14,9 +14,11 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<List<Category>> GetAllAsync()
+    public async Task<List<Category>> GetAllRootCategoriesAsync()
     {
-        return await _context.Categories.ToListAsync();
+        return await _context.Categories
+            .Where(c => c.ParentCategoryId == null)
+            .ToListAsync();
     }
 
     public async Task<Category?> GetByIdAsync(Guid categoryId)
@@ -24,6 +26,31 @@ public class CategoryRepository : ICategoryRepository
         return await _context.Categories
             .Where(c => c.Id == categoryId)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<Category?> GetBySlugWithSubcategoriesAsync(string categorySlug)
+    {
+        var category = await _context.Categories
+            .Where(c => c.Slug == categorySlug)
+            .FirstOrDefaultAsync();
+        if (category != null)
+        {
+            await LoadSubcategoriesRecursive(category);
+        }
+
+        return category;
+    }
+    
+    private async Task LoadSubcategoriesRecursive(Category category)
+    {
+        await _context.Entry(category)
+            .Collection(c => c.Subcategories)
+            .LoadAsync();
+
+        foreach (var subcategory in category.Subcategories)
+        {
+            await LoadSubcategoriesRecursive(subcategory);
+        }
     }
 
     public async Task<Category> CreateAsync(Category category)

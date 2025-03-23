@@ -1,8 +1,9 @@
+using api.Database.Seeders;
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace api.Database;
+namespace api.Database.Configuration;
 
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
@@ -11,24 +12,26 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Id)
             .HasDefaultValueSql("gen_random_uuid()")
             .IsRequired();
-        
+
         builder.HasOne<Category>(p => p.Category)
             .WithMany(c => c.Products)
-            .HasForeignKey(p => p.CategoryId);
+            .HasForeignKey(p => p.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(p => p.Slug)
             .IsUnique();
-            
+
         builder.HasIndex(p => new { p.Name, p.Slug })
             .HasMethod("GIN")
             .IsTsVectorExpressionIndex("english");
-            
+
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAdd();
-            
+
         builder.Property(p => p.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+        builder.HasData(ProductSeedingData.InitialProducts());
     }
 }

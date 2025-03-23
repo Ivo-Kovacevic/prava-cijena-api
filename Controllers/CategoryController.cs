@@ -18,7 +18,7 @@ public class CategoryController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> Index()
     {
-        var categoriesDto = await _categoryService.GetCategoriesAsync();
+        var categoriesDto = await _categoryService.GetRootCategoriesAsync();
         return Ok(categoriesDto);
     }
 
@@ -26,6 +26,13 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<CategoryDto>> Show(Guid categoryId)
     {
         var categoryDto = await _categoryService.GetCategoryByIdAsync(categoryId);
+        return Ok(categoryDto);
+    }
+    
+    [HttpGet("{categorySlug}")]
+    public async Task<ActionResult<CategoryDto>> ShowBySlug(string categorySlug)
+    {
+        var categoryDto = await _categoryService.GetCategoryBySlugWithSubcategoriesAsync(categorySlug);
         return Ok(categoryDto);
     }
 
