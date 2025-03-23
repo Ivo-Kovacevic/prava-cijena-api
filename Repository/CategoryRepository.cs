@@ -14,17 +14,10 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<List<Category>> GetAllRootCategoriesAsync()
+    public async Task<Category?> GetBySlugAsync(string categorySlug)
     {
         return await _context.Categories
-            .Where(c => c.ParentCategoryId == null)
-            .ToListAsync();
-    }
-
-    public async Task<Category?> GetByIdAsync(Guid categoryId)
-    {
-        return await _context.Categories
-            .Where(c => c.Id == categoryId)
+            .Where(c => c.Slug == categorySlug)
             .FirstOrDefaultAsync();
     }
 
@@ -40,17 +33,19 @@ public class CategoryRepository : ICategoryRepository
 
         return category;
     }
-    
-    private async Task LoadSubcategoriesRecursive(Category category)
-    {
-        await _context.Entry(category)
-            .Collection(c => c.Subcategories)
-            .LoadAsync();
 
-        foreach (var subcategory in category.Subcategories)
-        {
-            await LoadSubcategoriesRecursive(subcategory);
-        }
+    public async Task<List<Category>> GetAllRootCategoriesAsync()
+    {
+        return await _context.Categories
+            .Where(c => c.ParentCategoryId == null)
+            .ToListAsync();
+    }
+
+    public async Task<Category?> GetByIdAsync(Guid categoryId)
+    {
+        return await _context.Categories
+            .Where(c => c.Id == categoryId)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<Category> CreateAsync(Category category)
@@ -76,5 +71,19 @@ public class CategoryRepository : ICategoryRepository
     public async Task<bool> CategoryExists(Guid id)
     {
         return await _context.Categories.AnyAsync(c => c.Id == id);
+    }
+
+    private async Task LoadSubcategoriesRecursive(Category category)
+    {
+        await _context.Entry(category)
+            .Collection(c => c.Subcategories)
+            .LoadAsync();
+
+        foreach (var subcategory in category.Subcategories) await LoadSubcategoriesRecursive(subcategory);
+    }
+
+    public async Task<bool> CategorySlugExists(string categorySlug)
+    {
+        return await _context.Categories.AnyAsync(c => c.Slug == categorySlug);
     }
 }

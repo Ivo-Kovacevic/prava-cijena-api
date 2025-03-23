@@ -16,6 +16,36 @@ public class ProductService : IProductService
         _productRepo = productRepository;
     }
 
+    /*
+     * SLUG SERVICE
+     */
+    public async Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug)
+    {
+        var category = await _categoryRepo.GetBySlugAsync(categorySlug);
+        if (category == null)
+        {
+            throw new NotFoundException($"Category '{categorySlug}' not found.");
+        }
+
+        var products = await _productRepo.GetProductsByCategoryIdAsync(category.Id);
+
+        return products.Select(p => p.ToProductDto());
+    }
+
+    public async Task<ProductDto> GetProductBySlugAsync(string productSlug)
+    {
+        var product = await _productRepo.GetProductBySlugAsync(productSlug);
+        if (product == null)
+        {
+            throw new NotFoundException($"Product '{productSlug}' not found.");
+        }
+
+        return product.ToProductDto();
+    }
+
+    /*
+     * ID SERVICE
+     */
     public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         var categoryExists = await _categoryRepo.CategoryExists(categoryId);

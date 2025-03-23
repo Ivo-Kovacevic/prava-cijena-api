@@ -14,6 +14,23 @@ public class CategoryService : ICategoryService
         _categoryRepo = categoryRepository;
     }
 
+    /*
+     * SLUG SERVICE
+     */
+    public async Task<CategoryDto> GetCategoryBySlugWithSubcategoriesAsync(string categorySlug)
+    {
+        var category = await _categoryRepo.GetBySlugWithSubcategoriesAsync(categorySlug);
+        if (category == null)
+        {
+            throw new NotFoundException($"Category '{categorySlug}' not found.");
+        }
+
+        return category.ToCategoryDto();
+    }
+
+    /*
+     * ID SERVICE
+     */
     public async Task<IEnumerable<CategoryDto>> GetRootCategoriesAsync()
     {
         var categories = await _categoryRepo.GetAllRootCategoriesAsync();
@@ -27,17 +44,6 @@ public class CategoryService : ICategoryService
         if (category == null)
         {
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
-        }
-
-        return category.ToCategoryDto();
-    }
-
-    public async Task<CategoryDto> GetCategoryBySlugWithSubcategoriesAsync(string categorySlug)
-    {
-        var category = await _categoryRepo.GetBySlugWithSubcategoriesAsync(categorySlug);
-        if (category == null)
-        {
-            throw new NotFoundException($"Category '{categorySlug}' not found.");
         }
 
         return category.ToCategoryDto();

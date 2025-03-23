@@ -15,6 +15,21 @@ public class CategoryController : ControllerBase
         _categoryService = categoryService;
     }
 
+    /*
+     * SLUG ENDPOINTS
+     * These endpoints are for public access because they provide readable URLs
+     */
+    [HttpGet("{categorySlug}")]
+    public async Task<ActionResult<CategoryDto>> ShowBySlug(string categorySlug)
+    {
+        var categoryDto = await _categoryService.GetCategoryBySlugWithSubcategoriesAsync(categorySlug);
+        return Ok(categoryDto);
+    }
+
+    /*
+     * ID ENDPOINTS
+     * These endpoints are for internal use
+     */
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> Index()
     {
@@ -26,13 +41,6 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<CategoryDto>> Show(Guid categoryId)
     {
         var categoryDto = await _categoryService.GetCategoryByIdAsync(categoryId);
-        return Ok(categoryDto);
-    }
-    
-    [HttpGet("{categorySlug}")]
-    public async Task<ActionResult<CategoryDto>> ShowBySlug(string categorySlug)
-    {
-        var categoryDto = await _categoryService.GetCategoryBySlugWithSubcategoriesAsync(categorySlug);
         return Ok(categoryDto);
     }
 

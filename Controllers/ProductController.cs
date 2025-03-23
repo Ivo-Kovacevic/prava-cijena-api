@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using api.Dto.Product;
 using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/categories/{categoryId:guid}/products")]
+[Route("api/")]
 public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;
@@ -15,28 +16,50 @@ public class ProductController : ControllerBase
         _productService = productService;
     }
 
-    [HttpGet]
+    /*
+     * SLUG ENDPOINTS
+     * These endpoints are for public access because they provide readable URLs
+     */
+    [HttpGet("categories/{categorySlug}/products")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> IndexBySlug(string categorySlug)
+    {
+        var productsDto = await _productService.GetProductsByCategorySlugAsync(categorySlug);
+        return Ok(productsDto);
+    }
+
+    [HttpGet("products/{productSlug}")]
+    public async Task<ActionResult<ProductDto>> ShowBySlug(string productSlug)
+    {
+        var productDto = await _productService.GetProductBySlugAsync(productSlug);
+        return Ok(productDto);
+    }
+
+    /*
+     * ID ENDPOINTS
+     * These endpoints are for internal use
+     */
+    [HttpGet("categories/{categoryId:guid}/products")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> Index(Guid categoryId)
     {
         var productsDto = await _productService.GetProductsByCategoryIdAsync(categoryId);
         return Ok(productsDto);
     }
 
-    [HttpGet("{productId:guid}")]
+    [HttpGet("categories/{categoryId:guid}/products/{productId:guid}")]
     public async Task<ActionResult<ProductDto>> Show(Guid categoryId, Guid productId)
     {
         var productDto = await _productService.GetProductByIdAsync(categoryId, productId);
         return Ok(productDto);
     }
 
-    [HttpPost]
+    [HttpPost("categories/{categoryId:guid}/products")]
     public async Task<ActionResult<ProductDto>> Store(Guid categoryId, CreateProductRequestDto productRequestDto)
     {
         var productDto = await _productService.CreateProductAsync(categoryId, productRequestDto);
         return CreatedAtAction(nameof(Show), new { categoryId, productId = productDto.Id }, productDto);
     }
 
-    [HttpPatch("{productId:guid}")]
+    [HttpPatch("categories/{categoryId:guid}/products/{productId:guid}")]
     public async Task<ActionResult<ProductDto>> Update(
         Guid categoryId,
         Guid productId,
@@ -47,7 +70,7 @@ public class ProductController : ControllerBase
         return Ok(productDto);
     }
 
-    [HttpDelete("{productId:guid}")]
+    [HttpDelete("categories/{categoryId:guid}/products/{productId:guid}")]
     public async Task<IActionResult> Destroy(Guid categoryId, Guid productId)
     {
         await _productService.DeleteProductAsync(categoryId, productId);
