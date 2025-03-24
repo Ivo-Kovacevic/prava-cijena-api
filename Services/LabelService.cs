@@ -16,6 +16,36 @@ public class LabelService : ILabelService
         _labelRepo = labelRepository;
     }
 
+    /*
+     * SLUG SERVICE
+     */
+    public async Task<IEnumerable<LabelDto>> GetLabelsByCategorySlugAsync(string categorySlug)
+    {
+        var category = await _categoryRepo.GetBySlugAsync(categorySlug);
+        if (category == null)
+        {
+            throw new NotFoundException($"Category '{categorySlug}' not found.");
+        }
+
+        var labels = await _labelRepo.GetLabelsByCategoryIdAsync(category.Id);
+
+        return labels.Select(p => p.ToLabelDto());
+    }
+
+    public async Task<LabelDto> GetLabelBySlugAsync(string labelSlug)
+    {
+        var label = await _labelRepo.GetLabelBySlugAsync(labelSlug);
+        if (label == null)
+        {
+            throw new NotFoundException($"Label '{labelSlug}' not found.");
+        }
+
+        return label.ToLabelDto();
+    }
+
+    /*
+     * ID SERVICE
+     */
     public async Task<IEnumerable<LabelDto>> GetLabelsByCategoryIdAsync(Guid categoryId)
     {
         var categoryExists = await _categoryRepo.CategoryExists(categoryId);

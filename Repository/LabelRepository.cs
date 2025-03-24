@@ -14,6 +14,13 @@ public class LabelRepository : ILabelRepository
         _context = context;
     }
 
+    public async Task<Label?> GetLabelBySlugAsync(string labelSlug)
+    {
+        return await _context.Labels
+            .Where(a => a.Slug == labelSlug)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<Label>> GetLabelsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Labels
@@ -48,7 +55,7 @@ public class LabelRepository : ILabelRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> AttributeExists(Guid attributeId)
+    public async Task<bool> LabelExists(Guid attributeId)
     {
         return await _context.Labels.AnyAsync(a => a.Id == attributeId);
     }

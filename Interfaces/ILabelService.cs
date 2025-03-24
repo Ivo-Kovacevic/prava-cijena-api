@@ -4,6 +4,8 @@ namespace api.Interfaces;
 
 public interface ILabelService
 {
+    Task<IEnumerable<LabelDto>> GetLabelsByCategorySlugAsync(string categorySlug);
+    Task<LabelDto> GetLabelBySlugAsync(string labelSlug);
     Task<IEnumerable<LabelDto>> GetLabelsByCategoryIdAsync(Guid categoryId);
     Task<LabelDto> GetLabelByIdAsync(Guid categoryId, Guid attributeId);
     Task<LabelDto> CreateLabelAsync(Guid categoryId, CreateLabelRequestDto labelRequestDto);

@@ -18,7 +18,7 @@ public class ValueService : IValueService
 
     public async Task<IEnumerable<ValueDto>> GetValuesByAttributeIdAsync(Guid attributeId)
     {
-        var attributeExists = await _labelRepo.AttributeExists(attributeId);
+        var attributeExists = await _labelRepo.LabelExists(attributeId);
         if (!attributeExists)
         {
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
@@ -31,7 +31,7 @@ public class ValueService : IValueService
 
     public async Task<ValueDto> GetValueByIdAsync(Guid attributeId, Guid valueId)
     {
-        var attributeExists = await _labelRepo.AttributeExists(attributeId);
+        var attributeExists = await _labelRepo.LabelExists(attributeId);
         if (!attributeExists)
         {
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
@@ -48,7 +48,7 @@ public class ValueService : IValueService
 
     public async Task<ValueDto> CreateValueAsync(Guid attributeId, CreateValueRequestDto valueRequestDto)
     {
-        var attributeExists = await _labelRepo.AttributeExists(attributeId);
+        var attributeExists = await _labelRepo.LabelExists(attributeId);
         if (!attributeExists)
         {
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
@@ -66,7 +66,7 @@ public class ValueService : IValueService
         UpdateValueRequestDto valueRequestDto
     )
     {
-        var attributeExists = await _labelRepo.AttributeExists(attributeId);
+        var attributeExists = await _labelRepo.LabelExists(attributeId);
         if (!attributeExists)
         {
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
@@ -86,7 +86,7 @@ public class ValueService : IValueService
 
     public async Task DeleteValueAsync(Guid attributeId, Guid valueId)
     {
-        var attributeExists = await _labelRepo.AttributeExists(attributeId);
+        var attributeExists = await _labelRepo.LabelExists(attributeId);
         if (!attributeExists)
         {
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/categories/{categoryId:guid}/attributes")]
+[Route("api")]
 public class LabelController : ControllerBase
 {
     private readonly ILabelService _labelService;
@@ -15,42 +15,64 @@ public class LabelController : ControllerBase
         _labelService = labelService;
     }
 
-    [HttpGet]
+    /*
+     * SLUG ENDPOINTS
+     * These endpoints are for public access because they provide readable URLs
+     */
+    [HttpGet("categories/{categorySlug}/labels")]
+    public async Task<ActionResult<IEnumerable<LabelDto>>> IndexBySlug(string categorySlug)
+    {
+        var labelsDto = await _labelService.GetLabelsByCategorySlugAsync(categorySlug);
+        return Ok(labelsDto);
+    }
+
+    [HttpGet("labels/{labelSlug}")]
+    public async Task<ActionResult<LabelDto>> ShowBySlug(string labelSlug)
+    {
+        var labelDto = await _labelService.GetLabelBySlugAsync(labelSlug);
+        return Ok(labelDto);
+    }
+
+    /*
+     * ID ENDPOINTS
+     * These endpoints are for internal use
+     */
+    [HttpGet("categories/{categoryId:guid}/labels")]
     public async Task<ActionResult<IEnumerable<LabelDto>>> Index(Guid categoryId)
     {
-        var attributesDto = await _labelService.GetLabelsByCategoryIdAsync(categoryId);
-        return Ok(attributesDto);
+        var labelsDto = await _labelService.GetLabelsByCategoryIdAsync(categoryId);
+        return Ok(labelsDto);
     }
 
-    [HttpGet("{attributeId:guid}")]
-    public async Task<ActionResult<LabelDto>> Show(Guid categoryId, Guid attributeId)
+    [HttpGet("categories/{categoryId:guid}/labels/{labelId:guid}")]
+    public async Task<ActionResult<LabelDto>> Show(Guid categoryId, Guid labelId)
     {
-        var attributeDto = await _labelService.GetLabelByIdAsync(categoryId, attributeId);
-        return Ok(attributeDto);
+        var labelDto = await _labelService.GetLabelByIdAsync(categoryId, labelId);
+        return Ok(labelDto);
     }
 
-    [HttpPost]
+    [HttpPost("categories/{categoryId:guid}/labels")]
     public async Task<ActionResult<LabelDto>> Store(Guid categoryId, CreateLabelRequestDto labelRequestDto)
     {
-        var attributeDto = await _labelService.CreateLabelAsync(categoryId, labelRequestDto);
-        return CreatedAtAction(nameof(Show), new { categoryId, attributeId = attributeDto.Id }, attributeDto);
+        var labelDto = await _labelService.CreateLabelAsync(categoryId, labelRequestDto);
+        return CreatedAtAction(nameof(Show), new { categoryId, labelId = labelDto.Id }, labelDto);
     }
 
-    [HttpPatch("{attributeId:guid}")]
+    [HttpPatch("categories/{categoryId:guid}/labels/{labelId:guid}")]
     public async Task<ActionResult<LabelDto>> Update(
         Guid categoryId,
-        Guid attributeId,
+        Guid labelId,
         UpdateLabelRequestDto labelRequestDto
     )
     {
-        var attributeDto = await _labelService.UpdateLabelAsync(categoryId, attributeId, labelRequestDto);
-        return Ok(attributeDto);
+        var labelDto = await _labelService.UpdateLabelAsync(categoryId, labelId, labelRequestDto);
+        return Ok(labelDto);
     }
 
-    [HttpDelete("{attributeId:guid}")]
-    public async Task<IActionResult> Destroy(Guid categoryId, Guid attributeId)
+    [HttpDelete("categories/{categoryId:guid}/labels/{labelId:guid}")]
+    public async Task<IActionResult> Destroy(Guid categoryId, Guid labelId)
     {
-        await _labelService.DeleteLabelAsync(categoryId, attributeId);
+        await _labelService.DeleteLabelAsync(categoryId, labelId);
         return NoContent();
     }
 }
