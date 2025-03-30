@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using api.Config;
 using api.Interfaces;
+using api.Models;
 
 namespace api.Services;
 
@@ -19,7 +20,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
         using var memoryStream = new MemoryStream();
         await pdfFile.CopyToAsync(memoryStream);
         var base64Pdf = Convert.ToBase64String(memoryStream.ToArray());
-
+        
         var requestBody = new
         {
             contents = new[]

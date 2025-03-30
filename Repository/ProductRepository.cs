@@ -13,6 +13,13 @@ public class ProductRepository : IProductRepository
     {
         _context = context;
     }
+    
+    public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
+    {
+        return await _context.Products
+            .Where(p => p.CategoryId == categoryId)
+            .ToListAsync();
+    }
 
     public async Task<Product?> GetProductBySlugAsync(string productSlug)
     {
@@ -21,10 +28,11 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
+    public async Task<IEnumerable<Product>> Search(string searchTerm)
     {
         return await _context.Products
-            .Where(p => p.CategoryId == categoryId)
+            .Where(p => EF.Functions.ToTsVector("english", p.Name + " " + p.Slug)
+                .Matches(searchTerm))
             .ToListAsync();
     }
 

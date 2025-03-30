@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace api.Controllers;
 
 [ApiController]
-[Route("api/product-stores/{productStoreId:guid}/prices")]
 public class PriceController : ControllerBase
 {
     private readonly IPriceService _priceService;
@@ -14,22 +13,26 @@ public class PriceController : ControllerBase
     {
         _priceService = priceService;
     }
-
-    [HttpGet]
+    
+    /*
+     * ID ENDPOINTS
+     * These endpoints are for internal use
+     */
+    [HttpGet("api/product-stores/{productStoreId:guid}/prices")]
     public async Task<ActionResult<PriceDto>> Index(Guid productStoreId)
     {
         var pricesDto = await _priceService.GetPricesAsync(productStoreId);
         return Ok(pricesDto);
     }
 
-    [HttpGet("{priceId:guid}")]
+    [HttpGet("api/product-stores/{productStoreId:guid}/prices/{priceId:guid}")]
     public async Task<ActionResult<PriceDto>> Show(Guid productStoreId, Guid priceId)
     {
         var priceDto = await _priceService.GetPriceByIdAsync(productStoreId, priceId);
         return Ok(priceDto);
     }
 
-    [HttpPost]
+    [HttpPost("api/product-stores/{productStoreId:guid}/prices")]
     public async Task<ActionResult<PriceDto>> Create(Guid productStoreId, CreatePriceRequestDto priceRequestDto)
     {
         var priceDto = await _priceService.CreatePriceAsync(productStoreId, priceRequestDto);

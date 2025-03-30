@@ -33,6 +33,13 @@ public class ProductController : ControllerBase
         var productDto = await _productService.GetProductBySlugAsync(productSlug);
         return Ok(productDto);
     }
+    
+    [HttpGet("products/search")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> Search(string productName)
+    {
+        var productsDto = await _productService.SearchProduct(productName);
+        return Ok(productsDto);
+    }
 
     /*
      * ID ENDPOINTS

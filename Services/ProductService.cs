@@ -43,6 +43,13 @@ public class ProductService : IProductService
         return product.ToProductDto();
     }
 
+    public async Task<IEnumerable<ProductDto>> SearchProduct(string productName)
+    {
+        var products = await _productRepo.Search(productName);
+        
+        return products.Select(p => p.ToProductDto());
+    }
+
     /*
      * ID SERVICE
      */
