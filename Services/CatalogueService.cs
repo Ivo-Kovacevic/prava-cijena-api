@@ -1,11 +1,12 @@
 using System.Text;
 using System.Text.Json;
+using api.Config;
+using api.Interfaces;
 
 namespace api.Services;
 
-public class CatalogueService
+public class CatalogueService : ApiConfig, ICatalogueService
 {
-    private readonly string _geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
     private readonly HttpClient _httpClient;
 
     public CatalogueService(HttpClient httpClient)
@@ -13,20 +14,12 @@ public class CatalogueService
         _httpClient = httpClient;
     }
 
-    public async Task<string> ExtractDataFromPdf(string pdfFilePath, string prompt)
+    public async Task<string> ExtractDataFromPdf(IFormFile pdfFile)
     {
-        if (!File.Exists(pdfFilePath))
-        {
-            return "Error: File not found.";
-        }
+        using var memoryStream = new MemoryStream();
+        await pdfFile.CopyToAsync(memoryStream);
+        var base64Pdf = Convert.ToBase64String(memoryStream.ToArray());
 
-        // Read the PDF file as bytes
-        var pdfData = await File.ReadAllBytesAsync(pdfFilePath);
-
-        // Convert to Base64
-        var base64Pdf = Convert.ToBase64String(pdfData);
-
-        // Prepare the request body
         var requestBody = new
         {
             contents = new[]
@@ -43,7 +36,11 @@ public class CatalogueService
                                 data = base64Pdf
                             }
                         },
-                        new { text = prompt }
+                        new
+                        {
+                            text =
+                                "Extract product names and prices from this document.\nReturn the results as a JSON object with the following format:\n[\n  {\n    \"product\": \"Product Name\",\n    \"price\": \"Price\"\n  },\n  ...\n]\n\nProduct name needs to be in the following format: \"brand-name product-name other-product-info product-weight-or-volume\"\nExample: \"Dukat svježe mlijeko 3,2 % m.m. 1L\""
+                        }
                     }
                 }
             }
@@ -54,7 +51,7 @@ public class CatalogueService
 
         // Send request to Google Gemini API
         var responseMessage = await _httpClient.PostAsync(
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_geminiApiKey}",
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GeminiApiKey}",
             content
         );
 

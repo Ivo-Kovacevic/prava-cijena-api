@@ -44,7 +44,8 @@ builder.Services.AddScoped<ILabelRepository, LabelRepository>();
 builder.Services.AddScoped<IValueService, ValueService>();
 builder.Services.AddScoped<IValueRepository, ValueRepository>();
 
-builder.Services.AddHttpClient<CatalogueService>();
+builder.Services.AddHttpClient<ICatalogueService, CatalogueService>();
+builder.Services.AddScoped<ICatalogueService, CatalogueService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

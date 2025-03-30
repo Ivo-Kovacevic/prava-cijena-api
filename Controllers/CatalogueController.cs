@@ -1,4 +1,4 @@
-using api.Services;
+using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
@@ -7,17 +7,17 @@ namespace api.Controllers;
 [Route("api/[controller]")]
 public class CatalogueController : ControllerBase
 {
-    private readonly CatalogueService _catalogueService;
+    private readonly ICatalogueService _catalogueService;
 
-    public CatalogueController(CatalogueService catalogueService)
+    public CatalogueController(ICatalogueService catalogueService)
     {
         _catalogueService = catalogueService;
     }
 
     [HttpPost("analyze")]
-    public async Task<IActionResult> AnalyzePdf(string pdfPath, string prompt)
+    public async Task<IActionResult> AnalyzePdf(IFormFile pdfFile)
     {
-        var result = await _catalogueService.ExtractDataFromPdf(pdfPath, prompt);
+        var result = await _catalogueService.ExtractDataFromPdf(pdfFile);
         return Ok(result);
     }
 }
