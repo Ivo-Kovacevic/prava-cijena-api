@@ -13,7 +13,7 @@ public class ProductRepository : IProductRepository
     {
         _context = context;
     }
-    
+
     public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
     {
         return await _context.Products
@@ -30,11 +30,18 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> Search(string searchTerm)
     {
-        return await _context.Products
-            .Where(p => EF.Functions.ToTsVector("english", p.Name + " " + p.Slug)
-                .Matches(searchTerm))
+        var productsWithSimilarity = await _context.Products
+            .FromSqlRaw(@"
+                SELECT *, similarity(""Name"", {0}) AS Similarity
+                FROM ""Products""
+                WHERE similarity(""Name"", {0}) > 0.01
+                ORDER BY similarity(""Name"", {0}) DESC", searchTerm
+            )
             .ToListAsync();
+
+        return productsWithSimilarity;
     }
+
 
     public async Task<Product?> GetProductByIdAsync(Guid productId)
     {

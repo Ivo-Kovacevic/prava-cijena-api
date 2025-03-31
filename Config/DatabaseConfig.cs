@@ -4,7 +4,7 @@ namespace api.Config;
 
 public static class DatabaseConfig
 {
-    public static string GetConnectionString(IConfiguration configuration)
+    public static string GetConnectionString()
     {
         Env.Load();
 

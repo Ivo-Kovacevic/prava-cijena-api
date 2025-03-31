@@ -1,6 +1,6 @@
-using System.ComponentModel;
 using api.Dto.Product;
 using api.Interfaces;
+using api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers;
@@ -33,9 +33,9 @@ public class ProductController : ControllerBase
         var productDto = await _productService.GetProductBySlugAsync(productSlug);
         return Ok(productDto);
     }
-    
+
     [HttpGet("products/search")]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> Search(string productName)
+    public async Task<ActionResult<IEnumerable<Product>>> Search(string productName)
     {
         var productsDto = await _productService.SearchProduct(productName);
         return Ok(productsDto);

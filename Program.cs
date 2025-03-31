@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 
 // Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(DatabaseConfig.GetConnectionString(builder.Configuration))
+    options.UseNpgsql(DatabaseConfig.GetConnectionString())
 );
 
 // Add Swagger services

@@ -1,4 +1,5 @@
 using api.Database.Configuration;
+using api.Dto.Product;
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 
