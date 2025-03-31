@@ -1,6 +1,7 @@
 using api.Database;
 using api.Interfaces;
 using api.Models;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Repository;
@@ -30,18 +31,15 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> Search(string searchTerm)
     {
-        var productsWithSimilarity = await _context.Products
-            .FromSqlRaw(@"
-                SELECT *, similarity(""Name"", {0}) AS Similarity
-                FROM ""Products""
-                WHERE similarity(""Name"", {0}) > 0.01
-                ORDER BY similarity(""Name"", {0}) DESC", searchTerm
-            )
-            .ToListAsync();
+        var sql = @"SELECT *, similarity(""Name"", @searchTerm) AS Similarity
+                    FROM ""Products""
+                    WHERE similarity(""Name"", @searchTerm) > 0.01
+                    ORDER BY similarity(""Name"", @searchTerm) DESC";
 
-        return productsWithSimilarity;
+        var connection = _context.Database.GetDbConnection();
+
+        return await connection.QueryAsync<Product>(sql, new { searchTerm });
     }
-
 
     public async Task<Product?> GetProductByIdAsync(Guid productId)
     {
