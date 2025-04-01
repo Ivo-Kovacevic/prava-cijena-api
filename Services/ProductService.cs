@@ -2,7 +2,6 @@ using api.Dto.Product;
 using api.Exceptions;
 using api.Interfaces;
 using api.Mappers;
-using api.Models;
 
 namespace api.Services;
 
@@ -44,7 +43,7 @@ public class ProductService : IProductService
         return product.ToProductDto();
     }
 
-    public async Task<IEnumerable<Product>> SearchProduct(string productName)
+    public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName)
     {
         var products = await _productRepo.Search(productName);
 

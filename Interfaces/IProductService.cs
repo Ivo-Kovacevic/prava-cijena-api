@@ -1,5 +1,4 @@
 using api.Dto.Product;
-using api.Models;
 
 namespace api.Interfaces;
 
@@ -7,7 +6,7 @@ public interface IProductService
 {
     Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug);
     Task<ProductDto> GetProductBySlugAsync(string productSlug);
-    Task<IEnumerable<Product>> SearchProduct(string productName);
+    Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName);
     Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId);
     Task<ProductDto> GetProductByIdAsync(Guid categoryId, Guid productId);
     Task<ProductDto> CreateProductAsync(Guid categoryId, CreateProductRequestDto productRequestDto);
