@@ -6,5 +6,5 @@ public class ValueDto : BaseEntity
 {
     public required string Name { get; set; }
     public required string Slug { get; set; }
-    public required Guid AttributeId { get; set; }
+    public required Guid LabelId { get; set; }
 }

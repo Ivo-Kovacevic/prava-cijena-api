@@ -21,10 +21,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasIndex(c => c.Slug)
             .IsUnique();
 
-        builder.HasIndex(c => new { c.Name, c.Slug })
-            .HasMethod("GIN")
-            .IsTsVectorExpressionIndex("english");
-
         builder.Property(c => c.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAdd();

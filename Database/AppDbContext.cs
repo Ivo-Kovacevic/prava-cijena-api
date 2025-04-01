@@ -18,7 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Price> Prices { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<Value> Values { get; set; }
-    public DbSet<ProductOption> ProductOptions { get; set; }
+    public DbSet<ProductValue> ProductValues { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,6 +26,8 @@ public class AppDbContext : DbContext
 
         builder.ApplyConfiguration(new CategoryConfiguration());
         builder.ApplyConfiguration(new ProductConfiguration());
+        builder.ApplyConfiguration(new LabelConfiguration());
+        builder.ApplyConfiguration(new ValueConfiguration());
         builder.ApplyConfiguration(new StoreConfiguration());
         builder.ApplyConfiguration(new ProductStoreConfiguration());
         builder.ApplyConfiguration(new PriceConfiguration());

@@ -1,6 +1,6 @@
 namespace api.Models;
 
-public class ProductOption : BaseEntity
+public class ProductValue : BaseEntity
 {
     public required Guid ProductId { get; set; }
     public required Guid OptionId { get; set; }

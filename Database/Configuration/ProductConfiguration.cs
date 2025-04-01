@@ -21,10 +21,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.Slug)
             .IsUnique();
 
-        builder.HasIndex(p => new { p.Name, p.Slug })
-            .HasMethod("GIN")
-            .IsTsVectorExpressionIndex("english");
-
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAdd();

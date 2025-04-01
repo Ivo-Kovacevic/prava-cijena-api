@@ -1,10 +1,10 @@
+using api.Helpers;
+
 namespace api.Models;
 
-public class Label : BaseEntity
+public class Label : BaseNamedEntity
 {
-    public required string Name { get; set; }
-    public required string Slug { get; set; }
     public required Guid CategoryId { get; set; }
     public Category Category { get; set; }
-    public ICollection<Value> Options { get; set; } = [];
+    public ICollection<Value> Values { get; set; } = [];
 }

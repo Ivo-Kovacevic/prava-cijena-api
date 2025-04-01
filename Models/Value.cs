@@ -1,10 +1,8 @@
 namespace api.Models;
 
-public class Value : BaseEntity
+public class Value : BaseNamedEntity
 {
-    public required string Name { get; set; }
-    public required string Slug { get; set; }
-    public required Guid AttributeId { get; set; }
+    public required Guid LabelId { get; set; }
     public Label Label { get; set; }
-    public ICollection<ProductOption> OptionProducts { get; set; } = [];
+    public ICollection<ProductValue> ValueProducts { get; set; } = [];
 }

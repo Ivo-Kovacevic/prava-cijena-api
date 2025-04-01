@@ -15,8 +15,7 @@ public static class ValueMapper
         return new Value
         {
             Name = name,
-            Slug = slug,
-            AttributeId = attributeId
+            LabelId = attributeId
         };
     }
 
@@ -26,7 +25,7 @@ public static class ValueMapper
         {
             Name = value.Name,
             Slug = value.Slug,
-            AttributeId = value.AttributeId
+            LabelId = value.LabelId
         };
     }
 
@@ -36,7 +35,6 @@ public static class ValueMapper
     )
     {
         existingValue.Name = valueRequestDto.Name ?? existingValue.Name;
-        existingValue.Slug = SlugHelper.GenerateSlug(existingValue.Name);
-        existingValue.AttributeId = valueRequestDto.AttributeId ?? existingValue.AttributeId;
+        existingValue.LabelId = valueRequestDto.LabelId ?? existingValue.LabelId;
     }
 }

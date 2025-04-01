@@ -1,9 +1,9 @@
+using api.Helpers;
+
 namespace api.Models;
 
-public class Category : BaseEntity
+public class Category : BaseNamedEntity
 {
-    public required string Name { get; set; }
-    public required string Slug { get; set; }
     public string? ImageUrl { get; set; }
     public Guid? ParentCategoryId { get; set; }
     public Category? ParentCategory { get; set; }

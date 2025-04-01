@@ -8,5 +8,5 @@ public class UpdateValueRequestDto
     [MaxLength(255, ErrorMessage = "Name cannot be longer than 255 characters")]
     public string? Name { get; set; }
 
-    public Guid? AttributeId { get; set; }
+    public Guid? LabelId { get; set; }
 }

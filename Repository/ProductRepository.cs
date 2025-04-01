@@ -33,7 +33,12 @@ public class ProductRepository : IProductRepository
     {
         var product = await _context.Database
             .SqlQuery<ProductWithSimilarityDto>(
-                $"SELECT *, similarity(\"Name\", {searchTerm}) AS \"Similarity\" FROM \"Products\" WHERE similarity(\"Name\", {searchTerm}) > 0.05 ORDER BY similarity(\"Name\", {searchTerm}) DESC"
+                $@"SELECT *,
+                          similarity(""Name"", {searchTerm}) AS ""Similarity""
+                   FROM ""Products""
+                   WHERE similarity(""Name"", {searchTerm}) > 0.05
+                   ORDER BY similarity(""Name"", {searchTerm})
+                   DESC"
             )
             .ToListAsync();
 

@@ -14,10 +14,10 @@ public class ValueRepository : IValueRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Value>> GetValuesByAttributeIdAsync(Guid attributeId)
+    public async Task<IEnumerable<Value>> GetValuesByLabelIdAsync(Guid attributeId)
     {
         return await _context.Values
-            .Where(o => o.AttributeId == attributeId)
+            .Where(o => o.LabelId == attributeId)
             .ToListAsync();
     }
 

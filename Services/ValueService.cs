@@ -24,7 +24,7 @@ public class ValueService : IValueService
             throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
         }
 
-        var values = await _valueRepo.GetValuesByAttributeIdAsync(attributeId);
+        var values = await _valueRepo.GetValuesByLabelIdAsync(attributeId);
 
         return values.Select(p => p.ToValueDto());
     }

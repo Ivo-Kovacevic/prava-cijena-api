@@ -29,7 +29,6 @@ public static class CategoryMapper
         return new Category
         {
             Name = name,
-            Slug = slug,
             ImageUrl = categoryRequestDto.ImageUrl,
             ParentCategoryId = categoryRequestDto.ParentCategoryId
         };
@@ -41,7 +40,6 @@ public static class CategoryMapper
     )
     {
         existingCategory.Name = categoryRequestDto.Name ?? existingCategory.Name;
-        existingCategory.Slug = SlugHelper.GenerateSlug(existingCategory.Name);
         existingCategory.ImageUrl = categoryRequestDto.ImageUrl ?? categoryRequestDto.ImageUrl;
         existingCategory.ParentCategoryId = categoryRequestDto.ParentCategoryId ?? categoryRequestDto.ParentCategoryId;
     }

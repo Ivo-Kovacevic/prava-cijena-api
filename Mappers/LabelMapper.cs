@@ -15,7 +15,6 @@ public static class LabelMapper
         return new Label
         {
             Name = name,
-            Slug = slug,
             CategoryId = categoryId
         };
     }
@@ -24,9 +23,12 @@ public static class LabelMapper
     {
         return new LabelDto
         {
+            Id = label.Id,
             Name = label.Name,
             Slug = label.Slug,
-            CategoryId = label.CategoryId
+            CategoryId = label.CategoryId,
+            CreatedAt = label.CreatedAt,
+            UpdatedAt = label.UpdatedAt
         };
     }
 
@@ -36,7 +38,6 @@ public static class LabelMapper
     )
     {
         existingLabel.Name = labelRequestDto.Name ?? existingLabel.Name;
-        existingLabel.Slug = SlugHelper.GenerateSlug(existingLabel.Name);
         existingLabel.CategoryId = labelRequestDto.CategoryId ?? existingLabel.CategoryId;
     }
 }

@@ -28,7 +28,6 @@ public static class ProductMapper
         return new Product
         {
             Name = name,
-            Slug = slug,
             ImageUrl = productRequestDto.ImageUrl,
             CategoryId = categoryId
         };
@@ -40,7 +39,6 @@ public static class ProductMapper
     )
     {
         existingProduct.Name = productRequestDto.Name ?? existingProduct.Name;
-        existingProduct.Slug = SlugHelper.GenerateSlug(existingProduct.Name);
         existingProduct.ImageUrl = productRequestDto.ImageUrl ?? existingProduct.ImageUrl;
         existingProduct.CategoryId = productRequestDto.CategoryId ?? existingProduct.CategoryId;
     }
