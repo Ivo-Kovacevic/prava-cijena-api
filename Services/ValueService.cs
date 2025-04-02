@@ -16,25 +16,25 @@ public class ValueService : IValueService
         _valueRepo = valueRepository;
     }
 
-    public async Task<IEnumerable<ValueDto>> GetValuesByAttributeIdAsync(Guid attributeId)
+    public async Task<IEnumerable<ValueDto>> GetValuesByLabelIdAsync(Guid labelId)
     {
-        var attributeExists = await _labelRepo.LabelExists(attributeId);
-        if (!attributeExists)
+        var labelExists = await _labelRepo.LabelExists(labelId);
+        if (!labelExists)
         {
-            throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
+            throw new NotFoundException($"Label with id '{labelId}' not found.");
         }
 
-        var values = await _valueRepo.GetValuesByLabelIdAsync(attributeId);
+        var values = await _valueRepo.GetValuesByLabelIdAsync(labelId);
 
         return values.Select(p => p.ToValueDto());
     }
 
-    public async Task<ValueDto> GetValueByIdAsync(Guid attributeId, Guid valueId)
+    public async Task<ValueDto> GetValueByIdAsync(Guid labelId, Guid valueId)
     {
-        var attributeExists = await _labelRepo.LabelExists(attributeId);
-        if (!attributeExists)
+        var labelExists = await _labelRepo.LabelExists(labelId);
+        if (!labelExists)
         {
-            throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
+            throw new NotFoundException($"Label with id '{labelId}' not found.");
         }
 
         var value = await _valueRepo.GetValueByIdAsync(valueId);
@@ -46,30 +46,30 @@ public class ValueService : IValueService
         return value.ToValueDto();
     }
 
-    public async Task<ValueDto> CreateValueAsync(Guid attributeId, CreateValueRequestDto valueRequestDto)
+    public async Task<ValueDto> CreateValueAsync(Guid labelId, CreateValueRequestDto valueRequestDto)
     {
-        var attributeExists = await _labelRepo.LabelExists(attributeId);
-        if (!attributeExists)
+        var labelExists = await _labelRepo.LabelExists(labelId);
+        if (!labelExists)
         {
-            throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
+            throw new NotFoundException($"Label with id '{labelId}' not found.");
         }
 
-        var value = valueRequestDto.ValueFromCreateRequestDto(attributeId);
+        var value = valueRequestDto.ValueFromCreateRequestDto(labelId);
         value = await _valueRepo.CreateAsync(value);
 
         return value.ToValueDto();
     }
 
     public async Task<ValueDto> UpdateValueAsync(
-        Guid attributeId,
+        Guid labelId,
         Guid valueId,
         UpdateValueRequestDto valueRequestDto
     )
     {
-        var attributeExists = await _labelRepo.LabelExists(attributeId);
-        if (!attributeExists)
+        var labelExists = await _labelRepo.LabelExists(labelId);
+        if (!labelExists)
         {
-            throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
+            throw new NotFoundException($"Label with id '{labelId}' not found.");
         }
 
         var existingValue = await _valueRepo.GetValueByIdAsync(valueId);
@@ -84,12 +84,12 @@ public class ValueService : IValueService
         return existingValue.ToValueDto();
     }
 
-    public async Task DeleteValueAsync(Guid attributeId, Guid valueId)
+    public async Task DeleteValueAsync(Guid labelId, Guid valueId)
     {
-        var attributeExists = await _labelRepo.LabelExists(attributeId);
-        if (!attributeExists)
+        var labelExists = await _labelRepo.LabelExists(labelId);
+        if (!labelExists)
         {
-            throw new NotFoundException($"Attribute with id '{attributeId}' not found.");
+            throw new NotFoundException($"Label with id '{labelId}' not found.");
         }
 
         var existingValue = await _valueRepo.GetValueByIdAsync(valueId);

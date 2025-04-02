@@ -8,12 +8,13 @@ public static class DatabaseConfig
     {
         Env.Load();
 
-        var dbHost = GetRequiredEnvVar("DB_HOST");
-        var dbDatabase = GetRequiredEnvVar("DB_DATABASE");
-        var dbUsername = GetRequiredEnvVar("DB_USERNAME");
-        var dbPassword = GetRequiredEnvVar("DB_PASSWORD");
+        // var dbHost = GetRequiredEnvVar("DB_HOST");
+        // var dbDatabase = GetRequiredEnvVar("DB_DATABASE");
+        // var dbUsername = GetRequiredEnvVar("DB_USERNAME");
+        // var dbPassword = GetRequiredEnvVar("DB_PASSWORD");
+        var dbConnection = GetRequiredEnvVar("DB_CONNECTION");
 
-        return $"Host={dbHost};Database={dbDatabase};Username={dbUsername};Password={dbPassword};";
+        return $"{dbConnection};";
     }
 
     private static string GetRequiredEnvVar(string key)

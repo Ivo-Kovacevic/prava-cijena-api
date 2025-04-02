@@ -18,7 +18,7 @@ public class ValueController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ValueDto>>> Index(Guid attributeId)
     {
-        var attributesDto = await _valueService.GetValuesByAttributeIdAsync(attributeId);
+        var attributesDto = await _valueService.GetValuesByLabelIdAsync(attributeId);
         return Ok(attributesDto);
     }
 
