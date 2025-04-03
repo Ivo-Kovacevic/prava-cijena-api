@@ -1,6 +1,6 @@
-using api.Dto.Value;
+using PravaCijena.Api.Dto.Value;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IValueService
 {

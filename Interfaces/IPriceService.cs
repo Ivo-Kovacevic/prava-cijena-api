@@ -1,6 +1,6 @@
-using api.Dto.Price;
+using PravaCijena.Api.Dto.Price;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IPriceService
 {

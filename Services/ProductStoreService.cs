@@ -1,9 +1,9 @@
-using api.Dto.ProductStore;
-using api.Exceptions;
-using api.Interfaces;
-using api.Mappers;
+using PravaCijena.Api.Mappers;
+using PravaCijena.Api.Dto.ProductStore;
+using PravaCijena.Api.Exceptions;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Services;
+namespace PravaCijena.Api.Services;
 
 public class ProductStoreService : IProductStoreService
 {

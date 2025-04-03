@@ -1,8 +1,8 @@
-using api.Dto.Price;
-using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using PravaCijena.Api.Dto.Price;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Controllers;
+namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 public class PriceController : ControllerBase

@@ -1,4 +1,4 @@
-namespace api.Models;
+namespace PravaCijena.Api.Models;
 
 public abstract class BaseEntity
 {

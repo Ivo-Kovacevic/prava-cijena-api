@@ -1,6 +1,6 @@
-using api.Dto.Category;
+using PravaCijena.Api.Dto.Category;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface ICategoryService
 {

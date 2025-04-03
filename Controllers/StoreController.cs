@@ -1,8 +1,8 @@
-using api.Dto.Store;
-using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Controllers;
+namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("api/stores")]

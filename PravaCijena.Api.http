@@ -1,0 +1,6 @@
+@PravaCijena_HostAddress = http://localhost:5098
+
+GET {{PravaCijena_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IValueRepository
 {

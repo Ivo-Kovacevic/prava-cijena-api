@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Label;
+namespace PravaCijena.Api.Dto.Label;
 
 public class CreateLabelRequestDto
 {

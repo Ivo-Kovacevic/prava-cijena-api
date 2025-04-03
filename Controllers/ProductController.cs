@@ -1,9 +1,9 @@
-using api.Dto.Product;
-using api.Interfaces;
-using api.Models;
 using Microsoft.AspNetCore.Mvc;
+using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
 
-namespace api.Controllers;
+namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("api/")]

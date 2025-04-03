@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace api.Helpers;
+namespace PravaCijena.Api.Helpers;
 
 public class SlugHelper
 {

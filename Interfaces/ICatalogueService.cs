@@ -1,4 +1,4 @@
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface ICatalogueService
 {

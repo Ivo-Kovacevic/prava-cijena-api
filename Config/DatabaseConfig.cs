@@ -1,6 +1,6 @@
 using DotNetEnv;
 
-namespace api.Config;
+namespace PravaCijena.Api.Config;
 
 public static class DatabaseConfig
 {

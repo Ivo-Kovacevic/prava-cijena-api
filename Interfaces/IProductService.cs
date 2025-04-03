@@ -1,6 +1,6 @@
-using api.Dto.Product;
+using PravaCijena.Api.Dto.Product;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IProductService
 {

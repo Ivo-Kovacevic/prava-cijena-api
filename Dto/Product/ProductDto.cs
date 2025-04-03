@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Dto.Product;
+namespace PravaCijena.Api.Dto.Product;
 
 public class ProductDto : BaseEntity
 {

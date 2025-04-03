@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Store;
+namespace PravaCijena.Api.Dto.Store;
 
 public class CreateStoreRequestDto
 {

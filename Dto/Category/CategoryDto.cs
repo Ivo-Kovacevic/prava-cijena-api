@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Dto.Category;
+namespace PravaCijena.Api.Dto.Category;
 
 public class CategoryDto : BaseEntity
 {

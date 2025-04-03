@@ -1,7 +1,7 @@
-using api.Dto.ProductStore;
-using api.Models;
+using PravaCijena.Api.Dto.ProductStore;
+using PravaCijena.Api.Models;
 
-namespace api.Mappers;
+namespace PravaCijena.Api.Mappers;
 
 public static class ProductStoreMapper
 {

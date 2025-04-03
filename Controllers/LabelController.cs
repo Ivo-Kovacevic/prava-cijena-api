@@ -1,8 +1,8 @@
-using api.Dto.Label;
-using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using PravaCijena.Api.Dto.Label;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Controllers;
+namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("api")]

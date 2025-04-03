@@ -1,8 +1,8 @@
-using api.Dto.Store;
-using api.Helpers;
-using api.Models;
+using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Helpers;
+using PravaCijena.Api.Models;
 
-namespace api.Mappers;
+namespace PravaCijena.Api.Mappers;
 
 public static class StoreMapper
 {

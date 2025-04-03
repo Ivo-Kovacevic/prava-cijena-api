@@ -1,10 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using api.Config;
-using api.Interfaces;
-using api.Models;
+using PravaCijena.Api.Models;
+using PravaCijena.Api.Config;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Services;
+namespace PravaCijena.Api.Services;
 
 public class CatalogueService : ApiConfig, ICatalogueService
 {

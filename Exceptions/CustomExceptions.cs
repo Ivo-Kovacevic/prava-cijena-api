@@ -1,4 +1,4 @@
-namespace api.Exceptions;
+namespace PravaCijena.Api.Exceptions;
 
 public class NotFoundException : Exception
 {

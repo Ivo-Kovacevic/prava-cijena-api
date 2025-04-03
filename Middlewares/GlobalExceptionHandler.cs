@@ -1,10 +1,10 @@
-using api.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using PravaCijena.Api.Exceptions;
 
-namespace api.Middlewares;
+namespace PravaCijena.Api.Middlewares;
 
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {

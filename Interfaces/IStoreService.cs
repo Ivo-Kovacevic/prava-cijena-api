@@ -1,6 +1,6 @@
-using api.Dto.Store;
+using PravaCijena.Api.Dto.Store;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IStoreService
 {

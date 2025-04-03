@@ -1,9 +1,9 @@
-using api.Database.Configuration;
-using api.Dto.Product;
-using api.Models;
+using PravaCijena.Api.Dto.Product;
 using Microsoft.EntityFrameworkCore;
+using PravaCijena.Api.Database.Configuration;
+using PravaCijena.Api.Models;
 
-namespace api.Database;
+namespace PravaCijena.Api.Database;
 
 public class AppDbContext : DbContext
 {

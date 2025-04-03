@@ -1,6 +1,6 @@
-using api.Dto.Label;
+using PravaCijena.Api.Dto.Label;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface ILabelService
 {

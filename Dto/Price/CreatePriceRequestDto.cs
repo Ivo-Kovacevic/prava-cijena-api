@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Price;
+namespace PravaCijena.Api.Dto.Price;
 
 public class CreatePriceRequestDto
 {

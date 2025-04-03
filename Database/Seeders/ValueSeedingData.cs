@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Database.Seeders;
+namespace PravaCijena.Api.Database.Seeders;
 
 public class ValueSeedingData : LabelSeedingData
 {

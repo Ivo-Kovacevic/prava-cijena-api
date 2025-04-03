@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Value;
+namespace PravaCijena.Api.Dto.Value;
 
 public class CreateValueRequestDto
 {

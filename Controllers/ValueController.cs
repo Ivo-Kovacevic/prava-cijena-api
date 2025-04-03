@@ -1,8 +1,8 @@
-using api.Dto.Value;
-using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using PravaCijena.Api.Dto.Value;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Controllers;
+namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("attributes/{attributeId:guid}/values")]

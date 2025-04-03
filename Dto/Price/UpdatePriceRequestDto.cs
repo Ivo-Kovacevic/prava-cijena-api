@@ -1,4 +1,4 @@
-namespace api.Dto.Price;
+namespace PravaCijena.Api.Dto.Price;
 
 public class UpdatePriceRequestDto
 {

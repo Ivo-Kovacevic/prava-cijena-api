@@ -1,9 +1,9 @@
-using api.Database;
-using api.Interfaces;
-using api.Models;
 using Microsoft.EntityFrameworkCore;
+using PravaCijena.Api.Database;
+using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
 
-namespace api.Repository;
+namespace PravaCijena.Api.Repository;
 
 public class ProductStoreRepository : IProductStoreRepository
 {

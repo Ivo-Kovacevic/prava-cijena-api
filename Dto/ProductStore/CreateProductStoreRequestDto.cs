@@ -1,4 +1,4 @@
-namespace api.Dto.ProductStore;
+namespace PravaCijena.Api.Dto.ProductStore;
 
 public class CreateProductStoreRequestDto
 {

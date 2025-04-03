@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Dto.Label;
+namespace PravaCijena.Api.Dto.Label;
 
 public class LabelDto : BaseEntity
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Product;
+namespace PravaCijena.Api.Dto.Product;
 
 public class UpdateProductRequestDto
 {

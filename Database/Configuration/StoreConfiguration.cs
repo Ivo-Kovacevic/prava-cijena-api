@@ -1,8 +1,8 @@
-using api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PravaCijena.Api.Models;
 
-namespace api.Database.Configuration;
+namespace PravaCijena.Api.Database.Configuration;
 
 public class StoreConfiguration : IEntityTypeConfiguration<Store>
 {

@@ -1,9 +1,9 @@
-using api.Database.Seeders;
-using api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PravaCijena.Api.Database.Seeders;
+using PravaCijena.Api.Models;
 
-namespace api.Database.Configuration;
+namespace PravaCijena.Api.Database.Configuration;
 
 public class LabelConfiguration : IEntityTypeConfiguration<Label>
 {

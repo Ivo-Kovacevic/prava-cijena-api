@@ -1,7 +1,7 @@
-using api.Dto.Product;
-using api.Models;
+using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Models;
 
-namespace api.Interfaces;
+namespace PravaCijena.Api.Interfaces;
 
 public interface IProductRepository
 {

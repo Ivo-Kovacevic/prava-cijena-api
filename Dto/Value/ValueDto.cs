@@ -1,6 +1,6 @@
-using api.Models;
+using PravaCijena.Api.Models;
 
-namespace api.Dto.Value;
+namespace PravaCijena.Api.Dto.Value;
 
 public class ValueDto : BaseEntity
 {

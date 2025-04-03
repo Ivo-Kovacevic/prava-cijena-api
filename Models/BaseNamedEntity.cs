@@ -1,6 +1,6 @@
-using api.Helpers;
+using PravaCijena.Api.Helpers;
 
-namespace api.Models;
+namespace PravaCijena.Api.Models;
 
 public class BaseNamedEntity : BaseEntity
 {

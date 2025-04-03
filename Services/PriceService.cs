@@ -1,9 +1,9 @@
-using api.Dto.Price;
-using api.Exceptions;
-using api.Interfaces;
-using api.Mappers;
+using PravaCijena.Api.Mappers;
+using PravaCijena.Api.Dto.Price;
+using PravaCijena.Api.Exceptions;
+using PravaCijena.Api.Interfaces;
 
-namespace api.Services;
+namespace PravaCijena.Api.Services;
 
 public class PriceService : IPriceService
 {

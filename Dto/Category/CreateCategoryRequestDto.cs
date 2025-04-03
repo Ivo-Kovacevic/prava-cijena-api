@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.Dto.Category;
+namespace PravaCijena.Api.Dto.Category;
 
 public class CreateCategoryRequestDto
 {

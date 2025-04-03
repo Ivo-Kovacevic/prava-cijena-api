@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace api.Models;
+namespace PravaCijena.Api.Models;
 
 public class Product : BaseNamedEntity
 {
