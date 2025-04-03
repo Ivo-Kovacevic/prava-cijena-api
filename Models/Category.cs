@@ -1,5 +1,3 @@
-using PravaCijena.Api.Helpers;
-
 namespace PravaCijena.Api.Models;
 
 public class Category : BaseNamedEntity

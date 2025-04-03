@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace PravaCijena.Api.Helpers;
@@ -7,7 +8,7 @@ public class SlugHelper
     public static string GenerateSlug(string name)
     {
         // Normalize string to separate diacritics from characters
-        var slug = name.Normalize(System.Text.NormalizationForm.FormD);
+        var slug = name.Normalize(NormalizationForm.FormD);
 
         // Remove any diacritical marks
         slug = Regex.Replace(slug, @"[\p{Mn}]", "");

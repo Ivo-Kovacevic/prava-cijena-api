@@ -13,7 +13,7 @@ public class PriceRepository : IPriceRepository
     {
         _context = context;
     }
-    
+
     public async Task<IEnumerable<Price>> GetPricesByProductStoreIdAsync(Guid productStoreId)
     {
         return await _context.Prices

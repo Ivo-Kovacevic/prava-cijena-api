@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 
@@ -21,9 +22,12 @@ public class ProductController : ControllerBase
      * These endpoints are for public access because they provide readable URLs
      */
     [HttpGet("categories/{categorySlug}/products")]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> IndexBySlug(string categorySlug)
+    public async Task<ActionResult<IEnumerable<ProductDto>>> IndexBySlug(
+        string categorySlug,
+        [FromQuery] QueryObject query
+    )
     {
-        var productsDto = await _productService.GetProductsByCategorySlugAsync(categorySlug);
+        var productsDto = await _productService.GetProductsByCategorySlugAsync(categorySlug, query);
         return Ok(productsDto);
     }
 
@@ -46,9 +50,9 @@ public class ProductController : ControllerBase
      * These endpoints are for internal use
      */
     [HttpGet("categories/{categoryId:guid}/products")]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> Index(Guid categoryId)
+    public async Task<ActionResult<IEnumerable<ProductDto>>> Index(Guid categoryId, [FromQuery] QueryObject query)
     {
-        var productsDto = await _productService.GetProductsByCategoryIdAsync(categoryId);
+        var productsDto = await _productService.GetProductsByCategoryIdAsync(categoryId, query);
         return Ok(productsDto);
     }
 

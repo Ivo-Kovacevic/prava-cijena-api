@@ -9,6 +9,4 @@ public class Product : BaseNamedEntity
     public required string ImageUrl { get; set; }
     public required Guid CategoryId { get; set; }
     public Category Category { get; set; }
-
-    [NotMapped] public double Similarity { get; set; }
 }

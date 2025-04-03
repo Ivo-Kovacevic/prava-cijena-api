@@ -1,11 +1,11 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Middlewares;
 using PravaCijena.Api.Repository;
 using PravaCijena.Api.Services;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();

@@ -1,7 +1,8 @@
-using PravaCijena.Api.Mappers;
 using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Exceptions;
+using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Mappers;
 
 namespace PravaCijena.Api.Services;
 
@@ -19,7 +20,7 @@ public class ProductService : IProductService
     /*
      * SLUG SERVICE
      */
-    public async Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug)
+    public async Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug, QueryObject query)
     {
         var category = await _categoryRepo.GetBySlugAsync(categorySlug);
         if (category == null)
@@ -27,7 +28,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category '{categorySlug}' not found.");
         }
 
-        var products = await _productRepo.GetProductsByCategoryIdAsync(category.Id);
+        var products = await _productRepo.GetProductsByCategoryIdAsync(category.Id, query);
 
         return products.Select(p => p.ToProductDto());
     }
@@ -53,7 +54,7 @@ public class ProductService : IProductService
     /*
      * ID SERVICE
      */
-    public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId)
+    public async Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query)
     {
         var categoryExists = await _categoryRepo.CategoryExists(categoryId);
         if (!categoryExists)
@@ -61,7 +62,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category with id '{categoryId}' not found.");
         }
 
-        var products = await _productRepo.GetProductsByCategoryIdAsync(categoryId);
+        var products = await _productRepo.GetProductsByCategoryIdAsync(categoryId, query);
 
         return products.Select(p => p.ToProductDto());
     }

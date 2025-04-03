@@ -5,17 +5,17 @@ namespace PravaCijena.Api.Database.Seeders;
 public class ValueSeedingData : LabelSeedingData
 {
     // Milk label values
-    public static readonly Guid MilkTypeCowValue = new Guid("2ce02301-83c2-4fb7-8397-185a4ea2e78c");
-    public static readonly Guid MilkTypeGoatValue = new Guid("2ce02301-83c2-4fb7-8397-185a4ea2e78d");
-    public static readonly Guid MilkLifeValueId1 = new Guid("43b33b76-69cc-4424-8608-eeb20f931477");
-    public static readonly Guid MilkLifeValueId2 = new Guid("95e493da-1772-4be5-8038-250a5453c2bb");
-    public static readonly Guid MilkFatValueId1 = new Guid("bf131788-50bf-413a-94c2-92c8b1de1adf");
-    public static readonly Guid MilkFatValueId2 = new Guid("b93dc567-d6d3-4dae-b3bd-9a4b990a5f6b");
-    public static readonly Guid MilkFatValueId3 = new Guid("bb601c25-43f5-403b-8ec1-92c470ec35e5");
-    public static readonly Guid MilkFatValueId4 = new Guid("48923d87-1b7e-4121-9f87-023e71712203");
-    public static readonly Guid MilkProducerValueId1 = new Guid("d813d858-809f-49e2-8f87-2b69b37b194b");
-    public static readonly Guid MilkProducerValueId2 = new Guid("e4006d51-2e28-46be-8747-159956b6fdbb");
-    public static readonly Guid MilkProducerValueId3 = new Guid("2a99e355-fcf1-46c8-8b5b-019bdbfc99de");
+    public static readonly Guid MilkTypeCowValue = new("2ce02301-83c2-4fb7-8397-185a4ea2e78c");
+    public static readonly Guid MilkTypeGoatValue = new("2ce02301-83c2-4fb7-8397-185a4ea2e78d");
+    public static readonly Guid MilkLifeValueId1 = new("43b33b76-69cc-4424-8608-eeb20f931477");
+    public static readonly Guid MilkLifeValueId2 = new("95e493da-1772-4be5-8038-250a5453c2bb");
+    public static readonly Guid MilkFatValueId1 = new("bf131788-50bf-413a-94c2-92c8b1de1adf");
+    public static readonly Guid MilkFatValueId2 = new("b93dc567-d6d3-4dae-b3bd-9a4b990a5f6b");
+    public static readonly Guid MilkFatValueId3 = new("bb601c25-43f5-403b-8ec1-92c470ec35e5");
+    public static readonly Guid MilkFatValueId4 = new("48923d87-1b7e-4121-9f87-023e71712203");
+    public static readonly Guid MilkProducerValueId1 = new("d813d858-809f-49e2-8f87-2b69b37b194b");
+    public static readonly Guid MilkProducerValueId2 = new("e4006d51-2e28-46be-8747-159956b6fdbb");
+    public static readonly Guid MilkProducerValueId3 = new("2a99e355-fcf1-46c8-8b5b-019bdbfc99de");
 
     public static IEnumerable<Value> InitialValues()
     {
@@ -36,7 +36,7 @@ public class ValueSeedingData : LabelSeedingData
                 LabelId = MilkTypeLabelId,
                 Name = "Kozje mlijeko"
             },
-            
+
             new()
             {
                 Id = MilkLifeValueId1,
@@ -49,7 +49,7 @@ public class ValueSeedingData : LabelSeedingData
                 LabelId = MilkLifeLabelId,
                 Name = "Trajno mlijeko"
             },
-            
+
             new()
             {
                 Id = MilkFatValueId1,
@@ -74,7 +74,7 @@ public class ValueSeedingData : LabelSeedingData
                 LabelId = MilkFatLabelId,
                 Name = "iznad 3%"
             },
-            
+
             new()
             {
                 Id = MilkProducerValueId1,

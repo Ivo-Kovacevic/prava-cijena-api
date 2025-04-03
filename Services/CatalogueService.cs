@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using PravaCijena.Api.Models;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Interfaces;
 
@@ -20,7 +19,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
         using var memoryStream = new MemoryStream();
         await pdfFile.CopyToAsync(memoryStream);
         var base64Pdf = Convert.ToBase64String(memoryStream.ToArray());
-        
+
         var requestBody = new
         {
             contents = new[]

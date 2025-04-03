@@ -1,4 +1,3 @@
-using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Database.Seeders;
@@ -82,7 +81,7 @@ public class ProductSeedingData : CategorySeedingData
                 ImageUrl = "https://dukatshop.hr/965-thickbox_default/dukat-svjeze-mlijeko-32-mm-1-l.jpg",
                 CategoryId = MilkSubcategoryId
             },
-            
+
             /*
              * Yogurt products
              */

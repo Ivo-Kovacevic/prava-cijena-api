@@ -13,7 +13,7 @@ public class PriceController : ControllerBase
     {
         _priceService = priceService;
     }
-    
+
     /*
      * ID ENDPOINTS
      * These endpoints are for internal use

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 
@@ -13,13 +14,6 @@ public class ProductRepository : IProductRepository
     public ProductRepository(AppDbContext context)
     {
         _context = context;
-    }
-
-    public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId)
-    {
-        return await _context.Products
-            .Where(p => p.CategoryId == categoryId)
-            .ToListAsync();
     }
 
     public async Task<Product?> GetProductBySlugAsync(string productSlug)
@@ -70,5 +64,14 @@ public class ProductRepository : IProductRepository
     {
         _context.Products.Remove(existingProduct);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query)
+    {
+        return await _context.Products
+            .Where(p => p.CategoryId == categoryId)
+            .Skip((query.Page - 1) * query.Limit)
+            .Take(query.Limit)
+            .ToListAsync();
     }
 }

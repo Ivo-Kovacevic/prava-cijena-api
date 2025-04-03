@@ -1,4 +1,3 @@
-using PravaCijena.Api.Dto.Product;
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Database.Configuration;
 using PravaCijena.Api.Models;
