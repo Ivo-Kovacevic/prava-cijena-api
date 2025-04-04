@@ -30,6 +30,7 @@ public class AppDbContext : DbContext
         builder.ApplyConfiguration(new StoreConfiguration());
         builder.ApplyConfiguration(new ProductStoreConfiguration());
         builder.ApplyConfiguration(new PriceConfiguration());
+        builder.ApplyConfiguration(new ProductValueConfiguration());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

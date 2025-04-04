@@ -2,13 +2,15 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Database;
-using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Middlewares;
-using PravaCijena.Api.Repository;
-using PravaCijena.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 // Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -23,39 +25,10 @@ builder.Services.AddSwaggerGen();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-
-builder.Services.AddScoped<IStoreService, StoreService>();
-builder.Services.AddScoped<IStoreRepository, StoreRepository>();
-
-builder.Services.AddScoped<IProductStoreService, ProductStoreService>();
-builder.Services.AddScoped<IProductStoreRepository, ProductStoreRepository>();
-
-builder.Services.AddScoped<IPriceService, PriceService>();
-builder.Services.AddScoped<IPriceRepository, PriceRepository>();
-
-builder.Services.AddScoped<ILabelService, LabelService>();
-builder.Services.AddScoped<ILabelRepository, LabelRepository>();
-
-builder.Services.AddScoped<IValueService, ValueService>();
-builder.Services.AddScoped<IValueRepository, ValueRepository>();
-
-builder.Services.AddHttpClient<ICatalogueService, CatalogueService>();
-builder.Services.AddScoped<ICatalogueService, CatalogueService>();
+builder.Services.AddAppServices();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
-
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-        options.JsonSerializerOptions.WriteIndented = true;
-    });
 
 var app = builder.Build();
 
@@ -66,9 +39,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options => options.EnableTryItOutByDefault());
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
 app.MapControllers();
+
+// Add Postgre Trigrams extension that provides searching for products functionality
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+}
 
 app.Run();
