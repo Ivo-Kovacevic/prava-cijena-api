@@ -5,13 +5,22 @@ namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CatalogueController : ControllerBase
+public class AutomationController : ControllerBase
 {
     private readonly ICatalogueService _catalogueService;
+    private readonly IScrapingService _scrapingService;
 
-    public CatalogueController(ICatalogueService catalogueService)
+    public AutomationController(IScrapingService scrapingService, ICatalogueService catalogueService)
     {
+        _scrapingService = scrapingService;
         _catalogueService = catalogueService;
+    }
+
+    [HttpPost("scrape")]
+    public async Task<IActionResult> Scrape()
+    {
+        var result = await _scrapingService.RunScraper();
+        return Ok(result);
     }
 
     [HttpPost("analyze")]

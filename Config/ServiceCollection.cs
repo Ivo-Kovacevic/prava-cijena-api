@@ -1,6 +1,7 @@
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Repository;
 using PravaCijena.Api.Services;
+using PravaCijena.Api.Services.AutomationServices;
 
 namespace PravaCijena.Api.Config;
 
@@ -31,6 +32,9 @@ public static class ServiceCollection
 
         services.AddHttpClient<ICatalogueService, CatalogueService>();
         services.AddScoped<ICatalogueService, CatalogueService>();
+
+        services.AddHttpClient<IScrapingService, ScrapingService>();
+        services.AddScoped<IScrapingService, ScrapingService>();
 
         return services;
     }

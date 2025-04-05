@@ -3,7 +3,7 @@ using System.Text.Json;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Interfaces;
 
-namespace PravaCijena.Api.Services;
+namespace PravaCijena.Api.Services.AutomationServices;
 
 public class CatalogueService : ApiConfig, ICatalogueService
 {

@@ -13,6 +13,7 @@ public static class ProductMapper
             Id = product.Id,
             Name = product.Name,
             Slug = product.Slug,
+            LowestPrice = product.LowestPrice,
             ImageUrl = product.ImageUrl,
             CategoryId = product.CategoryId,
             CreatedAt = product.CreatedAt,
@@ -41,5 +42,13 @@ public static class ProductMapper
         existingProduct.Name = productRequestDto.Name ?? existingProduct.Name;
         existingProduct.ImageUrl = productRequestDto.ImageUrl ?? existingProduct.ImageUrl;
         existingProduct.CategoryId = productRequestDto.CategoryId ?? existingProduct.CategoryId;
+    }
+
+    public static void ToProductFromProductPreviewDto(
+        this Product existingProduct,
+        ProductPreviewDto productPreviewDto
+    )
+    {
+        existingProduct.LowestPrice = productPreviewDto.Price;
     }
 }
