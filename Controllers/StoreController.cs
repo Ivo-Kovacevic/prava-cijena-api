@@ -15,6 +15,21 @@ public class StoreController : ControllerBase
         _storeService = storeService;
     }
 
+    /*
+     * SLUG ENDPOINTS
+     * These endpoints are for public access because they provide readable URLs
+     */
+    [HttpGet("{storeSlug}")]
+    public async Task<ActionResult<StoreDto>> ShowBySlug(string storeSlug)
+    {
+        var storeDto = await _storeService.GetStoreBySlugAsync(storeSlug);
+        return Ok(storeDto);
+    }
+
+    /*
+     * ID ENDPOINTS
+     * These endpoints are for internal use
+     */
     [HttpGet]
     public async Task<ActionResult<IEnumerable<StoreDto>>> Index()
     {

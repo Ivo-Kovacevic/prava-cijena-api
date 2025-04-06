@@ -60,6 +60,13 @@ public class ProductRepository : IProductRepository
         return existingProduct;
     }
 
+    public async Task UpdatePriceAsync(Guid productId, decimal price)
+    {
+        await _context.Products
+            .Where(p => p.Id == productId)
+            .ExecuteUpdateAsync(set => set.SetProperty(p => p.LowestPrice, price));
+    }
+
     public async Task DeleteAsync(Product existingProduct)
     {
         _context.Products.Remove(existingProduct);

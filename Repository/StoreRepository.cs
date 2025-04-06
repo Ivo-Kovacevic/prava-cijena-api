@@ -14,6 +14,13 @@ public class StoreRepository : IStoreRepository
         _context = context;
     }
 
+    public async Task<Store?> GetBySlugAsync(string storeSlug)
+    {
+        return await _context.Stores
+            .Where(s => s.Slug == storeSlug)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<Store>> GetAllAsync()
     {
         return await _context.Stores.ToListAsync();

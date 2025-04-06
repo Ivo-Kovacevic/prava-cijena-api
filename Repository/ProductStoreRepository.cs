@@ -44,6 +44,13 @@ public class ProductStoreRepository : IProductStoreRepository
         return productStore;
     }
 
+    public async Task UpdatePriceAsync(Guid productStoreId, decimal price)
+    {
+        await _context.ProductStores
+            .Where(ps => ps.Id == productStoreId)
+            .ExecuteUpdateAsync(set => set.SetProperty(ps => ps.LatestPrice, price));
+    }
+
     public async Task DeleteAsync(ProductStore productStore)
     {
         _context.ProductStores.Remove(productStore);

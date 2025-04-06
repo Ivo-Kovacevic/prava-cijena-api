@@ -14,6 +14,17 @@ public class StoreService : IStoreService
         _storeRepo = storeRepo;
     }
 
+    public async Task<StoreDto> GetStoreBySlugAsync(string storeSlug)
+    {
+        var store = await _storeRepo.GetBySlugAsync(storeSlug);
+        if (store == null)
+        {
+            throw new NotFoundException($"Store '{storeSlug}' not found.");
+        }
+
+        return store.ToStoreDto();
+    }
+
     public async Task<IEnumerable<StoreDto>> GetStoresAsync()
     {
         var stores = await _storeRepo.GetAllAsync();

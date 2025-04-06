@@ -4,6 +4,7 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface IStoreService
 {
+    Task<StoreDto> GetStoreBySlugAsync(string storeSlug);
     Task<IEnumerable<StoreDto>> GetStoresAsync();
     Task<StoreDto> GetStoreByIdAsync(Guid id);
     Task<StoreDto> CreateStoreAsync(CreateStoreRequestDto storeRequestDto);
