@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Database;
+using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 
@@ -24,6 +26,29 @@ public class StoreRepository : IStoreRepository
     public async Task<IEnumerable<Store>> GetAllAsync()
     {
         return await _context.Stores.ToListAsync();
+    }
+
+    public async Task<List<StoreDto>> GetAllWithCategories()
+    {
+        var stores = await _context.Stores
+            .Where(s => s.BaseUrl != null && s.ProductListXPath != null) // Filter stores as needed
+            .Select(store => new StoreDto
+            {
+                Id = store.Id,
+                Name = store.Name,
+                Slug = store.Slug,
+                StoreUrl = store.StoreUrl,
+                BaseUrl = store.BaseUrl,
+                ProductListXPath = store.ProductListXPath,
+                ImageUrl = store.ImageUrl,
+                Categories = store.Categories
+                    .AsQueryable()
+                    .Select(GetStoreCategoryProjection(10, 0))
+                    .ToList()
+            })
+            .ToListAsync();
+
+        return stores;
     }
 
     public async Task<Store?> GetByIdAsync(Guid id)
@@ -51,5 +76,29 @@ public class StoreRepository : IStoreRepository
     {
         _context.Stores.Remove(existingStore);
         await _context.SaveChangesAsync();
+    }
+
+    private static Expression<Func<StoreCategory, StoreCategoryDto>> GetStoreCategoryProjection(
+        int maxDepth,
+        int currentDepth = 0
+    )
+    {
+        currentDepth++;
+
+        Expression<Func<StoreCategory, StoreCategoryDto>> result = storeCategory => new StoreCategoryDto
+        {
+            Id = storeCategory.Id,
+            Name = storeCategory.Name,
+            StoreId = storeCategory.StoreId,
+            ParentCategoryId = storeCategory.ParentCategoryId,
+            Subcategories = currentDepth == maxDepth
+                ? new List<StoreCategoryDto>()
+                : storeCategory.Subcategories.AsQueryable()
+                    .Select(GetStoreCategoryProjection(maxDepth, currentDepth))
+                    .OrderBy(sc => sc.Name)
+                    .ToList()
+        };
+
+        return result;
     }
 }

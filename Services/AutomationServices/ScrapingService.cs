@@ -1,10 +1,8 @@
 using HtmlAgilityPack;
-using PravaCijena.Api.Config;
 using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
-using PravaCijena.Api.Models.AutomationModels;
-using Category = PravaCijena.Api.Models.AutomationModels.Category;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
@@ -33,46 +31,48 @@ public class ScrapingService : IScrapingService
 
     public async Task<int> RunScraper()
     {
-        // var random = new Random();
-        // foreach (var storeConfig in ScrapingConfiguration.StoresList)
-        // {
-        //     var urls = GetCategoryUrls(storeConfig.Url, storeConfig.Categories);
-        //
-        //     foreach (var url in urls)
-        //         try
-        //         {
-        //             // ------------ Add random delay between scraping websites ------------
-        //             await Task.Delay(random.Next(2, 5) * 1000);
-        //
-        //             var html = await _httpClient.GetStringAsync(url);
-        //
-        //             var htmlDocument = new HtmlDocument();
-        //             htmlDocument.LoadHtml(html);
-        //
-        //             var productNodes = htmlDocument.DocumentNode.SelectNodes(storeConfig.ProductListXPath);
-        //             if (productNodes == null)
-        //             {
-        //                 continue;
-        //             }
-        //
-        //             var updated = await UpdateProductPrices(productNodes, storeConfig);
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             Console.WriteLine($"Failed to scrape URL: {url}, Error: {ex.Message}");
-        //         }
-        // }
+        var storesWithCategories = await _storeRepository.GetAllWithCategories();
+        var random = new Random();
+        foreach (var store in storesWithCategories)
+        {
+            var urls = GetCategoryUrls(store.BaseUrl, store.Categories);
+
+            foreach (var url in urls)
+                try
+                {
+                    Console.WriteLine(url);
+                    //             // ------------ Add random delay between scraping websites ------------
+                    //             await Task.Delay(random.Next(2, 5) * 1000);
+                    //
+                    //             var html = await _httpClient.GetStringAsync(url);
+                    //
+                    //             var htmlDocument = new HtmlDocument();
+                    //             htmlDocument.LoadHtml(html);
+                    //
+                    //             var productNodes = htmlDocument.DocumentNode.SelectNodes(storeConfig.ProductListXPath);
+                    //             if (productNodes == null)
+                    //             {
+                    //                 continue;
+                    //             }
+                    //
+                    //             var updated = await UpdateProductPrices(productNodes, storeConfig);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to scrape URL: {url}, Error: {ex.Message}");
+                }
+        }
 
         return 1;
     }
 
-    private async Task<int> UpdateProductPrices(HtmlNodeCollection productNodes, StoreScrapingConfig storeSonfig)
+    private async Task<int> UpdateProductPrices(HtmlNodeCollection productNodes, StoreDto storeSonfig)
     {
         var productsUpdated = 0;
         foreach (var productNode in productNodes)
         {
             ProductPreviewDto productPreview;
-            switch (storeSonfig.StoreSlug)
+            switch (storeSonfig.Slug)
             {
                 case "konzum":
                     productPreview = GetKonzumNameAndPrice(productNode);
@@ -89,7 +89,7 @@ public class ScrapingService : IScrapingService
             {
                 continue;
             }
-            
+
             var similarExistingProduct = products.First();
 
             // Create new data for each product that doesn't exist
@@ -108,7 +108,7 @@ public class ScrapingService : IScrapingService
                     await _productRepository.UpdatePriceAsync(similarExistingProduct.Id, productPreview.Price);
                 }
 
-                var store = await _storeRepository.GetBySlugAsync(storeSonfig.StoreSlug);
+                var store = await _storeRepository.GetBySlugAsync(storeSonfig.Slug);
                 var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
                     similarExistingProduct.Id,
                     store.Id
@@ -200,7 +200,8 @@ public class ScrapingService : IScrapingService
         return null;
     }
 
-    private static IEnumerable<string> GetCategoryUrls(string baseUrl, List<Category> categories, string path = "")
+    private static IEnumerable<string> GetCategoryUrls(string baseUrl, List<StoreCategoryDto> categories,
+        string path = "")
     {
         foreach (var category in categories)
         {

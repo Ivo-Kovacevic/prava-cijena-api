@@ -2,7 +2,7 @@ using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Database.Seeders;
 
-public static class StoreSeedingData
+public class StoreSeedingData
 {
     public static readonly Guid KonzumStoreId = new("c25d8a61-eac0-4f5e-a1f5-d9f80b6b2d4e");
     public static readonly Guid LidlStoreId = new("137a4c4a-2d10-4037-a65d-dc1f86d77d2e");
@@ -24,7 +24,10 @@ public static class StoreSeedingData
                 Id = KonzumStoreId,
                 Name = "Konzum",
                 StoreUrl = "https://www.konzum.hr/",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp"
+                BaseUrl = "https://www.konzum.hr/web/t/kategorije",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
+                ProductListXPath =
+                    "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article"
             },
             new()
             {

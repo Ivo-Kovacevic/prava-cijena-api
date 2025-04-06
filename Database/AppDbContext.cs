@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Store> Stores { get; set; }
+    public DbSet<StoreCategory> StoresCategories { get; set; }
     public DbSet<ProductStore> ProductStores { get; set; }
     public DbSet<Price> Prices { get; set; }
     public DbSet<Label> Labels { get; set; }
@@ -28,6 +29,7 @@ public class AppDbContext : DbContext
         builder.ApplyConfiguration(new LabelConfiguration());
         builder.ApplyConfiguration(new ValueConfiguration());
         builder.ApplyConfiguration(new StoreConfiguration());
+        builder.ApplyConfiguration(new StoreCategoryConfiguration());
         builder.ApplyConfiguration(new ProductStoreConfiguration());
         builder.ApplyConfiguration(new PriceConfiguration());
         builder.ApplyConfiguration(new ProductValueConfiguration());
