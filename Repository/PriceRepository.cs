@@ -18,6 +18,7 @@ public class PriceRepository : IPriceRepository
     {
         return await _context.Prices
             .Where(p => p.ProductStoreId == productStoreId)
+            .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
 
