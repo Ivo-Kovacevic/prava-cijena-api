@@ -9,7 +9,7 @@ public class CategorySeedingData
 
     public static readonly Guid MilkSubcategoryId = new("2d15ec67-b47b-4756-bc7b-e7a4e4f1232f");
     public static readonly Guid EggsSubcategoryId = new("7b3a5662-d9f6-48ad-b6ea-6fce8c92715a");
-    public static readonly Guid CheesesSubcategoryId = new("aad5b759-df12-4937-a1f5-91c30a0f4e90");
+    public static readonly Guid CheeseSubcategoryId = new("aad5b759-df12-4937-a1f5-91c30a0f4e90");
     public static readonly Guid YogurtSubcategoryId = new("aa4c9e5f-3e8b-4d99-a04e-dadfe2a5e10e");
     public static readonly Guid ButterSubcategoryId = new("b625a4f2-533b-4a33-822b-488457325b5d");
     public static readonly Guid IceCreamSubcategoryId = new("0d4667bc-9675-4e55-8d3c-6f4763f053b2");
@@ -29,6 +29,7 @@ public class CategorySeedingData
 
     // Beverages category
     public static readonly Guid BeveragesCategoryId = new("91ac1be2-b97c-47ed-902d-712a96d8b0f0");
+    public static readonly Guid WaterCategoryId = new("320547d7-17e5-41d3-960f-32839cf62be6");
     public static readonly Guid CoffeeSubcategoryId = new("5de62c74-fb47-468a-b56d-5d9d38208039");
     public static readonly Guid TeaSubcategoryId = new("41da84c7-0196-4bde-8e0c-bd20688e6e63");
     public static readonly Guid CarbonatedDrinksSubcategoryId = new("7f4d2586-e464-4b18-9e4f-d4b38c553295");
@@ -61,7 +62,7 @@ public class CategorySeedingData
             },
             new()
             {
-                Id = CheesesSubcategoryId,
+                Id = CheeseSubcategoryId,
                 Name = "Sirevi",
                 ParentCategoryId = DairyCategoryId
             },
@@ -147,6 +148,12 @@ public class CategorySeedingData
             {
                 Id = CoffeeSubcategoryId,
                 Name = "Kava",
+                ParentCategoryId = BeveragesCategoryId
+            },
+            new()
+            {
+                Id = WaterCategoryId,
+                Name = "Voda",
                 ParentCategoryId = BeveragesCategoryId
             },
             new()

@@ -23,6 +23,11 @@ public class StoreCategoryConfiguration : IEntityTypeConfiguration<StoreCategory
             .HasForeignKey(sc => sc.ParentCategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<Category>(sc => sc.EquivalentCategory)
+            .WithMany(c => c.StoreCategories)
+            .HasForeignKey(sc => sc.EquivalentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(s => s.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .ValueGeneratedOnAdd();

@@ -8,4 +8,5 @@ public class Category : BaseNamedEntity
     public ICollection<Category> Subcategories { get; set; } = [];
     public ICollection<Product> Products { get; set; } = [];
     public ICollection<Label> Labels { get; set; } = [];
+    public ICollection<StoreCategory> StoreCategories { get; set; } = [];
 }

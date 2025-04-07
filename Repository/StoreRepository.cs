@@ -28,18 +28,18 @@ public class StoreRepository : IStoreRepository
         return await _context.Stores.ToListAsync();
     }
 
-    public async Task<List<StoreDto>> GetAllWithCategories()
+    public async Task<List<StoreWithCategoriesDto>> GetAllWithCategories()
     {
         var stores = await _context.Stores
-            .Where(s => s.BaseUrl != null && s.ProductListXPath != null) // Filter stores as needed
-            .Select(store => new StoreDto
+            .Where(s => s.BaseUrl != null && s.ProductListXPath != null)
+            .Select(store => new StoreWithCategoriesDto
             {
                 Id = store.Id,
                 Name = store.Name,
                 Slug = store.Slug,
                 StoreUrl = store.StoreUrl,
-                BaseUrl = store.BaseUrl,
-                ProductListXPath = store.ProductListXPath,
+                BaseUrl = store.BaseUrl!,
+                ProductListXPath = store.ProductListXPath!,
                 ImageUrl = store.ImageUrl,
                 Categories = store.Categories
                     .AsQueryable()
@@ -91,6 +91,7 @@ public class StoreRepository : IStoreRepository
             Name = storeCategory.Name,
             StoreId = storeCategory.StoreId,
             ParentCategoryId = storeCategory.ParentCategoryId,
+            EquivalentCategoryId = storeCategory.EquivalentCategoryId,
             Subcategories = currentDepth == maxDepth
                 ? new List<StoreCategoryDto>()
                 : storeCategory.Subcategories.AsQueryable()

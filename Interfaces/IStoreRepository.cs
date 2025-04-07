@@ -5,9 +5,9 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface IStoreRepository
 {
-    Task<Store> GetBySlugAsync(string storeSlug);
+    Task<Store?> GetBySlugAsync(string storeSlug);
     Task<IEnumerable<Store>> GetAllAsync();
-    Task<List<StoreDto>> GetAllWithCategories();
+    Task<List<StoreWithCategoriesDto>> GetAllWithCategories();
     Task<Store?> GetByIdAsync(Guid id);
     Task<Store> CreateAsync(Store category);
     Task<Store> UpdateAsync(Store existingStore);

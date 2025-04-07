@@ -1,4 +1,5 @@
 using HtmlAgilityPack;
+using PravaCijena.Api.Dto.Category;
 using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
@@ -31,128 +32,145 @@ public class ScrapingService : IScrapingService
 
     public async Task<int> RunScraper()
     {
+        return 1;
+        
         var storesWithCategories = await _storeRepository.GetAllWithCategories();
         var random = new Random();
         foreach (var store in storesWithCategories)
         {
-            var urls = GetCategoryUrls(store.BaseUrl, store.Categories);
+            var urlsInfo = GetCategoryUrls(store.BaseUrl, store.Categories);
 
-            foreach (var url in urls)
+            foreach (var urlInfo in urlsInfo)
                 try
                 {
-                    Console.WriteLine(url);
-                    //             // ------------ Add random delay between scraping websites ------------
-                    //             await Task.Delay(random.Next(2, 5) * 1000);
-                    //
-                    //             var html = await _httpClient.GetStringAsync(url);
-                    //
-                    //             var htmlDocument = new HtmlDocument();
-                    //             htmlDocument.LoadHtml(html);
-                    //
-                    //             var productNodes = htmlDocument.DocumentNode.SelectNodes(storeConfig.ProductListXPath);
-                    //             if (productNodes == null)
-                    //             {
-                    //                 continue;
-                    //             }
-                    //
-                    //             var updated = await UpdateProductPrices(productNodes, storeConfig);
+                    // ------------ Add random delay between scraping websites ------------
+                    await Task.Delay(random.Next(2, 5) * 1000);
+
+                    var html = await _httpClient.GetStringAsync(urlInfo.Url);
+                    Console.WriteLine(urlInfo.Url);
+
+                    var htmlDocument = new HtmlDocument();
+                    htmlDocument.LoadHtml(html);
+
+                    var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
+                    if (productNodes.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var updated = await UpdateProductPrices(productNodes, store, urlInfo.EquivalentCategoryId);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to scrape URL: {url}, Error: {ex.Message}");
+                    Console.WriteLine($"Failed to scrape URL: {urlInfo.Url}, Error: {ex.Message}");
                 }
         }
-
-        return 1;
     }
 
-    private async Task<int> UpdateProductPrices(HtmlNodeCollection productNodes, StoreDto store)
+    private async Task<int> UpdateProductPrices(
+        HtmlNodeCollection productNodes,
+        StoreWithCategoriesDto store,
+        Guid? equivalentCategoryId
+    )
     {
         var productsUpdated = 0;
         var productsCreated = 0;
         foreach (var productNode in productNodes)
         {
-            ProductPreviewDto productPreviewDto;
+            ProductPreviewDto? productPreviewDto;
             switch (store.Slug)
             {
                 case "konzum":
                     productPreviewDto = GetKonzumNameAndPrice(productNode);
                     break;
-                case "tommy":
-                    productPreviewDto = GetTommyNameAndPrice(productNode);
-                    break;
+                // case "tommy":
+                //     productPreviewDto = GetTommyNameAndPrice(productNode);
+                //     break;
                 default:
                     return 0;
             }
 
+            if (productPreviewDto == null)
+            {
+                continue;
+            }
+
             var existingProduct = (await _productRepository.Search(productPreviewDto.Name)).FirstOrDefault();
-            if (existingProduct == null)
+            if (existingProduct == null || existingProduct.Similarity is > 0.5 and < 0.95)
             {
                 continue;
             }
 
             // Create new data for each product that doesn't exist
-            // if (existingProduct.Similarity < 0.9)
-            // {
-            //     _productRepository.CreateAsync();
-            //     _productStoreRepository.CreateAsync();
-            //     _priceRepository.CreateAsync();
-            //     productsCreated++;
-            // }
-
-            // If existing product name is similar enough with found product name
-            if (existingProduct.Similarity >= 0.9)
+            if (existingProduct.Similarity <= 0.5 && equivalentCategoryId != null)
             {
-                // Update the lowest product price if current price is from yesterday or if it's lower than current price
-                if (existingProduct.UpdatedAt.Date < DateTime.UtcNow.Date
-                    || productPreviewDto.Price < existingProduct.LowestPrice
-                   )
+                await _productRepository.CreateAsync(new Product
                 {
-                    await _productRepository.UpdatePriceAsync(existingProduct.Id, productPreviewDto.Price);
-                    productsUpdated++;
-                }
+                    Name = productPreviewDto.Name,
+                    ImageUrl = productPreviewDto.ImageUrl,
+                    CategoryId = equivalentCategoryId.Value,
+                    LowestPrice = productPreviewDto.Price
+                });
+                // _productStoreRepository.CreateAsync();
+                // _priceRepository.CreateAsync();
+                productsCreated++;
+            }
 
-                var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
-                    existingProduct.Id,
-                    store.Id
-                );
+            /*
+             * Update the lowest product price if product name is similar with found product
+             * and current price is from yesterday
+             * or if it's lower than current price
+             */
+            if (existingProduct.Similarity >= 0.95
+                && (existingProduct.UpdatedAt.Date < DateTime.UtcNow.Date
+                    || productPreviewDto.Price < existingProduct.LowestPrice))
+            {
+                await _productRepository.UpdateLowestPriceAsync(existingProduct.Id, productPreviewDto.Price);
+                productsUpdated++;
+            }
 
-                // Create new ProductStore if it doesn't exist or just update price if it does
-                if (productStore == null)
-                {
-                    productStore = await _productStoreRepository.CreateAsync(new ProductStore
-                    {
-                        ProductId = existingProduct.Id,
-                        StoreId = store.Id,
-                        LatestPrice = productPreviewDto.Price
-                    });
-                }
-                else
-                {
-                    await _productStoreRepository.UpdatePriceAsync(productStore.Id, productPreviewDto.Price);
-                }
+            var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
+                existingProduct.Id,
+                store.Id
+            );
 
-                // Create today's price if it doesn't exist
-                var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id))
-                    .FirstOrDefault();
-                if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
+            // Create new ProductStore if it doesn't exist or just update price if it does
+            if (productStore == null)
+            {
+                productStore = await _productStoreRepository.CreateAsync(new ProductStore
                 {
-                    await _priceRepository.CreateAsync(new Price
-                    {
-                        Amount = productPreviewDto.Price,
-                        ProductStoreId = productStore.Id
-                    });
-                }
+                    ProductId = existingProduct.Id,
+                    StoreId = store.Id,
+                    LatestPrice = productPreviewDto.Price
+                });
+            }
+            else
+            {
+                await _productStoreRepository.UpdatePriceAsync(productStore.Id, productPreviewDto.Price);
+            }
+
+            // Create today's price if it doesn't exist
+            var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id)).FirstOrDefault();
+            if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
+            {
+                await _priceRepository.CreateAsync(new Price
+                {
+                    Amount = productPreviewDto.Price,
+                    ProductStoreId = productStore.Id
+                });
             }
         }
 
         return productsUpdated;
     }
 
-    private static ProductPreviewDto GetKonzumNameAndPrice(HtmlNode productNode)
+    private static ProductPreviewDto? GetKonzumNameAndPrice(HtmlNode productNode)
     {
+        // Product name
         var productName = productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim();
 
+        // Get product price and in two vars
+        // Konzum keeps price in euros and cents separated so that's why price needs to be retrieved like this
         var primaryPriceNode = productNode.SelectSingleNode(
             ".//div[@class='price--primary']//span[@class='price--kn']"
         );
@@ -161,55 +179,54 @@ public class ScrapingService : IScrapingService
         );
 
         // Combine primary and secondary prices
-        var primaryPrice = primaryPriceNode.InnerText.Trim();
-        var secondaryPrice = secondaryPriceNode.InnerText.Trim();
+        var formattedPrice = $"{primaryPriceNode.InnerText.Trim()}.{secondaryPriceNode.InnerText.Trim()}";
 
-        // Format the price (replace comma with dot and combine)
-        var formattedPrice = $"{primaryPrice},{secondaryPrice}".Replace(',', '.');
-
-        Console.WriteLine(productName);
-        if (decimal.TryParse(formattedPrice, out var productPrice))
-        {
-            return new ProductPreviewDto
-            {
-                Name = productName,
-                Price = productPrice
-            };
-        }
-
-        return null;
-    }
-
-    private static ProductPreviewDto GetTommyNameAndPrice(HtmlNode productNode)
-    {
-        var productName = productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim();
-
-        var primaryPriceNode = productNode.SelectSingleNode(
-            ".//div[@class='price--primary']//span[@class='price--kn']"
-        );
-        var secondaryPriceNode = productNode.SelectSingleNode(
-            ".//div[@class='price--primary']//div[@class='price__ul']//span[@class='price--li']"
-        );
-
-        // Combine primary and secondary prices
-        var primaryPrice = primaryPriceNode.InnerText.Trim();
-        var secondaryPrice = secondaryPriceNode.InnerText.Trim();
-
-        var formattedPrice = $"{primaryPrice}.{secondaryPrice}";
+        // Image url
+        var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
         if (decimal.TryParse(formattedPrice, out var productPrice))
         {
             return new ProductPreviewDto
             {
                 Name = productName,
-                Price = productPrice
+                Price = productPrice,
+                ImageUrl = imageUrl
             };
         }
 
         return null;
     }
 
-    private static IEnumerable<string> GetCategoryUrls(
+    // private static ProductPreviewDto GetTommyNameAndPrice(HtmlNode productNode)
+    // {
+    //     var productName = productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim();
+    //
+    //     var primaryPriceNode = productNode.SelectSingleNode(
+    //         ".//div[@class='price--primary']//span[@class='price--kn']"
+    //     );
+    //     var secondaryPriceNode = productNode.SelectSingleNode(
+    //         ".//div[@class='price--primary']//div[@class='price__ul']//span[@class='price--li']"
+    //     );
+    //
+    //     // Combine primary and secondary prices
+    //     var primaryPrice = primaryPriceNode.InnerText.Trim();
+    //     var secondaryPrice = secondaryPriceNode.InnerText.Trim();
+    //
+    //     var formattedPrice = $"{primaryPrice}.{secondaryPrice}";
+    //
+    //     if (decimal.TryParse(formattedPrice, out var productPrice))
+    //     {
+    //         return new ProductPreviewDto
+    //         {
+    //             Name = productName,
+    //             Price = productPrice
+    //         };
+    //     }
+    //
+    //     return null;
+    // }
+
+    private static IEnumerable<UrlInfoDto> GetCategoryUrls(
         string baseUrl,
         List<StoreCategoryDto> categories,
         string path = ""
@@ -221,7 +238,11 @@ public class ScrapingService : IScrapingService
 
             if (category.Subcategories.Count == 0)
             {
-                yield return $"{baseUrl}/{newPath}";
+                yield return new UrlInfoDto
+                {
+                    Url = $"{baseUrl}/{newPath}",
+                    EquivalentCategoryId = category.EquivalentCategoryId ?? null
+                };
             }
             else
             {

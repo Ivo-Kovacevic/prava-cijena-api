@@ -60,7 +60,7 @@ public class ProductRepository : IProductRepository
         return existingProduct;
     }
 
-    public async Task UpdatePriceAsync(Guid productId, decimal price)
+    public async Task UpdateLowestPriceAsync(Guid productId, decimal price)
     {
         await _context.Products
             .Where(p => p.Id == productId)

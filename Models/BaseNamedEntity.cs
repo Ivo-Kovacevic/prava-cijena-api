@@ -4,7 +4,7 @@ namespace PravaCijena.Api.Models;
 
 public class BaseNamedEntity : BaseEntity
 {
-    private string _name;
+    private string _name = null!;
 
     public required string Name
     {
@@ -16,5 +16,5 @@ public class BaseNamedEntity : BaseEntity
         }
     }
 
-    public string Slug { get; private set; }
+    public string Slug { get; private set; } = null!;
 }

@@ -12,6 +12,6 @@ public interface IProductRepository
     Task<Product?> GetProductByIdAsync(Guid productId);
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product existingProduct);
-    Task UpdatePriceAsync(Guid productId, decimal price);
+    Task UpdateLowestPriceAsync(Guid productId, decimal price);
     Task DeleteAsync(Product existingProduct);
 }
