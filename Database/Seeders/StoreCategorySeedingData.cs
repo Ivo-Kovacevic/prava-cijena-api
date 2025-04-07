@@ -28,7 +28,7 @@ public class StoreCategorySeedingData
     public static readonly Guid TommyDairyEggsId = new("194aad3f-d0e7-4ace-9781-3b534b63bd76");
     public static readonly Guid TommyEggsId = new("8219aa22-6af7-431b-b8eb-70b2c53c459c");
     public static readonly Guid TommyButterFatId = new("fe378902-103a-43fd-a5c5-77b9179c1cf2");
-    public static readonly Guid TommyCheese = new("860a9f63-5988-425a-b2cd-df521892299a");
+    public static readonly Guid TommyCheeseId = new("860a9f63-5988-425a-b2cd-df521892299a");
     public static readonly Guid TommyDessertsId = new("83c64ddb-7d41-43cc-b92f-09d7e769ba59");
     public static readonly Guid TommyCreamsId = new("dfa3993e-9839-4acf-8098-766c5bbbc38a");
     public static readonly Guid TommySpreadsId = new("cc8d02b4-cfb6-4fd6-8f97-f11637bfc086");
@@ -139,31 +139,35 @@ public class StoreCategorySeedingData
             new() { Id = TommyDrinksId, Name = "pica", StoreId = StoreSeedingData.TommyStoreId },
             new()
             {
-                Id = TommyDairyDrinksId, Name = "mlijecni-proizvodi-i-jaja", StoreId = StoreSeedingData.TommyStoreId
+                Id = TommyDairyEggsId, Name = "mlijecni-proizvodi-i-jaja", StoreId = StoreSeedingData.TommyStoreId
             },
 
             // Drinks subcategories
-            new() { Id = TommyDrinksId, Name = "jaja", EquivalentCategoryId = CategorySeedingData.EggsSubcategoryId },
+            new() { Id = TommyEggsId, Name = "jaja", EquivalentCategoryId = CategorySeedingData.EggsSubcategoryId },
             new()
             {
-                Id = TommyDrinksId, Name = "margarin-maslac-mast",
+                Id = TommyButterFatId, Name = "margarin-maslac-mast",
                 EquivalentCategoryId = CategorySeedingData.ButterSubcategoryId
             },
-            new() { Id = TommyDrinksId, Name = "mlijecni-deserti" },
-            new() { Id = TommyDrinksId, Name = "vrhnje" },
-            new() { Id = TommyDrinksId, Name = "namazi" },
             new()
             {
-                Id = TommyDrinksId, Name = "mlijeko", EquivalentCategoryId = CategorySeedingData.MilkSubcategoryId
+                Id = TommyCheeseId, Name = "sirevi", EquivalentCategoryId = CategorySeedingData.CheeseSubcategoryId
+            },
+            new() { Id = TommyDessertsId, Name = "mlijecni-deserti" },
+            new() { Id = TommyCreamsId, Name = "vrhnje" },
+            new() { Id = TommySpreadsId, Name = "namazi" },
+            new()
+            {
+                Id = TommyMilkId, Name = "mlijeko", EquivalentCategoryId = CategorySeedingData.MilkSubcategoryId
             },
             new()
             {
-                Id = TommyDrinksId, Name = "jogurti-i-ostalo",
+                Id = TommyYogurtId, Name = "jogurti-i-ostalo",
                 EquivalentCategoryId = CategorySeedingData.YogurtSubcategoryId
             },
-            new() { Id = TommyDrinksId, Name = "ledena-kava" },
-            new() { Id = TommyDrinksId, Name = "napitci" },
-            
+            new() { Id = TommyIceCoffeeId, Name = "ledena-kava" },
+            new() { Id = TommyDairyDrinksId, Name = "napitci" },
+
             // Drinks subcategories
             new() { Id = TommyNonAlcoholicId, Name = "bezalkoholna", ParentCategoryId = TommyDrinksId },
             new()
@@ -199,7 +203,7 @@ public class StoreCategorySeedingData
                 EquivalentCategoryId = CategorySeedingData.CarbonatedDrinksSubcategoryId
             },
             new() { Id = TommyStillId, Name = "negazirana-pica", ParentCategoryId = TommyNonAlcoholicId },
-            new() { Id = TommyEnergyId, Name = "energetska-pica", ParentCategoryId = TommyNonAlcoholicId },
+            new() { Id = TommyEnergyId, Name = "energetska-pica", ParentCategoryId = TommyNonAlcoholicId }
         };
     }
 }
