@@ -20,8 +20,7 @@ public class AutomationController : ControllerBase
     public async Task<IActionResult> Scrape()
     {
         var result = await _scrapingService.RunScraper();
-        var random = new Random();
-        return Ok(random.Next(2, 5));
+        return Ok(result);
     }
 
     [HttpPost("analyze")]

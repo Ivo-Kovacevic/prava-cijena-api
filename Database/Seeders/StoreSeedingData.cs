@@ -23,7 +23,7 @@ public class StoreSeedingData
             {
                 Id = KonzumStoreId,
                 Name = "Konzum",
-                StoreUrl = "https://www.konzum.hr/",
+                StoreUrl = "https://www.konzum.hr",
                 BaseUrl = "https://www.konzum.hr/web/t/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
                 ProductListXPath =
@@ -33,63 +33,63 @@ public class StoreSeedingData
             {
                 Id = LidlStoreId,
                 Name = "Lidl",
-                StoreUrl = "https://www.lidl.hr/",
+                StoreUrl = "https://www.lidl.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/lidl.webp"
             },
             new()
             {
                 Id = StudenacStoreId,
                 Name = "Studenac",
-                StoreUrl = "https://www.studenac.hr/",
+                StoreUrl = "https://www.studenac.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/studenac.webp"
             },
             new()
             {
                 Id = TommyStoreId,
                 Name = "Tommy",
-                StoreUrl = "https://www.tommy.hr/",
+                StoreUrl = "https://www.tommy.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp"
             },
             new()
             {
                 Id = SparStoreId,
                 Name = "Spar",
-                StoreUrl = "https://www.spar.hr/",
+                StoreUrl = "https://www.spar.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/spar.webp"
             },
             new()
             {
                 Id = EurospinStoreId,
                 Name = "Eurospin",
-                StoreUrl = "https://www.eurospin.hr/",
+                StoreUrl = "https://www.eurospin.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/eurospin.webp"
             },
             new()
             {
                 Id = KauflandStoreId,
                 Name = "Kaufland",
-                StoreUrl = "https://www.kaufland.hr/",
+                StoreUrl = "https://www.kaufland.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/kaufland.webp"
             },
             new()
             {
                 Id = PlodineStoreId,
                 Name = "Plodine",
-                StoreUrl = "https://www.plodine.hr/",
+                StoreUrl = "https://www.plodine.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/plodine.webp"
             },
             new()
             {
                 Id = MetroStoreId,
                 Name = "Metro",
-                StoreUrl = "https://www.metro-cc.hr/",
+                StoreUrl = "https://www.metro-cc.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/metro.webp"
             },
             new()
             {
                 Id = NtlStoreId,
                 Name = "NTL",
-                StoreUrl = "https://www.ntl.hr/",
+                StoreUrl = "https://www.ntl.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/ntl.webp"
             }
         };

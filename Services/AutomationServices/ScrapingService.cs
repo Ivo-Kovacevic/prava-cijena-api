@@ -1,3 +1,4 @@
+using System.Net;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
 using PravaCijena.Api.Dto.Product;
@@ -32,8 +33,6 @@ public class ScrapingService : IScrapingService
 
     public async Task<int> RunScraper()
     {
-        return 1;
-        
         var storesWithCategories = await _storeRepository.GetAllWithCategories();
         var random = new Random();
         foreach (var store in storesWithCategories)
@@ -65,9 +64,11 @@ public class ScrapingService : IScrapingService
                     Console.WriteLine($"Failed to scrape URL: {urlInfo.Url}, Error: {ex.Message}");
                 }
         }
+
+        return 1;
     }
 
-    private async Task<int> UpdateProductPrices(
+    private async Task<(int, int)> UpdateProductPrices(
         HtmlNodeCollection productNodes,
         StoreWithCategoriesDto store,
         Guid? equivalentCategoryId
@@ -81,13 +82,13 @@ public class ScrapingService : IScrapingService
             switch (store.Slug)
             {
                 case "konzum":
-                    productPreviewDto = GetKonzumNameAndPrice(productNode);
+                    productPreviewDto = GetKonzumNameAndPrice(productNode, store.StoreUrl);
                     break;
                 // case "tommy":
                 //     productPreviewDto = GetTommyNameAndPrice(productNode);
                 //     break;
                 default:
-                    return 0;
+                    return (0, 0);
             }
 
             if (productPreviewDto == null)
@@ -101,73 +102,102 @@ public class ScrapingService : IScrapingService
                 continue;
             }
 
-            // Create new data for each product that doesn't exist
+            /*
+             * Create new entries for each product that doesn't exist
+             */
             if (existingProduct.Similarity <= 0.5 && equivalentCategoryId != null)
             {
-                await _productRepository.CreateAsync(new Product
+                var newProduct = await _productRepository.CreateAsync(new Product
                 {
                     Name = productPreviewDto.Name,
                     ImageUrl = productPreviewDto.ImageUrl,
                     CategoryId = equivalentCategoryId.Value,
                     LowestPrice = productPreviewDto.Price
                 });
-                // _productStoreRepository.CreateAsync();
-                // _priceRepository.CreateAsync();
                 productsCreated++;
-            }
 
-            /*
-             * Update the lowest product price if product name is similar with found product
-             * and current price is from yesterday
-             * or if it's lower than current price
-             */
-            if (existingProduct.Similarity >= 0.95
-                && (existingProduct.UpdatedAt.Date < DateTime.UtcNow.Date
-                    || productPreviewDto.Price < existingProduct.LowestPrice))
-            {
-                await _productRepository.UpdateLowestPriceAsync(existingProduct.Id, productPreviewDto.Price);
-                productsUpdated++;
-            }
-
-            var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
-                existingProduct.Id,
-                store.Id
-            );
-
-            // Create new ProductStore if it doesn't exist or just update price if it does
-            if (productStore == null)
-            {
-                productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                var productStore = await _productStoreRepository.CreateAsync(new ProductStore
                 {
-                    ProductId = existingProduct.Id,
+                    ProductId = newProduct.Id,
                     StoreId = store.Id,
+                    ProductUrl = productPreviewDto.ProductUrl,
                     LatestPrice = productPreviewDto.Price
                 });
-            }
-            else
-            {
-                await _productStoreRepository.UpdatePriceAsync(productStore.Id, productPreviewDto.Price);
-            }
 
-            // Create today's price if it doesn't exist
-            var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id)).FirstOrDefault();
-            if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
-            {
                 await _priceRepository.CreateAsync(new Price
                 {
                     Amount = productPreviewDto.Price,
                     ProductStoreId = productStore.Id
                 });
+
+                continue;
+            }
+
+            /*
+             * Update product if it's similar enough
+             */
+            if (existingProduct.Similarity >= 0.95)
+            {
+                /*
+                 * Update the lowest price if current price is from yesterday or if it's lower than current price
+                 */
+                if (existingProduct.UpdatedAt.Date < DateTime.UtcNow.Date ||
+                    productPreviewDto.Price < existingProduct.LowestPrice
+                   )
+                {
+                    await _productRepository.UpdateLowestPriceAsync(existingProduct.Id, productPreviewDto.Price);
+                }
+
+                productsUpdated++;
+
+                var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
+                    existingProduct.Id,
+                    store.Id
+                );
+
+                if (productStore == null)
+                {
+                    productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                    {
+                        ProductId = existingProduct.Id,
+                        StoreId = store.Id,
+                        ProductUrl = productPreviewDto.ProductUrl,
+                        LatestPrice = productPreviewDto.Price
+                    });
+
+                    await _priceRepository.CreateAsync(new Price
+                    {
+                        Amount = productPreviewDto.Price,
+                        ProductStoreId = productStore.Id
+                    });
+
+                    continue;
+                }
+
+                await _productStoreRepository.UpdatePriceAsync(productStore.Id, productPreviewDto.Price);
+
+                var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id))
+                    .FirstOrDefault();
+                if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
+                {
+                    await _priceRepository.CreateAsync(new Price
+                    {
+                        Amount = productPreviewDto.Price,
+                        ProductStoreId = productStore.Id
+                    });
+                }
             }
         }
 
-        return productsUpdated;
+        return (productsUpdated, productsCreated);
     }
 
-    private static ProductPreviewDto? GetKonzumNameAndPrice(HtmlNode productNode)
+    private static ProductPreviewDto? GetKonzumNameAndPrice(HtmlNode productNode, string storeUrl)
     {
         // Product name
-        var productName = productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim();
+        var productName = WebUtility.HtmlDecode(
+            productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
+        );
 
         // Get product price and in two vars
         // Konzum keeps price in euros and cents separated so that's why price needs to be retrieved like this
@@ -183,6 +213,7 @@ public class ScrapingService : IScrapingService
 
         // Image url
         var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
+        var productUrl = productNode.SelectNodes(".//a")[0].GetAttributeValue("href", "");
 
         if (decimal.TryParse(formattedPrice, out var productPrice))
         {
@@ -190,6 +221,7 @@ public class ScrapingService : IScrapingService
             {
                 Name = productName,
                 Price = productPrice,
+                ProductUrl = storeUrl + productUrl,
                 ImageUrl = imageUrl
             };
         }
