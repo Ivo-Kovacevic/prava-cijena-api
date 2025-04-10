@@ -27,7 +27,9 @@ public class StoreSeedingData
                 BaseUrl = "https://www.konzum.hr/web/t/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
                 ProductListXPath =
-                    "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article"
+                    "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article",
+                PageQuery = "page",
+                LimitQuery = "per_page"
             },
             new()
             {

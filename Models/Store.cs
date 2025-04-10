@@ -7,6 +7,8 @@ public class Store : BaseNamedEntity
     public string? ProductListXPath { get; set; }
 
     public required string ImageUrl { get; set; }
+    public string? PageQuery { get; set; }
+    public string? LimitQuery { get; set; }
     public ICollection<ProductStore> StoreProducts { get; set; } = [];
     public List<StoreCategory> Categories { get; set; }
 }

@@ -42,22 +42,36 @@ public class ScrapingService : IScrapingService
             foreach (var urlInfo in urlsInfo)
                 try
                 {
-                    // ------------ Add random delay between scraping websites ------------
-                    await Task.Delay(random.Next(2, 5) * 1000);
+                    var page = 1;
+                    const int perPage = 100;
+                    var hasMoreProducts = true;
 
-                    var html = await _httpClient.GetStringAsync(urlInfo.Url);
-                    Console.WriteLine(urlInfo.Url);
-
-                    var htmlDocument = new HtmlDocument();
-                    htmlDocument.LoadHtml(html);
-
-                    var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
-                    if (productNodes.Count == 0)
+                    while (hasMoreProducts)
                     {
-                        continue;
-                    }
+                        // ------------ Add random delay between scraping websites ------------
+                        await Task.Delay(random.Next(2, 5) * 1000);
 
-                    var updated = await UpdateProductPrices(productNodes, store, urlInfo.EquivalentCategoryId);
+                        var pageUrl = $"{urlInfo.Url}?{store.PageQuery}={page}&{store.LimitQuery}={perPage}";
+                        
+                        var html = await _httpClient.GetStringAsync(pageUrl);
+                        var htmlDocument = new HtmlDocument();
+                        htmlDocument.LoadHtml(html);
+                        
+                        var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
+                        if (productNodes.Count == 0)
+                        {
+                            hasMoreProducts = false;
+                            continue;
+                        }
+                        
+                        var productsInfo = await HandleFoundProducts(productNodes, store, urlInfo.EquivalentCategoryId);
+                        page++;
+
+                        if (productNodes.Count < 100)
+                        {
+                            hasMoreProducts = false;
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -68,7 +82,7 @@ public class ScrapingService : IScrapingService
         return 1;
     }
 
-    private async Task<(int, int)> UpdateProductPrices(
+    private async Task<(int, int)> HandleFoundProducts(
         HtmlNodeCollection productNodes,
         StoreWithCategoriesDto store,
         Guid? equivalentCategoryId
@@ -97,7 +111,7 @@ public class ScrapingService : IScrapingService
             }
 
             var existingProduct = (await _productRepository.Search(productPreviewDto.Name)).FirstOrDefault();
-            if (existingProduct == null || existingProduct.Similarity is > 0.5 and < 0.95)
+            if (existingProduct == null || existingProduct.Similarity is > 0.6 and < 0.95)
             {
                 continue;
             }
@@ -105,7 +119,7 @@ public class ScrapingService : IScrapingService
             /*
              * Create new entries for each product that doesn't exist
              */
-            if (existingProduct.Similarity <= 0.5 && equivalentCategoryId != null)
+            if (existingProduct.Similarity <= 0.6 && equivalentCategoryId != null)
             {
                 var newProduct = await _productRepository.CreateAsync(new Product
                 {
@@ -146,9 +160,9 @@ public class ScrapingService : IScrapingService
                    )
                 {
                     await _productRepository.UpdateLowestPriceAsync(existingProduct.Id, productPreviewDto.Price);
+                    productsUpdated++;
                 }
 
-                productsUpdated++;
 
                 var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
                     existingProduct.Id,
