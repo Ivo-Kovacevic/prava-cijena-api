@@ -34,10 +34,11 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task<List<Category>> GetAllRootCategoriesAsync()
+    public async Task<List<Category>> GetAllCategoriesAsync()
     {
         return await _context.Categories
             .Where(c => c.ParentCategoryId == null)
+            .Include(c => c.Subcategories)
             .ToListAsync();
     }
 

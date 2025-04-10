@@ -33,7 +33,7 @@ public class CategoryController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> Index()
     {
-        var categoriesDto = await _categoryService.GetRootCategoriesAsync();
+        var categoriesDto = await _categoryService.GetCategoriesAsync();
         return Ok(categoriesDto);
     }
 

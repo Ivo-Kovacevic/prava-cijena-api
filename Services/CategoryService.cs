@@ -31,9 +31,9 @@ public class CategoryService : ICategoryService
     /*
      * ID SERVICE
      */
-    public async Task<IEnumerable<CategoryDto>> GetRootCategoriesAsync()
+    public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
-        var categories = await _categoryRepo.GetAllRootCategoriesAsync();
+        var categories = await _categoryRepo.GetAllCategoriesAsync();
 
         return categories.Select(c => c.ToCategoryDto());
     }
