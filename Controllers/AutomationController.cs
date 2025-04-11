@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Controllers;
 
@@ -17,7 +18,7 @@ public class AutomationController : ControllerBase
     }
 
     [HttpPost("scrape")]
-    public async Task<IActionResult> Scrape()
+    public async Task<ActionResult<AutomationResult>> Scrape()
     {
         var result = await _scrapingService.RunScraper();
         return Ok(result);

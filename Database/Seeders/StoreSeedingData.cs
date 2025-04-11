@@ -50,7 +50,11 @@ public class StoreSeedingData
                 Id = TommyStoreId,
                 Name = "Tommy",
                 StoreUrl = "https://www.tommy.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp"
+                BaseUrl = "https://www.tommy.hr/kategorije",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp",
+                ProductListXPath = "//section//article",
+                PageQuery = "page",
+                LimitQuery = "limit"
             },
             new()
             {
