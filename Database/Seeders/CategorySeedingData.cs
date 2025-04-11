@@ -47,53 +47,61 @@ public class CategorySeedingData
             {
                 Id = DairyCategoryId,
                 Name = "Mliječni proizvodi i jaja",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317792/dairy.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317792/dairy.svg",
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = MilkSubcategoryId,
                 Name = "Mlijeko",
                 ParentCategoryId = DairyCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317799/milk.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317799/milk.svg",
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = EggsSubcategoryId,
                 Name = "Jaja",
                 ParentCategoryId = DairyCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317793/eggs.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317793/eggs.svg",
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = CheeseSubcategoryId,
                 Name = "Sirevi",
                 ParentCategoryId = DairyCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317789/cheese.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317789/cheese.svg",
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = YogurtSubcategoryId,
                 Name = "Jogurti, kefiri, vrhnja",
                 ParentCategoryId = DairyCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317807/yogurt.png"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317807/yogurt.png",
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = ButterSubcategoryId,
                 Name = "Maslac, margarin, mast",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = MilkSpreadsSubcategoryId,
                 Name = "Mliječni namazi",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                HexColor = "#1E71B8"
             },
             new()
             {
                 Id = MilkDesertsSubcategoryId,
                 Name = "Mliječni deserti",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                HexColor = "#1E71B8"
             },
 
             /*
@@ -102,33 +110,38 @@ public class CategorySeedingData
             new()
             {
                 Id = FruitsAndVegetablesCategoryId,
-                Name = "Voće i povrće"
+                Name = "Voće i povrće",
+                HexColor = "#FF7373"
             },
             new()
             {
                 Id = FruitsSubcategoryId,
                 Name = "Voće",
                 ParentCategoryId = FruitsAndVegetablesCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317796/fruits.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317796/fruits.svg",
+                HexColor = "#FF7373"
             },
             new()
             {
                 Id = VegetablesSubcategoryId,
                 Name = "Povrće",
                 ParentCategoryId = FruitsAndVegetablesCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317803/vegetables.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317803/vegetables.svg",
+                HexColor = "#FF7373"
             },
             new()
             {
                 Id = FrozenFruitsAndVegetablesSubcategoryId,
                 Name = "Smrznuto voće i povrće",
-                ParentCategoryId = FruitsAndVegetablesCategoryId
+                ParentCategoryId = FruitsAndVegetablesCategoryId,
+                HexColor = "#FF7373"
             },
             new()
             {
                 Id = DryFruitsAndVegetablesSubcategoryId,
                 Name = "Suho voće i povrće, orašasto, sjemenke",
-                ParentCategoryId = FruitsAndVegetablesCategoryId
+                ParentCategoryId = FruitsAndVegetablesCategoryId,
+                HexColor = "#FF7373"
             },
 
             /*
@@ -138,20 +151,23 @@ public class CategorySeedingData
             {
                 Id = BeveragesCategoryId,
                 Name = "Pića",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317784/beverages.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317784/beverages.svg",
+                HexColor = "#41949E"
             },
             new()
             {
                 Id = WaterCategoryId,
                 Name = "Voda",
-                ParentCategoryId = BeveragesCategoryId
+                ParentCategoryId = BeveragesCategoryId,
+                HexColor = "#41949E"
             },
             new()
             {
                 Id = CarbonatedDrinksSubcategoryId,
                 Name = "Gazirana pića",
                 ParentCategoryId = BeveragesCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317788/carbonated-drinks.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317788/carbonated-drinks.svg",
+                HexColor = "#41949E"
             },
 
             new()
@@ -159,14 +175,16 @@ public class CategorySeedingData
                 Id = NonCarbonatedSubcategoryId,
                 Name = "Negazirana pića",
                 ParentCategoryId = BeveragesCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317800/non-carbonated.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317800/non-carbonated.svg",
+                HexColor = "#41949E"
             },
             new()
             {
                 Id = AlcoholDrinksSubcategoryId,
                 Name = "Alkoholna pića",
                 ParentCategoryId = BeveragesCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317783/alcohol.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317783/alcohol.svg",
+                HexColor = "#41949E"
             },
 
             /*
@@ -176,32 +194,37 @@ public class CategorySeedingData
             {
                 Id = SnacksAndSweetsCategoryId,
                 Name = "Grickalice i slatkiši",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317787/candies.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317787/candies.svg",
+                HexColor = "#A4539E"
             },
             new()
             {
                 Id = ChocolateSubcategoryId,
                 Name = "Čokolade, bombonjere, snackovi",
                 ParentCategoryId = SnacksAndSweetsCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317790/chocolate.svg"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317790/chocolate.svg",
+                HexColor = "#A4539E"
             },
             new()
             {
                 Id = ChipsAndOtherSnacksSubcategoryId,
                 Name = "Čips, flips, štapići i ostale grickalice",
-                ParentCategoryId = SnacksAndSweetsCategoryId
+                ParentCategoryId = SnacksAndSweetsCategoryId,
+                HexColor = "#A4539E"
             },
             new()
             {
                 Id = CandiesAndOtherSweetsSubcategoryId,
                 Name = "Bomboni, lizalice i ostali slatkiši",
-                ParentCategoryId = SnacksAndSweetsCategoryId
+                ParentCategoryId = SnacksAndSweetsCategoryId,
+                HexColor = "#A4539E"
             },
             new()
             {
                 Id = CookiesSubcategoryId,
                 Name = "Keksi",
-                ParentCategoryId = SnacksAndSweetsCategoryId
+                ParentCategoryId = SnacksAndSweetsCategoryId,
+                HexColor = "#A4539E"
             }
         };
     }

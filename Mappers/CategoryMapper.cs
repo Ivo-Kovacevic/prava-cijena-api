@@ -14,6 +14,7 @@ public static class CategoryMapper
             Name = category.Name,
             Slug = category.Slug,
             ImageUrl = category.ImageUrl,
+            HexColor = category.HexColor,
             ParentCategoryId = category.ParentCategoryId,
             Subcategories = category.Subcategories.Select(c => c.ToCategoryDto()).ToList(),
             CreatedAt = category.CreatedAt,
