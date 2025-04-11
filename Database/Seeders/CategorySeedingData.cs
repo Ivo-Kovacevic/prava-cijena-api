@@ -46,31 +46,36 @@ public class CategorySeedingData
             new()
             {
                 Id = DairyCategoryId,
-                Name = "Mliječni proizvodi i jaja"
+                Name = "Mliječni proizvodi i jaja",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317792/dairy.svg"
             },
             new()
             {
                 Id = MilkSubcategoryId,
                 Name = "Mlijeko",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317799/milk.svg"
             },
             new()
             {
                 Id = EggsSubcategoryId,
                 Name = "Jaja",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317793/eggs.svg"
             },
             new()
             {
                 Id = CheeseSubcategoryId,
                 Name = "Sirevi",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317789/cheese.svg"
             },
             new()
             {
                 Id = YogurtSubcategoryId,
                 Name = "Jogurti, kefiri, vrhnja",
-                ParentCategoryId = DairyCategoryId
+                ParentCategoryId = DairyCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317807/yogurt.png"
             },
             new()
             {
@@ -103,13 +108,15 @@ public class CategorySeedingData
             {
                 Id = FruitsSubcategoryId,
                 Name = "Voće",
-                ParentCategoryId = FruitsAndVegetablesCategoryId
+                ParentCategoryId = FruitsAndVegetablesCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317796/fruits.svg"
             },
             new()
             {
                 Id = VegetablesSubcategoryId,
                 Name = "Povrće",
-                ParentCategoryId = FruitsAndVegetablesCategoryId
+                ParentCategoryId = FruitsAndVegetablesCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317803/vegetables.svg"
             },
             new()
             {
@@ -130,7 +137,8 @@ public class CategorySeedingData
             new()
             {
                 Id = BeveragesCategoryId,
-                Name = "Pića"
+                Name = "Pića",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317784/beverages.svg"
             },
             new()
             {
@@ -142,20 +150,23 @@ public class CategorySeedingData
             {
                 Id = CarbonatedDrinksSubcategoryId,
                 Name = "Gazirana pića",
-                ParentCategoryId = BeveragesCategoryId
+                ParentCategoryId = BeveragesCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317788/carbonated-drinks.svg"
             },
 
             new()
             {
                 Id = NonCarbonatedSubcategoryId,
                 Name = "Negazirana pića",
-                ParentCategoryId = BeveragesCategoryId
+                ParentCategoryId = BeveragesCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317800/non-carbonated.svg"
             },
             new()
             {
                 Id = AlcoholDrinksSubcategoryId,
                 Name = "Alkoholna pića",
-                ParentCategoryId = BeveragesCategoryId
+                ParentCategoryId = BeveragesCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317783/alcohol.svg"
             },
 
             /*
@@ -164,13 +175,15 @@ public class CategorySeedingData
             new()
             {
                 Id = SnacksAndSweetsCategoryId,
-                Name = "Grickalice i slatkiši"
+                Name = "Grickalice i slatkiši",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317787/candies.svg"
             },
             new()
             {
                 Id = ChocolateSubcategoryId,
                 Name = "Čokolade, bombonjere, snackovi",
-                ParentCategoryId = SnacksAndSweetsCategoryId
+                ParentCategoryId = SnacksAndSweetsCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1744317790/chocolate.svg"
             },
             new()
             {
