@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using System.Web;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
 using PravaCijena.Api.Dto.Product;
@@ -131,7 +130,7 @@ public class ScrapingService : IScrapingService
             /*
              * Create new entries for each product that doesn't exist
              */
-            if (existingProduct.Similarity <= 0.6 && equivalentCategoryId != null)
+            if (existingProduct.Similarity <= 0.6 && equivalentCategoryId.HasValue)
             {
                 var newProduct = await _productRepository.CreateAsync(new Product
                 {
@@ -226,25 +225,17 @@ public class ScrapingService : IScrapingService
     {
         // Product name
         var productName = WebUtility.HtmlDecode(
-            productNode.SelectNodes(".//a[@class='link-to-product']")[1]?.InnerText.Trim()
+            productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
         );
-        if (productName == null)
-        {
-            return null;
-        }
 
         // Get product price and in two vars
         // Konzum keeps price in euros and cents separated so that's why price needs to be retrieved like this
         var primaryPriceNode = productNode.SelectSingleNode(
             ".//div[@class='price--primary']//span[@class='price--kn']"
-        )?.InnerText.Trim();
+        ).InnerText.Trim();
         var secondaryPriceNode = productNode.SelectSingleNode(
             ".//div[@class='price--primary']//div[@class='price__ul']//span[@class='price--li']"
-        )?.InnerText.Trim();
-        if (primaryPriceNode == null || secondaryPriceNode == null)
-        {
-            return null;
-        }
+        ).InnerText.Trim();
 
         // Combine primary and secondary prices
         var formattedPrice = $"{primaryPriceNode}.{secondaryPriceNode}";
@@ -271,27 +262,21 @@ public class ScrapingService : IScrapingService
     {
         // Product name
         var productName = WebUtility.HtmlDecode(
-            productNode.SelectSingleNode(".//h3/a")?.InnerText.Trim()
+            productNode.SelectSingleNode(".//h3/a").InnerText.Trim()
         );
-        if (productName == null)
-        {
-            return null;
-        }
 
         // Product price
         var priceText = productNode.SelectSingleNode(
             ".//span[@class='mt-auto inline-block-block text-sm font-bold text-gray-900']"
-        )?.InnerText.Trim().Replace(',', '.');
-        if (priceText == null)
-        {
-            return null;
-        }
+        ).InnerText.Trim().Replace(',', '.');
 
         var matchedPrice = Regex.Match(priceText, @"\d+(\.\d+)?");
 
         // Product and image url
         var productUrl = productNode.SelectNodes(".//a")[0].GetAttributeValue("href", "");
-        var imageUrl = productNode.SelectSingleNode(".//img")?.GetAttributeValue("src", "");
+        
+        // Can't get image url this way, it is in format like this: data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
+        // var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
         if (matchedPrice.Success && decimal.TryParse(matchedPrice.Value, out var productPrice))
         {
@@ -300,7 +285,7 @@ public class ScrapingService : IScrapingService
                 Name = productName,
                 Price = productPrice,
                 ProductUrl = storeUrl + productUrl,
-                ImageUrl = imageUrl != null ? storeUrl + imageUrl : null
+                ImageUrl = null
             };
         }
 
