@@ -75,10 +75,18 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query)
     {
+        var subcategoryIds = await _context.Categories
+            .Where(c => c.ParentCategoryId == categoryId)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
+
         return await _context.Products
-            .Where(p => p.CategoryId == categoryId)
+            .Where(p => categoryIdsToSearch.Contains(p.CategoryId))
             .Skip((query.Page - 1) * query.Limit)
             .Take(query.Limit)
+            .OrderBy(p => p.LowestPrice)
             .ToListAsync();
     }
 }
