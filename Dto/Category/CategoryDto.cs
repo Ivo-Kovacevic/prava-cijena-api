@@ -1,3 +1,4 @@
+using PravaCijena.Api.Dto.Label;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Dto.Category;
@@ -10,4 +11,5 @@ public class CategoryDto : BaseEntity
     public string? ImageUrl { get; set; }
     public Guid? ParentCategoryId { get; set; }
     public ICollection<CategoryDto> Subcategories { get; set; } = [];
+    public ICollection<LabelDto> Labels { get; set; } = [];
 }

@@ -18,6 +18,8 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories
             .Where(c => c.Slug == categorySlug)
+            .Include(c => c.Subcategories)
+            .Include(c => c.Labels)
             .FirstOrDefaultAsync();
     }
 

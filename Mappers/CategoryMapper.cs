@@ -17,6 +17,7 @@ public static class CategoryMapper
             HexColor = category.HexColor,
             ParentCategoryId = category.ParentCategoryId,
             Subcategories = category.Subcategories.Select(c => c.ToCategoryDto()).ToList(),
+            Labels = category.Labels.Select(l => l.ToLabelDto()).ToList(),
             CreatedAt = category.CreatedAt,
             UpdatedAt = category.UpdatedAt
         };
