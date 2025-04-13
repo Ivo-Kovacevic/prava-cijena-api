@@ -4,7 +4,7 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface ICategoryRepository
 {
-    Task<Category?> GetBySlugWithSubcategoriesAsync(string categorySlug);
+    Task<Category?> GetBySlugWithFiltersAsync(string categorySlug);
     Task<Category?> GetBySlugAsync(string categorySlug);
     Task<List<Category>> GetAllCategoriesAsync();
     Task<Category?> GetByIdAsync(Guid categoryId);

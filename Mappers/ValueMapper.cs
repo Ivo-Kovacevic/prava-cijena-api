@@ -23,9 +23,12 @@ public static class ValueMapper
     {
         return new ValueDto
         {
+            Id = value.Id,
             Name = value.Name,
             Slug = value.Slug,
-            LabelId = value.LabelId
+            LabelId = value.LabelId,
+            CreatedAt = value.CreatedAt,
+            UpdatedAt = value.UpdatedAt
         };
     }
 

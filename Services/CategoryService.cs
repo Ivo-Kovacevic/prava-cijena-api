@@ -19,7 +19,7 @@ public class CategoryService : ICategoryService
      */
     public async Task<CategoryDto> GetCategoryBySlugWithSubcategoriesAsync(string categorySlug)
     {
-        var category = await _categoryRepo.GetBySlugWithSubcategoriesAsync(categorySlug);
+        var category = await _categoryRepo.GetBySlugWithFiltersAsync(categorySlug);
         if (category == null)
         {
             throw new NotFoundException($"Category '{categorySlug}' not found.");

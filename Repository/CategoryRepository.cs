@@ -18,22 +18,17 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories
             .Where(c => c.Slug == categorySlug)
-            .Include(c => c.Subcategories)
-            .Include(c => c.Labels)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Category?> GetBySlugWithSubcategoriesAsync(string categorySlug)
+    public async Task<Category?> GetBySlugWithFiltersAsync(string categorySlug)
     {
-        var category = await _context.Categories
+        return await _context.Categories
             .Where(c => c.Slug == categorySlug)
+            .Include(c => c.Subcategories)
+            .Include(c => c.Labels)
+            .ThenInclude(l => l.Values)
             .FirstOrDefaultAsync();
-        if (category != null)
-        {
-            await LoadSubcategoriesRecursive(category);
-        }
-
-        return category;
     }
 
     public async Task<List<Category>> GetAllCategoriesAsync()
@@ -41,6 +36,7 @@ public class CategoryRepository : ICategoryRepository
         return await _context.Categories
             .Where(c => c.ParentCategoryId == null)
             .Include(c => c.Subcategories)
+            .Include(c => c.Labels)
             .ToListAsync();
     }
 

@@ -27,6 +27,7 @@ public static class LabelMapper
             Name = label.Name,
             Slug = label.Slug,
             CategoryId = label.CategoryId,
+            Values = label.Values.Select(v => v.ToValueDto()).ToList(),
             CreatedAt = label.CreatedAt,
             UpdatedAt = label.UpdatedAt
         };
