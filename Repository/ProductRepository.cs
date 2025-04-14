@@ -31,8 +31,8 @@ public class ProductRepository : IProductRepository
                           similarity(""Name"", {searchTerm}) AS ""Similarity""
                    FROM ""Products""
                    WHERE similarity(""Name"", {searchTerm}) > 0.05
-                   ORDER BY similarity(""Name"", {searchTerm})
-                   DESC"
+                   ORDER BY similarity(""Name"", {searchTerm}) DESC
+                   LIMIT 5"
             )
             .ToListAsync();
 

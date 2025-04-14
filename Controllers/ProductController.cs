@@ -39,9 +39,9 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("products/search")]
-    public async Task<ActionResult<IEnumerable<Product>>> Search(string productName)
+    public async Task<ActionResult<IEnumerable<Product>>> Search([FromQuery] string searchTerm)
     {
-        var productsDto = await _productService.SearchProduct(productName);
+        var productsDto = await _productService.SearchProduct(searchTerm);
         return Ok(productsDto);
     }
 
