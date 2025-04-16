@@ -2,6 +2,7 @@ using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Repository;
 using PravaCijena.Api.Services;
 using PravaCijena.Api.Services.AutomationServices;
+using PravaCijena.Api.Services.Gemini;
 
 namespace PravaCijena.Api.Config;
 
@@ -35,6 +36,9 @@ public static class ServiceCollection
 
         services.AddHttpClient<IScrapingService, ScrapingService>();
         services.AddScoped<IScrapingService, ScrapingService>();
+
+        services.AddHttpClient<IGeminiService, GeminiService>();
+        services.AddScoped<IGeminiService, GeminiService>();
 
         return services;
     }

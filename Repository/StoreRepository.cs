@@ -48,6 +48,7 @@ public class StoreRepository : IStoreRepository
                     .Select(GetStoreCategoryProjection(10, 0))
                     .ToList()
             })
+            .OrderBy(s => s.Name)
             .ToListAsync();
 
         return stores;
