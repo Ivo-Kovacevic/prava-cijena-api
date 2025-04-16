@@ -9,8 +9,11 @@ public static class ProductStoreMapper
     {
         return new ProductStoreDto
         {
+            Id = productStore.Id,
             ProductId = productStore.ProductId,
-            StoreId = productStore.StoreId
+            StoreId = productStore.StoreId,
+            LatestPrice = productStore.LatestPrice,
+            ProductUrl = productStore.ProductUrl
         };
     }
 
