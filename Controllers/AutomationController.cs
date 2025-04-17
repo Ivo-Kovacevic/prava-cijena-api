@@ -20,12 +20,12 @@ public class AutomationController : ControllerBase
         _geminiService = geminiService;
     }
 
-    [HttpPost("compare")]
-    public async Task<IActionResult> Compare(string existingProduct, string newProduct)
-    {
-        var result = await _geminiService.CompareProductNamesAsync(existingProduct, newProduct);
-        return Ok(result);
-    }
+    // [HttpPost("compare")]
+    // public async Task<IActionResult> Compare(string existingProduct, string newProduct)
+    // {
+    //     var result = await _geminiService.CompareProductsAsync();
+    //     return Ok(result);
+    // }
 
     [HttpPost("scrape")]
     public async Task<ActionResult<AutomationResult>> Scrape()

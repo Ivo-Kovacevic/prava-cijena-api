@@ -2,7 +2,11 @@ using System.Text;
 using System.Text.Json;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
 using PravaCijena.Api.Services.Gemini.GeminiRequest;
+using PravaCijena.Api.Services.Gemini.GeminiResponse;
+using Content = PravaCijena.Api.Services.Gemini.GeminiRequest.Content;
+using Part = PravaCijena.Api.Services.Gemini.GeminiRequest.Part;
 
 namespace PravaCijena.Api.Services.Gemini;
 
@@ -15,9 +19,9 @@ public class GeminiService : ApiConfig, IGeminiService
         _httpClient = httpClient;
     }
 
-    public async Task<string> CompareProductNamesAsync(string existingProduct, string newProduct)
+    public async Task<List<ComparedResult>> CompareProductsAsync(List<MappedProduct> mappedProducts)
     {
-        var requestBody = new GeminiRequest.GeminiRequest()
+        var requestBody = new GeminiRequestModel
         {
             Contents =
             [
@@ -28,17 +32,35 @@ public class GeminiService : ApiConfig, IGeminiService
                         new Part
                         {
                             Text = $@"You are an AI specializing in grocery product name matching.
-                            Input: {{
-                                existingProduct: {existingProduct},
-                                newProduct: {newProduct}
-                            }}
+                            Input: {JsonSerializer.Serialize(mappedProducts)}
 
-                            Task: Determine if the two names refer to the exact same product item, considering brand, variant, and *exact* size/quantity. Ignore minor differences in capitalization, punctuation, word order, and common abbreviations (g/G, l/L).
-                            Output: Respond *only* with a JSON object:
-                            {{
-                              ""productName"": ""[First input existing product name]"",
-                              ""sameProduct"": [true if they are the same item, false otherwise]
-                            }}"
+                            Each object has:
+                            - existingProduct: The product already in our database.
+                            - productPreview: A newly scraped product to compare.
+
+                            ### TASK:
+                            Determine if the *existingProduct.name* and *productPreview.name* are same products, considering brand, variant, and *exact* size/quantity.
+                            Ignore minor differences in capitalization, punctuation, word order, and common abbreviations (g/G, l/L).
+
+                            ### OUTPUT RULES:
+                            - Output MUST be a valid JSON array of objects.
+                            - Each object must have:
+                              - existingProduct (unchanged from input)
+                              - productPreview (unchanged from input)
+                              - isSameProduct (true/false)
+                            - Do NOT change or truncate any fields.
+                            - Do NOT include comments or explanations.
+                            - Do NOT output anything except the JSON.
+
+                            ### EXAMPLE OUTPUT:
+                            [
+                               {{
+                                   ""existingProduct"": {{ ... }},
+                                   ""productPreview"": {{ ... }},
+                                   ""isSameProduct"": true
+                               }},
+                               ...
+                            ]"
                         }
                     ]
                 }
@@ -50,7 +72,7 @@ public class GeminiService : ApiConfig, IGeminiService
         };
 
         var url =
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GeminiApiKey}";
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GeminiApiKey}";
         var json = JsonSerializer.Serialize(requestBody);
         var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
@@ -61,7 +83,17 @@ public class GeminiService : ApiConfig, IGeminiService
         response.EnsureSuccessStatusCode();
 
         var responseBody = await response.Content.ReadAsStringAsync();
-        return responseBody;
+        var geminiResponse = JsonSerializer.Deserialize<GeminiResponseModel>(responseBody, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        var text = geminiResponse.Candidates.First().Content.Parts.First().Text;
+        var compareResult = JsonSerializer.Deserialize<List<ComparedResult>>(text, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        return compareResult;
     }
 }
-

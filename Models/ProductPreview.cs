@@ -1,6 +1,6 @@
-namespace PravaCijena.Api.Dto.Product;
+namespace PravaCijena.Api.Models;
 
-public class ProductPreviewDto
+public class ProductPreview
 {
     public string Name { get; set; }
     public decimal Price { get; set; }

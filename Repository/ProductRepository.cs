@@ -30,7 +30,7 @@ public class ProductRepository : IProductRepository
                 $@"SELECT *,
                           similarity(""Name"", {searchTerm}) AS ""Similarity""
                    FROM ""Products""
-                   WHERE similarity(""Name"", {searchTerm}) > 0.05
+                   WHERE similarity(""Name"", {searchTerm}) > 0.00
                    ORDER BY similarity(""Name"", {searchTerm}) DESC
                    LIMIT 5"
             )

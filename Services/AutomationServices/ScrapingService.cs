@@ -2,15 +2,16 @@ using System.Net;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
-using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
+using PravaCijena.Api.Services.Gemini.GeminiResponse;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
 public class ScrapingService : IScrapingService
 {
+    private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
     private readonly IPriceRepository _priceRepository;
     private readonly IProductRepository _productRepository;
@@ -19,6 +20,7 @@ public class ScrapingService : IScrapingService
 
     public ScrapingService(
         HttpClient httpClient,
+        IGeminiService geminiService,
         IProductRepository productRepository,
         IStoreRepository storeRepository,
         IProductStoreRepository productStoreRepository,
@@ -26,6 +28,7 @@ public class ScrapingService : IScrapingService
     )
     {
         _httpClient = httpClient;
+        _geminiService = geminiService;
         _productRepository = productRepository;
         _storeRepository = storeRepository;
         _productStoreRepository = productStoreRepository;
@@ -76,7 +79,16 @@ public class ScrapingService : IScrapingService
                             continue;
                         }
 
-                        await HandleFoundProducts(productNodes, store, urlInfo.EquivalentCategoryId, results);
+                        // await HandleFoundProducts(productNodes, store, urlInfo.EquivalentCategoryId, results);
+                        var productPreviews = ProductNodesToProductPreviewList(productNodes, store);
+                        var mappedProducts = await MapScrapedToExistingProducts(productPreviews);
+                        var comparedProducts = new List<ComparedResult>();
+                        foreach (var chunk in mappedProducts.Chunk(10))
+                        {
+                            var result = await _geminiService.CompareProductsAsync(chunk.ToList());
+                            comparedProducts.AddRange(result);
+                        }
+                        await HandleComparedProducts(comparedProducts, store, urlInfo.EquivalentCategoryId, results);
                         page++;
 
                         if (productNodes.Count < 100)
@@ -94,91 +106,88 @@ public class ScrapingService : IScrapingService
         return results;
     }
 
-    private async Task HandleFoundProducts(
+    private static List<ProductPreview> ProductNodesToProductPreviewList(
         HtmlNodeCollection productNodes,
-        StoreWithCategoriesDto store,
-        Guid? equivalentCategoryId,
-        AutomationResult results
+        StoreWithCategoriesDto store
     )
     {
+        var productPreviews = new List<ProductPreview>();
+
         foreach (var productNode in productNodes)
         {
-            ProductPreviewDto? productPreviewDto;
+            ProductPreview? productPreview;
             switch (store.Slug)
             {
                 case "konzum":
-                    productPreviewDto = GetKonzumNameAndPrice(productNode, store.StoreUrl);
+                    productPreview = GetKonzumNameAndPrice(productNode, store.StoreUrl);
                     break;
                 case "tommy":
-                    productPreviewDto = GetTommyNameAndPrice(productNode, store.StoreUrl);
+                    productPreview = GetTommyNameAndPrice(productNode, store.StoreUrl);
                     break;
                 default:
                     continue;
             }
 
-            if (productPreviewDto == null)
+            if (productPreview != null)
             {
-                continue;
+                productPreviews.Add(productPreview);
             }
+        }
 
-            var existingProduct = (await _productRepository.Search(productPreviewDto.Name)).FirstOrDefault();
-            if (existingProduct == null || existingProduct.Similarity is > 0.6 and < 0.95)
+        return productPreviews;
+    }
+
+    private async Task<List<MappedProduct>> MapScrapedToExistingProducts(List<ProductPreview> productPreviews)
+    {
+        var mappedProducts = new List<MappedProduct>();
+        foreach (var productPreview in productPreviews)
+        {
+            var existingProduct = (await _productRepository.Search(productPreview.Name)).FirstOrDefault();
+            if (existingProduct != null)
             {
-                continue;
+                mappedProducts.Add(
+                    new MappedProduct
+                    {
+                        ExistingProduct = existingProduct,
+                        ProductPreview = productPreview
+                    }
+                );
             }
+        }
 
-            /*
-             * Create new entries for each product that doesn't exist
-             */
-            if (existingProduct.Similarity <= 0.6 && equivalentCategoryId.HasValue)
-            {
-                var newProduct = await _productRepository.CreateAsync(new Product
-                {
-                    Name = productPreviewDto.Name,
-                    ImageUrl = productPreviewDto.ImageUrl,
-                    CategoryId = equivalentCategoryId.Value,
-                    LowestPrice = productPreviewDto.Price
-                });
-                results.CreatedProducts++;
+        return mappedProducts;
+    }
 
-                var productStore = await _productStoreRepository.CreateAsync(new ProductStore
-                {
-                    ProductId = newProduct.Id,
-                    StoreId = store.Id,
-                    ProductUrl = productPreviewDto.ProductUrl,
-                    LatestPrice = productPreviewDto.Price
-                });
-                results.CreatedProductStores++;
-
-                await _priceRepository.CreateAsync(new Price
-                {
-                    Amount = productPreviewDto.Price,
-                    ProductStoreId = productStore.Id
-                });
-                results.CreatedPrices++;
-
-                continue;
-            }
-
+    private async Task HandleComparedProducts(
+        List<ComparedResult> comparedResults,
+        StoreWithCategoriesDto store,
+        Guid? equivalentCategoryId,
+        AutomationResult results
+    )
+    {
+        foreach (var comparedResult in comparedResults)
+        {
             /*
              * Update product if it's similar enough
              */
-            if (existingProduct.Similarity >= 0.95)
+            if (comparedResult.IsSameProduct)
             {
                 /*
                  * Update the lowest price if current price is from yesterday or if it's lower than current price
                  */
-                if (existingProduct.UpdatedAt.Date < DateTime.UtcNow.Date ||
-                    productPreviewDto.Price < existingProduct.LowestPrice
+                if (comparedResult.ExistingProduct.UpdatedAt.Date < DateTime.UtcNow.Date ||
+                    comparedResult.ProductPreview.Price < comparedResult.ExistingProduct.LowestPrice
                    )
                 {
-                    await _productRepository.UpdateLowestPriceAsync(existingProduct.Id, productPreviewDto.Price);
+                    await _productRepository.UpdateLowestPriceAsync(
+                        comparedResult.ExistingProduct.Id,
+                        comparedResult.ProductPreview.Price
+                    );
                     results.UpdatedProducts++;
                 }
 
-
                 var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
-                    existingProduct.Id,
+                    comparedResult.ExistingProduct.Id,
                     store.Id
                 );
 
@@ -186,16 +195,16 @@ public class ScrapingService : IScrapingService
                 {
                     productStore = await _productStoreRepository.CreateAsync(new ProductStore
                     {
-                        ProductId = existingProduct.Id,
+                        ProductId = comparedResult.ExistingProduct.Id,
                         StoreId = store.Id,
-                        ProductUrl = productPreviewDto.ProductUrl,
-                        LatestPrice = productPreviewDto.Price
+                        ProductUrl = comparedResult.ProductPreview.ProductUrl,
+                        LatestPrice = comparedResult.ProductPreview.Price
                     });
                     results.CreatedProductStores++;
 
                     await _priceRepository.CreateAsync(new Price
                     {
-                        Amount = productPreviewDto.Price,
+                        Amount = comparedResult.ProductPreview.Price,
                         ProductStoreId = productStore.Id
                     });
                     results.CreatedPrices++;
@@ -203,7 +212,7 @@ public class ScrapingService : IScrapingService
                     continue;
                 }
 
-                await _productStoreRepository.UpdatePriceAsync(productStore.Id, productPreviewDto.Price);
+                await _productStoreRepository.UpdatePriceAsync(productStore.Id, comparedResult.ProductPreview.Price);
                 results.UpdatedProductStores++;
 
                 var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id))
@@ -212,16 +221,49 @@ public class ScrapingService : IScrapingService
                 {
                     await _priceRepository.CreateAsync(new Price
                     {
-                        Amount = productPreviewDto.Price,
+                        Amount = comparedResult.ProductPreview.Price,
                         ProductStoreId = productStore.Id
                     });
                     results.CreatedPrices++;
                 }
+
+                continue;
+            }
+
+            /*
+             * Create new entries for each product that doesn't exist
+             */
+            if (comparedResult.ExistingProduct.Similarity < 0.95 && !comparedResult.IsSameProduct && equivalentCategoryId.HasValue)
+            {
+                var newProduct = await _productRepository.CreateAsync(new Product
+                {
+                    Name = comparedResult.ProductPreview.Name,
+                    ImageUrl = comparedResult.ProductPreview.ImageUrl,
+                    CategoryId = equivalentCategoryId.Value,
+                    LowestPrice = comparedResult.ProductPreview.Price
+                });
+                results.CreatedProducts++;
+
+                var productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                {
+                    ProductId = newProduct.Id,
+                    StoreId = store.Id,
+                    ProductUrl = comparedResult.ProductPreview.ProductUrl,
+                    LatestPrice = comparedResult.ProductPreview.Price
+                });
+                results.CreatedProductStores++;
+
+                await _priceRepository.CreateAsync(new Price
+                {
+                    Amount = comparedResult.ProductPreview.Price,
+                    ProductStoreId = productStore.Id
+                });
+                results.CreatedPrices++;
             }
         }
     }
 
-    private static ProductPreviewDto? GetKonzumNameAndPrice(HtmlNode productNode, string storeUrl)
+    private static ProductPreview? GetKonzumNameAndPrice(HtmlNode productNode, string storeUrl)
     {
         // Product name
         var productName = WebUtility.HtmlDecode(
@@ -246,7 +288,7 @@ public class ScrapingService : IScrapingService
 
         if (decimal.TryParse(formattedPrice, out var productPrice))
         {
-            return new ProductPreviewDto
+            return new ProductPreview
             {
                 Name = productName,
                 Price = productPrice,
@@ -258,7 +300,7 @@ public class ScrapingService : IScrapingService
         return null;
     }
 
-    private static ProductPreviewDto? GetTommyNameAndPrice(HtmlNode productNode, string storeUrl)
+    private static ProductPreview? GetTommyNameAndPrice(HtmlNode productNode, string storeUrl)
     {
         // Product name
         var productName = WebUtility.HtmlDecode(
@@ -274,13 +316,13 @@ public class ScrapingService : IScrapingService
 
         // Product and image url
         var productUrl = productNode.SelectNodes(".//a")[0].GetAttributeValue("href", "");
-        
+
         // Can't get image url this way, it is in format like this: data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
         // var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
         if (matchedPrice.Success && decimal.TryParse(matchedPrice.Value, out var productPrice))
         {
-            return new ProductPreviewDto
+            return new ProductPreview
             {
                 Name = productName,
                 Price = productPrice,

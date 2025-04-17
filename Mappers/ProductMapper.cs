@@ -46,9 +46,9 @@ public static class ProductMapper
 
     public static void ToProductFromProductPreviewDto(
         this Product existingProduct,
-        ProductPreviewDto productPreviewDto
+        ProductPreview productPreview
     )
     {
-        existingProduct.LowestPrice = productPreviewDto.Price;
+        existingProduct.LowestPrice = productPreview.Price;
     }
 }
