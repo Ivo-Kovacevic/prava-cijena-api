@@ -21,6 +21,22 @@ public static class ProductMapper
         };
     }
 
+    public static PageProductDto ToPageProductDto(this Product product)
+    {
+        return new PageProductDto
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Slug = product.Slug,
+            LowestPrice = product.LowestPrice,
+            ImageUrl = product.ImageUrl,
+            CategoryId = product.CategoryId,
+            ProductStores = product.ProductStores.Select(ps => ps.ToPageProductStoreDto()).ToList(),
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt
+        };
+    }
+
     public static Product ProductFromCreateRequestDto(this CreateProductRequestDto productRequestDto, Guid categoryId)
     {
         var name = productRequestDto.Name.Trim();

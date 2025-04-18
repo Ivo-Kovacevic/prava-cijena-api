@@ -48,6 +48,7 @@ public class ScrapingService : IScrapingService
         };
 
         var storesWithCategories = await _storeRepository.GetAllWithCategories();
+        var semaphore = new SemaphoreSlim(100);
         var random = new Random();
         foreach (var store in storesWithCategories)
         {
@@ -79,15 +80,23 @@ public class ScrapingService : IScrapingService
                             continue;
                         }
 
-                        // await HandleFoundProducts(productNodes, store, urlInfo.EquivalentCategoryId, results);
                         var productPreviews = ProductNodesToProductPreviewList(productNodes, store);
                         var mappedProducts = await MapScrapedToExistingProducts(productPreviews);
-                        var comparedProducts = new List<ComparedResult>();
-                        foreach (var chunk in mappedProducts.Chunk(10))
+
+                        var tasks = mappedProducts.Select(async mappedProduct =>
                         {
-                            var result = await _geminiService.CompareProductsAsync(chunk.ToList());
-                            comparedProducts.AddRange(result);
-                        }
+                            await semaphore.WaitAsync();
+                            try
+                            {
+                                return await _geminiService.CompareProductsAsync(mappedProduct);
+                            }
+                            finally
+                            {
+                                semaphore.Release();
+                            }
+                        }).ToList();
+
+                        var comparedProducts = (await Task.WhenAll(tasks)).ToList();
                         await HandleComparedProducts(comparedProducts, store, urlInfo.EquivalentCategoryId, results);
                         page++;
 
@@ -166,36 +175,99 @@ public class ScrapingService : IScrapingService
     )
     {
         foreach (var comparedResult in comparedResults)
-        {
-            /*
-             * Update product if it's similar enough
-             */
-            if (comparedResult.IsSameProduct)
+            try
             {
-                /*
-                 * Update the lowest price if current price is from yesterday or if it's lower than current price
-                 */
-                if (comparedResult.ExistingProduct.UpdatedAt.Date < DateTime.UtcNow.Date ||
-                    comparedResult.ProductPreview.Price < comparedResult.ExistingProduct.LowestPrice
+                if (comparedResult.ExistingProduct.Name == "Zott Belriso Mliječni desert s rižom razni okusi 200 g" ||
+                    comparedResult.ProductPreview.Name == "Zott Belriso Mliječni desert s rižom razni okusi 200 g"
                    )
                 {
-                    await _productRepository.UpdateLowestPriceAsync(
-                        comparedResult.ExistingProduct.Id,
-                        comparedResult.ProductPreview.Price
-                    );
-                    results.UpdatedProducts++;
+                    Console.WriteLine("FFS");
                 }
 
-                var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
-                    comparedResult.ExistingProduct.Id,
-                    store.Id
-                );
-
-                if (productStore == null)
+                /*
+                 * Update product if it's similar enough
+                 */
+                if (comparedResult.ExistingProduct.Similarity >= 0.95 || comparedResult.IsSameProduct)
                 {
-                    productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                    /*
+                     * Update the lowest price if current price is from yesterday or if it's lower than current price
+                     */
+                    if (comparedResult.ExistingProduct.UpdatedAt.Date < DateTime.UtcNow.Date ||
+                        comparedResult.ProductPreview.Price < comparedResult.ExistingProduct.LowestPrice
+                       )
                     {
-                        ProductId = comparedResult.ExistingProduct.Id,
+                        await _productRepository.UpdateLowestPriceAsync(
+                            comparedResult.ExistingProduct.Id,
+                            comparedResult.ProductPreview.Price
+                        );
+                        results.UpdatedProducts++;
+                    }
+
+                    var productStore = await _productStoreRepository.GetProductStoreByIdsAsync(
+                        comparedResult.ExistingProduct.Id,
+                        store.Id
+                    );
+
+                    if (productStore == null)
+                    {
+                        productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                        {
+                            ProductId = comparedResult.ExistingProduct.Id,
+                            StoreId = store.Id,
+                            ProductUrl = comparedResult.ProductPreview.ProductUrl,
+                            LatestPrice = comparedResult.ProductPreview.Price
+                        });
+                        results.CreatedProductStores++;
+
+                        await _priceRepository.CreateAsync(new Price
+                        {
+                            Amount = comparedResult.ProductPreview.Price,
+                            ProductStoreId = productStore.Id
+                        });
+                        results.CreatedPrices++;
+
+                        continue;
+                    }
+
+                    await _productStoreRepository.UpdatePriceAsync(
+                        productStore.Id,
+                        comparedResult.ProductPreview.Price
+                    );
+                    results.UpdatedProductStores++;
+
+                    var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id))
+                        .FirstOrDefault();
+                    if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
+                    {
+                        await _priceRepository.CreateAsync(new Price
+                        {
+                            Amount = comparedResult.ProductPreview.Price,
+                            ProductStoreId = productStore.Id
+                        });
+                        results.CreatedPrices++;
+                    }
+
+                    continue;
+                }
+
+                /*
+                 * Create new entries for each product that doesn't exist
+                 */
+                if (comparedResult.ExistingProduct.Similarity < 0.95 && !comparedResult.IsSameProduct &&
+                    equivalentCategoryId.HasValue)
+                {
+                    var newProduct = await _productRepository.CreateAsync(new Product
+                    {
+                        Name = comparedResult.ProductPreview.Name,
+                        ImageUrl = comparedResult.ProductPreview.ImageUrl,
+                        CategoryId = equivalentCategoryId.Value,
+                        LowestPrice = comparedResult.ProductPreview.Price
+                    });
+                    results.CreatedProducts++;
+
+                    var productStore = await _productStoreRepository.CreateAsync(new ProductStore
+                    {
+                        ProductId = newProduct.Id,
                         StoreId = store.Id,
                         ProductUrl = comparedResult.ProductPreview.ProductUrl,
                         LatestPrice = comparedResult.ProductPreview.Price
@@ -208,59 +280,12 @@ public class ScrapingService : IScrapingService
                         ProductStoreId = productStore.Id
                     });
                     results.CreatedPrices++;
-
-                    continue;
                 }
-
-                await _productStoreRepository.UpdatePriceAsync(productStore.Id, comparedResult.ProductPreview.Price);
-                results.UpdatedProductStores++;
-
-                var latestPrice = (await _priceRepository.GetPricesByProductStoreIdAsync(productStore.Id))
-                    .FirstOrDefault();
-                if (latestPrice == null || latestPrice.CreatedAt.Date != DateTime.UtcNow.Date)
-                {
-                    await _priceRepository.CreateAsync(new Price
-                    {
-                        Amount = comparedResult.ProductPreview.Price,
-                        ProductStoreId = productStore.Id
-                    });
-                    results.CreatedPrices++;
-                }
-
-                continue;
             }
-
-            /*
-             * Create new entries for each product that doesn't exist
-             */
-            if (comparedResult.ExistingProduct.Similarity < 0.95 && !comparedResult.IsSameProduct && equivalentCategoryId.HasValue)
+            catch (Exception e)
             {
-                var newProduct = await _productRepository.CreateAsync(new Product
-                {
-                    Name = comparedResult.ProductPreview.Name,
-                    ImageUrl = comparedResult.ProductPreview.ImageUrl,
-                    CategoryId = equivalentCategoryId.Value,
-                    LowestPrice = comparedResult.ProductPreview.Price
-                });
-                results.CreatedProducts++;
-
-                var productStore = await _productStoreRepository.CreateAsync(new ProductStore
-                {
-                    ProductId = newProduct.Id,
-                    StoreId = store.Id,
-                    ProductUrl = comparedResult.ProductPreview.ProductUrl,
-                    LatestPrice = comparedResult.ProductPreview.Price
-                });
-                results.CreatedProductStores++;
-
-                await _priceRepository.CreateAsync(new Price
-                {
-                    Amount = comparedResult.ProductPreview.Price,
-                    ProductStoreId = productStore.Id
-                });
-                results.CreatedPrices++;
+                Console.WriteLine(e.Message);
             }
-        }
     }
 
     private static ProductPreview? GetKonzumNameAndPrice(HtmlNode productNode, string storeUrl)

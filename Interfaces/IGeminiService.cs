@@ -5,5 +5,5 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface IGeminiService
 {
-    public Task<List<ComparedResult>> CompareProductsAsync(List<MappedProduct> mappedProducts);
+    public Task<ComparedResult> CompareProductsAsync(MappedProduct mappedProducts);
 }

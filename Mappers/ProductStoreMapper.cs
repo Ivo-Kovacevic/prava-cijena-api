@@ -17,6 +17,19 @@ public static class ProductStoreMapper
         };
     }
 
+    public static PageProductStoreDto ToPageProductStoreDto(this ProductStore productStore)
+    {
+        return new PageProductStoreDto
+        {
+            Id = productStore.Id,
+            ProductId = productStore.ProductId,
+            StoreId = productStore.StoreId,
+            Store = productStore.Store.ToStoreDto(),
+            LatestPrice = productStore.LatestPrice,
+            ProductUrl = productStore.ProductUrl
+        };
+    }
+
     public static ProductStore ToProductStoreFromCreateRequestDto(
         this CreateProductStoreRequestDto productStoreRequestDto)
     {

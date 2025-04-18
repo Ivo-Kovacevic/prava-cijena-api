@@ -18,9 +18,19 @@ public class ProductRepository : IProductRepository
 
     public async Task<Product?> GetProductBySlugAsync(string productSlug)
     {
-        return await _context.Products
-            .Where(p => p.Slug == productSlug)
-            .FirstOrDefaultAsync();
+        var product = await _context.Products
+            .Include(p => p.ProductStores)
+            .ThenInclude(ps => ps.Store)
+            .FirstOrDefaultAsync(p => p.Slug == productSlug);
+
+        if (product != null)
+        {
+            product.ProductStores = product.ProductStores
+                .OrderBy(ps => ps.LatestPrice)
+                .ToList();
+        }
+
+        return product;
     }
 
     public async Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm)
@@ -48,6 +58,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<Product> CreateAsync(Product product)
     {
+        _context.ChangeTracker.Clear();
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
         return product;

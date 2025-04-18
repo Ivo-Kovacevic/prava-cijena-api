@@ -15,6 +15,7 @@ public static class StoreMapper
             Slug = store.Slug,
             StoreUrl = store.StoreUrl,
             ImageUrl = store.ImageUrl,
+            BaseUrl = store.BaseUrl,
             CreatedAt = store.CreatedAt,
             UpdatedAt = store.UpdatedAt
         };

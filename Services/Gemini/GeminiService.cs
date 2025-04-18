@@ -19,7 +19,7 @@ public class GeminiService : ApiConfig, IGeminiService
         _httpClient = httpClient;
     }
 
-    public async Task<List<ComparedResult>> CompareProductsAsync(List<MappedProduct> mappedProducts)
+    public async Task<ComparedResult> CompareProductsAsync(MappedProduct mappedProducts)
     {
         var requestBody = new GeminiRequestModel
         {
@@ -43,7 +43,7 @@ public class GeminiService : ApiConfig, IGeminiService
                             Ignore minor differences in capitalization, punctuation, word order, and common abbreviations (g/G, l/L).
 
                             ### OUTPUT RULES:
-                            - Output MUST be a valid JSON array of objects.
+                            - Output MUST be a valid JSON object, not array, just single object.
                             - Each object must have:
                               - existingProduct (unchanged from input)
                               - productPreview (unchanged from input)
@@ -53,14 +53,12 @@ public class GeminiService : ApiConfig, IGeminiService
                             - Do NOT output anything except the JSON.
 
                             ### EXAMPLE OUTPUT:
-                            [
-                               {{
-                                   ""existingProduct"": {{ ... }},
-                                   ""productPreview"": {{ ... }},
-                                   ""isSameProduct"": true
-                               }},
-                               ...
-                            ]"
+                            {{
+                               ""existingProduct"": {{ ... }},
+                               ""productPreview"": {{ ... }},
+                               ""isSameProduct"": true
+                            }}
+                            "
                         }
                     ]
                 }
@@ -72,7 +70,7 @@ public class GeminiService : ApiConfig, IGeminiService
         };
 
         var url =
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GeminiApiKey}";
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GeminiApiKey}";
         var json = JsonSerializer.Serialize(requestBody);
         var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
@@ -89,7 +87,7 @@ public class GeminiService : ApiConfig, IGeminiService
         });
 
         var text = geminiResponse.Candidates.First().Content.Parts.First().Text;
-        var compareResult = JsonSerializer.Deserialize<List<ComparedResult>>(text, new JsonSerializerOptions
+        var compareResult = JsonSerializer.Deserialize<ComparedResult>(text, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });

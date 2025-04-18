@@ -33,7 +33,7 @@ public class ProductService : IProductService
         return products.Select(p => p.ToProductDto());
     }
 
-    public async Task<ProductDto> GetProductBySlugAsync(string productSlug)
+    public async Task<PageProductDto> GetProductBySlugAsync(string productSlug)
     {
         var product = await _productRepo.GetProductBySlugAsync(productSlug);
         if (product == null)
@@ -41,7 +41,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product '{productSlug}' not found.");
         }
 
-        return product.ToProductDto();
+        return product.ToPageProductDto();
     }
 
     public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName)

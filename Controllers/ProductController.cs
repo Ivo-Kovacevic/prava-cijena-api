@@ -32,7 +32,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("products/{productSlug}")]
-    public async Task<ActionResult<ProductDto>> ShowBySlug(string productSlug)
+    public async Task<ActionResult<PageProductDto>> ShowBySlug(string productSlug)
     {
         var productDto = await _productService.GetProductBySlugAsync(productSlug);
         return Ok(productDto);
