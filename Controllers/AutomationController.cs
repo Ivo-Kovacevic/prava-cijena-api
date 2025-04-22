@@ -5,7 +5,7 @@ using PravaCijena.Api.Models;
 namespace PravaCijena.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/automation")]
 public class AutomationController : ControllerBase
 {
     private readonly ICatalogueService _catalogueService;
@@ -34,10 +34,10 @@ public class AutomationController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("analyze")]
+    [HttpPost("analyze-catalogue")]
     public async Task<IActionResult> AnalyzePdf(IFormFile pdfFile)
     {
-        var result = await _catalogueService.ExtractDataFromPdf(pdfFile);
+        var result = await _catalogueService.AnalyzePdf(pdfFile);
         return Ok(result);
     }
 }

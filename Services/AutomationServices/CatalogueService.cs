@@ -1,65 +1,51 @@
-using System.Text;
 using System.Text.Json;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
+using PravaCijena.Api.Services.Gemini.GeminiRequest;
+using Part = PravaCijena.Api.Services.Gemini.GeminiRequest.Part;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
 public class CatalogueService : ApiConfig, ICatalogueService
 {
+    private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
 
-    public CatalogueService(HttpClient httpClient)
+    public CatalogueService(HttpClient httpClient, IGeminiService geminiService)
     {
         _httpClient = httpClient;
+        _geminiService = geminiService;
     }
 
-    public async Task<string> ExtractDataFromPdf(IFormFile pdfFile)
+    public async Task<List<ProductPreview>> AnalyzePdf(IFormFile pdfFile)
     {
         using var memoryStream = new MemoryStream();
         await pdfFile.CopyToAsync(memoryStream);
         var base64Pdf = Convert.ToBase64String(memoryStream.ToArray());
 
-        var requestBody = new
-        {
-            contents = new[]
+        // Send request to Google Gemini API
+        var response = await _geminiService.SendRequestAsync([
+            new Part
             {
-                new
+                Text =
+                    "Extract product names and prices from this document.\nReturn the results as a JSON object with the following format:\n[\n  {\n    \"name\": \"Product Name\",\n    \"price\": decimal  },\n  ...\n]\n\nKeep only the first letter capital. Product name needs to be in the following format: \"brand-name product-name other-product-info product-weight-or-volume\"\nExample: \"Dukat svježe mlijeko 3,2 % m.m. 1L\"."
+            },
+            new Part
+            {
+                InlineData = new InlineData
                 {
-                    parts = new object[]
-                    {
-                        new
-                        {
-                            inline_data = new
-                            {
-                                mime_type = "application/pdf",
-                                data = base64Pdf
-                            }
-                        },
-                        new
-                        {
-                            text =
-                                "Extract product names and prices from this document.\nReturn the results as a JSON object with the following format:\n[\n  {\n    \"product\": \"Product Name\",\n    \"price\": \"Price\"\n  },\n  ...\n]\n\nProduct name needs to be in the following format: \"brand-name product-name other-product-info product-weight-or-volume\"\nExample: \"Dukat svježe mlijeko 3,2 % m.m. 1L\""
-                        }
-                    }
+                    MimeType = "application/pdf",
+                    Data = base64Pdf
                 }
             }
-        };
+        ]);
 
-        var requestJson = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-
-        // Send request to Google Gemini API
-        var responseMessage = await _httpClient.PostAsync(
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GeminiApiKey}",
-            content
-        );
-
-        if (!responseMessage.IsSuccessStatusCode)
+        var result = JsonSerializer.Deserialize<List<ProductPreview>>(response, new JsonSerializerOptions
         {
-            return $"Error: {responseMessage.StatusCode} - {await responseMessage.Content.ReadAsStringAsync()}";
-        }
+            PropertyNameCaseInsensitive = true
+        });
 
-        return await responseMessage.Content.ReadAsStringAsync();
+        return result;
     }
 }

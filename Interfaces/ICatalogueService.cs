@@ -1,6 +1,8 @@
+using PravaCijena.Api.Models;
+
 namespace PravaCijena.Api.Interfaces;
 
 public interface ICatalogueService
 {
-    Task<string> ExtractDataFromPdf(IFormFile pdfFile);
+    Task<List<ProductPreview>> AnalyzePdf(IFormFile pdfFile);
 }

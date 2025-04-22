@@ -1,9 +1,8 @@
-using PravaCijena.Api.Models;
-using PravaCijena.Api.Services.Gemini.GeminiResponse;
+using Part = PravaCijena.Api.Services.Gemini.GeminiRequest.Part;
 
 namespace PravaCijena.Api.Interfaces;
 
 public interface IGeminiService
 {
-    public Task<ComparedResult> CompareProductsAsync(MappedProduct mappedProducts);
+    public Task<string> SendRequestAsync(List<Part> parts);
 }

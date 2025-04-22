@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
@@ -6,6 +7,7 @@ using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 using PravaCijena.Api.Services.Gemini.GeminiResponse;
+using Part = PravaCijena.Api.Services.Gemini.GeminiRequest.Part;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
@@ -88,7 +90,47 @@ public class ScrapingService : IScrapingService
                             await semaphore.WaitAsync();
                             try
                             {
-                                return await _geminiService.CompareProductsAsync(mappedProduct);
+                                var response = await _geminiService.SendRequestAsync([
+                                    new Part
+                                    {
+                                        Text = $@"You are an AI specializing in grocery product name matching.
+                                                  Input: {JsonSerializer.Serialize(mappedProduct)}
+
+                                                  Each object has:
+                                                  - existingProduct: The product already in our database.
+                                                  - productPreview: A newly scraped product to compare.
+
+                                                  ### TASK:
+                                                  Determine if the *existingProduct.name* and *productPreview.name* are same products, considering brand, variant, and *exact* size/quantity.
+                                                  Ignore minor differences in capitalization, punctuation, word order, and common abbreviations (g/G, l/L).
+
+                                                  ### OUTPUT RULES:
+                                                  - Output MUST be a valid JSON object, not array, just single object.
+                                                  - Each object must have:
+                                                    - existingProduct (unchanged from input)
+                                                    - productPreview (unchanged from input)
+                                                    - isSameProduct (true/false)
+                                                  - Do NOT change or truncate any fields.
+                                                  - Do NOT include comments or explanations.
+                                                  - Do NOT output anything except the JSON.
+
+                                                  ### EXAMPLE OUTPUT:
+                                                  {{
+                                                     ""existingProduct"": {{ ... }},
+                                                     ""productPreview"": {{ ... }},
+                                                     ""isSameProduct"": true
+                                                  }}
+                                                  "
+                                    }
+                                ]);
+
+                                var result = JsonSerializer.Deserialize<ComparedResult>(response,
+                                    new JsonSerializerOptions
+                                    {
+                                        PropertyNameCaseInsensitive = true
+                                    });
+
+                                return result;
                             }
                             finally
                             {
