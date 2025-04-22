@@ -4,5 +4,5 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface ICatalogueService
 {
-    Task<List<ProductPreview>> AnalyzePdf(IFormFile pdfFile);
+    Task<AutomationResult> AnalyzePdfs();
 }

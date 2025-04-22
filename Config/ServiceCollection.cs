@@ -31,6 +31,9 @@ public static class ServiceCollection
         services.AddScoped<IValueService, ValueService>();
         services.AddScoped<IValueRepository, ValueRepository>();
 
+        services.AddHttpClient<IAutomationService, AutomationService>();
+        services.AddScoped<IAutomationService, AutomationService>();
+
         services.AddHttpClient<ICatalogueService, CatalogueService>();
         services.AddScoped<ICatalogueService, CatalogueService>();
 

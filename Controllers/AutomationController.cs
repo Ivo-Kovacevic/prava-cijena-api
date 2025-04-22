@@ -35,9 +35,9 @@ public class AutomationController : ControllerBase
     }
 
     [HttpPost("analyze-catalogue")]
-    public async Task<IActionResult> AnalyzePdf(IFormFile pdfFile)
+    public async Task<IActionResult> AnalyzePdf(IFormFile? pdfFile)
     {
-        var result = await _catalogueService.AnalyzePdf(pdfFile);
+        var result = await _catalogueService.AnalyzePdfs();
         return Ok(result);
     }
 }
