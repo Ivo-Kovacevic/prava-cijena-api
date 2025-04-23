@@ -24,7 +24,7 @@ public class StoreSeedingData
                 Id = KonzumStoreId,
                 Name = "Konzum",
                 StoreUrl = "https://www.konzum.hr",
-                BaseUrl = "https://www.konzum.hr/web/t/kategorije",
+                BaseCategoryUrl = "https://www.konzum.hr/web/t/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
                 ProductListXPath =
                     "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article",
@@ -43,14 +43,16 @@ public class StoreSeedingData
                 Id = StudenacStoreId,
                 Name = "Studenac",
                 StoreUrl = "https://www.studenac.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/studenac.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/studenac.webp",
+                CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
+                CatalogueListXPath = "//ul[@class='cataloguelisting__list']//div[@class='card__cta']"
             },
             new()
             {
                 Id = TommyStoreId,
                 Name = "Tommy",
                 StoreUrl = "https://www.tommy.hr",
-                BaseUrl = "https://www.tommy.hr/kategorije",
+                BaseCategoryUrl = "https://www.tommy.hr/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp",
                 ProductListXPath = "//section//article",
                 PageQuery = "page",
@@ -75,14 +77,19 @@ public class StoreSeedingData
                 Id = KauflandStoreId,
                 Name = "Kaufland",
                 StoreUrl = "https://www.kaufland.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/kaufland.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/kaufland.webp",
+                CatalogueListUrl = "https://www.kaufland.hr/aktualni-katalozi.html",
+                CatalogueListXPath =
+                    "//div[@class='m-tab-navigation__inner-container m-tab-navigation__inner-container--show']//div[@class='m-flyer-tile ']"
             },
             new()
             {
                 Id = PlodineStoreId,
                 Name = "Plodine",
                 StoreUrl = "https://www.plodine.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/plodine.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/plodine.webp",
+                CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
+                CatalogueListXPath = "//div[@class='catalog__wrap']//a[@class='btn btn--iconR']"
             },
             new()
             {

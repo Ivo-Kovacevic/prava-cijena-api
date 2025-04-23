@@ -31,21 +31,22 @@ public class StoreRepository : IStoreRepository
     public async Task<List<StoreWithCategoriesDto>> GetAllWithCategories()
     {
         var stores = await _context.Stores
-            .Where(s => s.BaseUrl != null && s.ProductListXPath != null && s.PageQuery != null && s.LimitQuery != null)
             .Select(store => new StoreWithCategoriesDto
             {
                 Id = store.Id,
                 Name = store.Name,
                 Slug = store.Slug,
                 StoreUrl = store.StoreUrl,
-                BaseUrl = store.BaseUrl!,
-                ProductListXPath = store.ProductListXPath!,
-                PageQuery = store.PageQuery!,
-                LimitQuery = store.LimitQuery!,
+                BaseCategoryUrl = store.BaseCategoryUrl,
+                ProductListXPath = store.ProductListXPath,
+                CatalogueListUrl = store.CatalogueListUrl,
+                CatalogueListXPath = store.CatalogueListXPath,
+                PageQuery = store.PageQuery,
+                LimitQuery = store.LimitQuery,
                 ImageUrl = store.ImageUrl,
                 Categories = store.Categories
                     .AsQueryable()
-                    .Select(GetStoreCategoryProjection(10, 0))
+                    .Select(GetStoreCategoryProjection(5, 0))
                     .ToList()
             })
             .OrderBy(s => s.Name)

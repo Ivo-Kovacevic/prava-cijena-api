@@ -40,7 +40,7 @@ public class ScrapingService : IScrapingService
         var random = new Random();
         foreach (var store in storesWithCategories)
         {
-            var urlsInfo = GetCategoryUrls(store.BaseUrl, store.Categories);
+            var urlsInfo = GetCategoryUrls(store.BaseCategoryUrl, store.Categories);
 
             foreach (var urlInfo in urlsInfo)
                 try

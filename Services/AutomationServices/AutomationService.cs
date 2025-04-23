@@ -129,13 +129,6 @@ public class AutomationService : IAutomationService
         foreach (var comparedResult in comparedResults)
             try
             {
-                if (comparedResult.ExistingProduct.Name == "Zott Belriso Mliječni desert s rižom razni okusi 200 g" ||
-                    comparedResult.ProductPreview.Name == "Zott Belriso Mliječni desert s rižom razni okusi 200 g"
-                   )
-                {
-                    Console.WriteLine("FFS");
-                }
-
                 /*
                  * Update product if it's similar enough
                  */
