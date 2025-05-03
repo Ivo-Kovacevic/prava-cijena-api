@@ -1,11 +1,15 @@
 # PravaCijena API Documentation
 
 ## Description
-API for retriving, organizing and collecting products and their prices.
+API for retrieving, organizing and collecting products and their prices.
+
+API consists of RESTful endpoints for internal use and slug based endpoints for public frontend because of readability.
+
+There are two automation endpoints that run scraping and analyze catalogues from store websites in database.
 
 ## Table of Contents
 - ### [API Endpoints](#api-endpoints)
-- #### [Regular API Endpoints (ID-based)](#regular-api-endpoints-id-based)
+- #### [RESTful API Endpoints (ID-based)](#restful-api-endpoints-id-based)
 - [Category Endpoints](#category-endpoints)
 - [Label Endpoints](#label-endpoints)
 - [Product Endpoints](#product-endpoints)
@@ -13,12 +17,12 @@ API for retriving, organizing and collecting products and their prices.
 - [ProductStore Endpoints](#productstore-endpoints)
 - [Price Endpoints](#price-endpoints)
 - [Value Endpoints](#value-endpoints)
-- [Automation Endpoints](#automation-endpoints)
 - #### [Slug Endpoints](#slug-endpoints)
 - [Category Slug Endpoints](#category-slug-endpoints)
 - [Label Slug Endpoints](#label-slug-endpoints)
 - [Product Slug Endpoints](#product-slug-endpoints)
 - [Store Slug Endpoints](#store-slug-endpoints)
+- ### [Automation Endpoints](#automation-endpoints)
 - ### [Database Structure](#database-structure)
 - ### [Starting locally](#starting-locally)
 - [Prerequisites](#prerequisites)
@@ -26,7 +30,7 @@ API for retriving, organizing and collecting products and their prices.
 
 ## Api Endpoints
 
-### Regular API Endpoints (ID-based)
+### RESTful API Endpoints (ID-based)
 
 #### Category Endpoints
 
@@ -103,14 +107,6 @@ API for retriving, organizing and collecting products and their prices.
 | DELETE | `/attributes/{attributeId:guid}/values/{valueId:guid}` | Delete a value | `attributeId` (GUID), `valueId` (GUID)
 
 
-#### Automation Endpoints
-
-| Method | Endpoint | Description | Parameters
-|-----|-----|-----|-----
-| POST | `/api/automation/scrape` | Run the scraper | None
-| POST | `/api/automation/analyze-catalogue` | Analyze PDF catalogues | `pdfFile` (optional form file)
-
-
 ### Slug Endpoints
 
 #### Category Slug Endpoints
@@ -143,6 +139,15 @@ API for retriving, organizing and collecting products and their prices.
 |-----|-----|-----|-----
 | GET | `/api/stores/{storeSlug}` | Get store by slug | `storeSlug` (string)
 
+
+### Automation Endpoints
+
+| Method | Endpoint | Description | Parameters
+|-----|-----|-----|-----
+| POST | `/api/automation/scrape` | Run the scraper | None
+| POST | `/api/automation/analyze-catalogue` | Analyze PDF catalogues | `pdfFile` (optional form file)
+
+
 ## Database Structure
 Database consists of 8 tables connected in following way shown by an image:
 ![Database Structure](./Images/database.png "Database Structure")
@@ -173,7 +178,7 @@ cd prava-cijena-api
 dotnet restore
 ```
 
-4. Make PostgreSQL database called `prava_cijena`:
+4. Create PostgreSQL database called `prava_cijena`:
 ```
 CREATE DATABASE prava_cijena;
 ```
@@ -184,7 +189,7 @@ DB_CONNECTION=USE_YOUR_DATABASE_CONNECTION_STRING_HERE
 GEMINI_API_KEY=USE_YOUR_DATABASE_GEMINI_API_KEY_HERE
 ```
 
-6. Make database tables and then seed them:
+6. Create migrations and apply them to database:
 
 ```
 dotnet ef migrations add Init
