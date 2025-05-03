@@ -22,7 +22,7 @@ There are two automation endpoints that run scraping and analyze catalogues from
 - [Label Slug Endpoints](#label-slug-endpoints)
 - [Product Slug Endpoints](#product-slug-endpoints)
 - [Store Slug Endpoints](#store-slug-endpoints)
-- ### [Automation Endpoints](#automation-endpoints)
+- #### [Automation Endpoints](#automation-endpoints)
 - ### [Database Structure](#database-structure)
 - ### [Starting locally](#starting-locally)
 - [Prerequisites](#prerequisites)
