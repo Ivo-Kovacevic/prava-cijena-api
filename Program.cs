@@ -52,5 +52,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
 }
+app.MapGet("/", () => Results.Ok("PravaCijena API is live. Check available endpoints at 'https://github.com/Ivo-Kovacevic/prava-cijena-api'"));
+app.MapFallback(() => Results.Problem(title: "Endpoint not found", statusCode: StatusCodes.Status404NotFound));
 
 app.Run();
