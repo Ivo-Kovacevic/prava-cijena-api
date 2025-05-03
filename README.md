@@ -192,3 +192,12 @@ dotnet ef migrations add Init
 ```
 dotnet ef database update
 ```
+
+7. Start API with:
+```
+dotnet run
+```
+or
+```
+dotnet run --launch-profile https
+```
