@@ -40,6 +40,9 @@ public static class ServiceCollection
         services.AddHttpClient<IScrapingService, ScrapingService>();
         services.AddScoped<IScrapingService, ScrapingService>();
 
+        services.AddHttpClient<IStructuredDataService, StructuredDataService>();
+        services.AddScoped<IStructuredDataService, StructuredDataService>();
+
         services.AddHttpClient<IGeminiService, GeminiService>();
         services.AddScoped<IGeminiService, GeminiService>();
 

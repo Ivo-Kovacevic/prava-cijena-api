@@ -11,13 +11,19 @@ public class AutomationController : ControllerBase
     private readonly ICatalogueService _catalogueService;
     private readonly IGeminiService _geminiService;
     private readonly IScrapingService _scrapingService;
+    private readonly IStructuredDataService _structuredDataService;
 
-    public AutomationController(IScrapingService scrapingService, ICatalogueService catalogueService,
-        IGeminiService geminiService)
+    public AutomationController(
+        IScrapingService scrapingService,
+        ICatalogueService catalogueService,
+        IGeminiService geminiService,
+        IStructuredDataService structuredDataService
+    )
     {
         _scrapingService = scrapingService;
         _catalogueService = catalogueService;
         _geminiService = geminiService;
+        _structuredDataService = structuredDataService;
     }
 
     // [HttpPost("compare")]
@@ -39,5 +45,12 @@ public class AutomationController : ControllerBase
     {
         var result = await _catalogueService.AnalyzePdfs();
         return Ok(result);
+    }
+
+    [HttpPost("process-structured-data")]
+    public async Task<IActionResult> ProcessStructuredData()
+    {
+        await _structuredDataService.SyncStoreFiles();
+        return Ok();
     }
 }
