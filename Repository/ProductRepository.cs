@@ -20,7 +20,7 @@ public class ProductRepository : IProductRepository
     {
         var product = await _context.Products
             .Include(p => p.ProductStores)
-            .ThenInclude(ps => ps.Store)
+            .ThenInclude(ps => ps.StoreLocation)
             .FirstOrDefaultAsync(p => p.Slug == productSlug);
 
         if (product != null)

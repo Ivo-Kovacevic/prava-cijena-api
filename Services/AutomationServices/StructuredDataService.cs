@@ -1,4 +1,6 @@
-using System.Xml;
+using System.IO.Compression;
+using System.Text;
+using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 
@@ -33,92 +35,89 @@ public class StructuredDataService : IStructuredDataService
             CreatedPrices = 0,
             UpdatedPrices = 0
         };
-        // var storesWithMetadata = await _storeRepository.GetAllWithCategories();
-        var random = new Random();
-        var dummyUrls = new List<string>
-        {
-            "https://res.cloudinary.com/dqbe0apqn/raw/upload/v1747162753/products.csv",
-            "https://res.cloudinary.com/dqbe0apqn/raw/upload/v1747162753/products.xml"
-        };
+        var storesWithMetadata = await _storeRepository.GetAllWithCategories();
 
-        foreach (var url in dummyUrls)
-            try
+        foreach (var store in storesWithMetadata)
+            switch (store.Slug)
             {
-                // ------------ Add random delay between getting files ------------
-                Console.WriteLine($"Delaying request to \"{url}\" by few seconds...");
-                await Task.Delay(random.Next(2, 5) * 1000);
-
-                await using var stream = await _httpClient.GetStreamAsync(url);
-                using var reader = new StreamReader(stream);
-                var fileContent = await reader.ReadToEndAsync();
-
-                var extension = Path.GetExtension(url).ToLower();
-                var productPreviews = FileDataToProductPreviewList(fileContent, extension);
-
-                // await _automationService.HandleFoundProducts(
-                //     productPreviews,
-                //     store,
-                //     null,
-                //     results
-                // );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to scrape URL: {url}, Error: {ex.Message}");
+                case "kaufland":
+                    await HandleKaufland(store);
+                    break;
+                default:
+                    continue;
             }
     }
 
-    private List<ProductPreview>? FileDataToProductPreviewList(string fileContent, string extension)
+    private async Task HandleKaufland(StoreWithMetadataDto store)
     {
-        switch (extension)
-        {
-            case ".csv":
-                return ParseCsv(fileContent);
-            case ".xml":
-                return ParseXml(fileContent);
-            default:
-                return null;
-        }
-    }
+        var url =
+            "https://www.kaufland.hr/content/dam/kaufland/website/consumer/hr_HR/download/document/2025/mpc/Popis_maloprodajnih_cijena_15_5_2025.zip";
+        Console.WriteLine("Downloading zip...");
 
-    private List<ProductPreview> ParseCsv(string content)
-    {
-        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        var previews = new List<ProductPreview>();
+        await using var zipStream = await _httpClient.GetStreamAsync(url);
+        using var memoryStream = new MemoryStream();
+        await zipStream.CopyToAsync(memoryStream);
+        memoryStream.Seek(0, SeekOrigin.Begin);
 
-        foreach (var line in lines.Skip(1))
+        using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read);
+
+        foreach (var entry in archive.Entries)
         {
-            var cols = line.Split(',');
-            if (cols.Length < 4)
+            // iterate over store.StoreLocations and connect address with file name
+            if (!entry.FullName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            previews.Add(new ProductPreview
+            var nameWithoutExtension = Path.GetFileNameWithoutExtension(entry.FullName);
+            var parts = nameWithoutExtension.Split(',');
+            var addressFromFile = parts[0].Replace("Supermarket_", "").Replace("Hipermarket_", "").Replace('_', ' ')
+                .Trim();
+
+            var matchedLocation = store.StoreLocations.FirstOrDefault(s => s.Address == addressFromFile);
+
+            if (matchedLocation == null)
             {
-                Name = cols[0],
-                Price = decimal.Parse(cols[1])
-            });
+                Console.WriteLine($"No match found for address: {addressFromFile}");
+                continue;
+            }
+
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
+
+            var content = await reader.ReadToEndAsync();
+
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var previews = new List<ProductPreview>();
+
+            foreach (var line in lines.Skip(1))
+            {
+                var cols = line.Split('\t');
+                if (cols.Length < 6)
+                {
+                    continue;
+                }
+
+                var name = cols[0].Trim();
+                var priceStr = cols[5].Trim().Replace(',', '.');
+                var barcodeStr = cols[13].Trim();
+
+                if (decimal.TryParse(priceStr, out var price)
+                    && long.TryParse(barcodeStr, out var barcode)
+                   )
+                {
+                    previews.Add(new ProductPreview
+                    {
+                        Name = name,
+                        Price = price,
+                        Barcode = barcode
+                    });
+                }
+            }
+
+            foreach (var preview in previews)
+            {
+            }
         }
-
-        return previews;
-    }
-
-    private List<ProductPreview> ParseXml(string xmlData)
-    {
-        var doc = new XmlDocument();
-        doc.LoadXml(xmlData);
-
-        var previews = new List<ProductPreview>();
-        var nodes = doc.SelectNodes("//Product");
-
-        foreach (XmlNode node in nodes)
-            previews.Add(new ProductPreview
-            {
-                Name = node["Name"]?.InnerText,
-                Price = decimal.Parse(node["Price"]?.InnerText ?? "0")
-            });
-
-        return previews;
     }
 }

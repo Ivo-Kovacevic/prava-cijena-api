@@ -95,7 +95,7 @@ public class ScrapingService : IScrapingService
 
     private static List<ProductPreview> ProductNodesToProductPreviewList(
         HtmlNodeCollection productNodes,
-        StoreWithCategoriesDto store
+        StoreWithMetadataDto store
     )
     {
         var productPreviews = new List<ProductPreview>();

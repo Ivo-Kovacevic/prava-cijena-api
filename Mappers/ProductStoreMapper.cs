@@ -11,7 +11,7 @@ public static class ProductStoreMapper
         {
             Id = productStore.Id,
             ProductId = productStore.ProductId,
-            StoreId = productStore.StoreId,
+            StoreLocationId = productStore.StoreLocationId,
             LatestPrice = productStore.LatestPrice,
             ProductUrl = productStore.ProductUrl
         };
@@ -23,8 +23,8 @@ public static class ProductStoreMapper
         {
             Id = productStore.Id,
             ProductId = productStore.ProductId,
-            StoreId = productStore.StoreId,
-            Store = productStore.Store.ToStoreDto(),
+            StoreLocationId = productStore.StoreLocationId,
+            Store = productStore.StoreLocation.ToStoreLocationDto(),
             LatestPrice = productStore.LatestPrice,
             ProductUrl = productStore.ProductUrl
         };
@@ -36,7 +36,7 @@ public static class ProductStoreMapper
         return new ProductStore
         {
             ProductId = productStoreRequestDto.ProductId,
-            StoreId = productStoreRequestDto.StoreId
+            StoreLocationId = productStoreRequestDto.StoreId
         };
     }
 
@@ -46,7 +46,7 @@ public static class ProductStoreMapper
     )
     {
         existingProductStore.ProductId = productStoreRequestDto.ProductId ?? existingProductStore.ProductId;
-        existingProductStore.StoreId = productStoreRequestDto.StoreId ?? existingProductStore.StoreId;
+        existingProductStore.StoreLocationId = productStoreRequestDto.StoreId ?? existingProductStore.StoreLocationId;
         existingProductStore.LatestPrice = productStoreRequestDto.LatestPrice ?? existingProductStore.LatestPrice;
         existingProductStore.ProductUrl = productStoreRequestDto.ProductUrl ?? existingProductStore.ProductUrl;
     }

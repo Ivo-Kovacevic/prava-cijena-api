@@ -17,9 +17,9 @@ public class ProductStoreConfiguration : IEntityTypeConfiguration<ProductStore>
             .HasForeignKey(ps => ps.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Store>(ps => ps.Store)
-            .WithMany(s => s.StoreProducts)
-            .HasForeignKey(ps => ps.StoreId)
+        builder.HasOne<StoreLocation>(ps => ps.StoreLocation)
+            .WithMany(s => s.LocationProducts)
+            .HasForeignKey(ps => ps.StoreLocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(ps => ps.CreatedAt)

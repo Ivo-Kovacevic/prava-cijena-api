@@ -127,7 +127,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
 
     private static List<string> CatalogueNodesToCatalogueUrls(
         HtmlNodeCollection catalogueNodes,
-        StoreWithCategoriesDto store
+        StoreWithMetadataDto store
     )
     {
         var catalogueUrls = new List<string>();
@@ -168,7 +168,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
     {
         return catalogueNode.GetAttributeValue("data-download-url", "");
     }
-    
+
     private static string GetStudenacCatalogueUrl(HtmlNode catalogueNode)
     {
         return catalogueNode.SelectNodes(".//a")[1].GetAttributeValue("href", "");

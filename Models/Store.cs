@@ -11,6 +11,6 @@ public class Store : BaseNamedEntity
     public required string ImageUrl { get; set; }
     public string? PageQuery { get; set; }
     public string? LimitQuery { get; set; }
-    public ICollection<ProductStore> StoreProducts { get; set; } = [];
     public List<StoreCategory> Categories { get; set; }
+    public List<StoreLocation> StoreLocations { get; set; }
 }

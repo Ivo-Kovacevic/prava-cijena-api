@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PravaCijena.Api.Database.Seeders;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Database.Configuration;
@@ -28,6 +27,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-        builder.HasData(ProductSeedingData.InitialProducts());
+        // builder.HasData(ProductSeedingData.InitialProducts());
     }
 }

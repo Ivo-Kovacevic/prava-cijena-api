@@ -18,15 +18,15 @@ public class ProductStoreRepository : IProductStoreRepository
     {
         return await _context.ProductStores
             .Where(ps => ps.ProductId == productId)
-            .Include(ps => ps.Store)
+            .Include(ps => ps.StoreLocation)
             .ToListAsync();
     }
 
     public async Task<ProductStore?> GetProductStoreByIdsAsync(Guid productId, Guid storeId)
     {
         return await _context.ProductStores
-            .Where(ps => ps.ProductId == productId && ps.StoreId == storeId)
-            .Include(ps => ps.Store)
+            .Where(ps => ps.ProductId == productId && ps.StoreLocationId == storeId)
+            .Include(ps => ps.StoreLocation)
             .FirstOrDefaultAsync();
     }
 

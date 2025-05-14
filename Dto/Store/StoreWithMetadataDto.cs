@@ -1,8 +1,9 @@
+using PravaCijena.Api.Dto.StoreLocation;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Dto.Store;
 
-public class StoreWithCategoriesDto : BaseEntity
+public class StoreWithMetadataDto : BaseEntity
 {
     public required string Name { get; set; }
     public required string Slug { get; set; }
@@ -15,4 +16,5 @@ public class StoreWithCategoriesDto : BaseEntity
     public required string StoreUrl { get; set; }
     public required string ImageUrl { get; set; }
     public List<StoreCategoryDto> Categories { get; set; } = [];
+    public List<StoreLocationDto> StoreLocations { get; set; } = [];
 }

@@ -1,8 +1,8 @@
-using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Dto.StoreLocation;
 
 namespace PravaCijena.Api.Dto.ProductStore;
 
 public class PageProductStoreDto : ProductStoreDto
 {
-    public StoreDto Store { get; set; }
+    public StoreLocationDto Store { get; set; }
 }

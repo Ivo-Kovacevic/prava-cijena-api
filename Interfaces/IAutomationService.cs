@@ -7,7 +7,7 @@ public interface IAutomationService
 {
     Task<AutomationResult> HandleFoundProducts(
         List<ProductPreview> productPreviews,
-        StoreWithCategoriesDto store,
+        StoreWithMetadataDto store,
         Guid? equivalentCategoryId,
         AutomationResult results
     );

@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Dto.StoreLocation;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 
@@ -28,10 +29,10 @@ public class StoreRepository : IStoreRepository
         return await _context.Stores.ToListAsync();
     }
 
-    public async Task<List<StoreWithCategoriesDto>> GetAllWithCategories()
+    public async Task<List<StoreWithMetadataDto>> GetAllWithCategories()
     {
         var stores = await _context.Stores
-            .Select(store => new StoreWithCategoriesDto
+            .Select(store => new StoreWithMetadataDto
             {
                 Id = store.Id,
                 Name = store.Name,
@@ -46,8 +47,16 @@ public class StoreRepository : IStoreRepository
                 ImageUrl = store.ImageUrl,
                 Categories = store.Categories
                     .AsQueryable()
-                    .Select(GetStoreCategoryProjection(5, 0))
-                    .ToList()
+                    .Select(GetStoreCategoryProjection(4, 0))
+                    .ToList(),
+                StoreLocations = store.StoreLocations
+                    .Select(location => new StoreLocationDto
+                    {
+                        Id = location.Id,
+                        Address = location.Address,
+                        City = location.City,
+                        StoreId = location.StoreId
+                    }).ToList()
             })
             .OrderBy(s => s.Name)
             .ToListAsync();
@@ -62,11 +71,11 @@ public class StoreRepository : IStoreRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Store> CreateAsync(Store store)
+    public async Task<Store> CreateAsync(Store storeLocation)
     {
-        _context.Stores.Add(store);
+        _context.Stores.Add(storeLocation);
         await _context.SaveChangesAsync();
-        return store;
+        return storeLocation;
     }
 
     public async Task<Store> UpdateAsync(Store existingStore)

@@ -35,7 +35,7 @@ public class ProductStoreController : ControllerBase
         var productStoreDto = await _productStoreService.CreateProductStoreAsync(productStoreRequestDto);
         return CreatedAtAction(
             nameof(Show),
-            new { productId = productStoreDto.ProductId, storeId = productStoreDto.StoreId }, productStoreDto
+            new { productId = productStoreDto.ProductId, storeId = productStoreDto.StoreLocationId }, productStoreDto
         );
     }
 

@@ -30,7 +30,7 @@ public class AutomationService : IAutomationService
 
     public async Task<AutomationResult> HandleFoundProducts(
         List<ProductPreview> productPreviews,
-        StoreWithCategoriesDto store,
+        StoreWithMetadataDto store,
         Guid? equivalentCategoryId,
         AutomationResult results
     )
@@ -121,7 +121,7 @@ public class AutomationService : IAutomationService
 
     private async Task HandleComparedProducts(
         List<ComparedResult> comparedResults,
-        StoreWithCategoriesDto store,
+        StoreWithMetadataDto store,
         Guid? equivalentCategoryId,
         AutomationResult results
     )
@@ -158,7 +158,7 @@ public class AutomationService : IAutomationService
                         productStore = await _productStoreRepository.CreateAsync(new ProductStore
                         {
                             ProductId = comparedResult.ExistingProduct.Id,
-                            StoreId = store.Id,
+                            StoreLocationId = store.Id,
                             ProductUrl = comparedResult.ProductPreview.ProductUrl,
                             LatestPrice = comparedResult.ProductPreview.Price
                         });
@@ -215,7 +215,7 @@ public class AutomationService : IAutomationService
                     var productStore = await _productStoreRepository.CreateAsync(new ProductStore
                     {
                         ProductId = newProduct.Id,
-                        StoreId = store.Id,
+                        StoreLocationId = store.Id,
                         ProductUrl = comparedResult.ProductPreview.ProductUrl,
                         LatestPrice = comparedResult.ProductPreview.Price
                     });
