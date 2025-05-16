@@ -19,6 +19,8 @@ public static class ServiceCollection
         services.AddScoped<IStoreService, StoreService>();
         services.AddScoped<IStoreRepository, StoreRepository>();
 
+        services.AddScoped<IStoreLocationRepository, StoreLocationRepository>();
+
         services.AddScoped<IProductStoreService, ProductStoreService>();
         services.AddScoped<IProductStoreRepository, ProductStoreRepository>();
 

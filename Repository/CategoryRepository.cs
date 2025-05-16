@@ -40,6 +40,13 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
+    public async Task<List<Category>> GetAllCategoriesWithSubcategoriesAsync()
+    {
+        return await _context.Categories
+            .Where(c => !c.Subcategories.Any())
+            .ToListAsync();
+    }
+
     public async Task<Category?> GetByIdAsync(Guid categoryId)
     {
         return await _context.Categories

@@ -22,10 +22,10 @@ public class ProductStoreRepository : IProductStoreRepository
             .ToListAsync();
     }
 
-    public async Task<ProductStore?> GetProductStoreByIdsAsync(Guid productId, Guid storeId)
+    public async Task<ProductStore?> GetProductStoreByIdsAsync(Guid productId, Guid storeLocationId)
     {
         return await _context.ProductStores
-            .Where(ps => ps.ProductId == productId && ps.StoreLocationId == storeId)
+            .Where(ps => ps.ProductId == productId && ps.StoreLocationId == storeLocationId)
             .Include(ps => ps.StoreLocation)
             .FirstOrDefaultAsync();
     }

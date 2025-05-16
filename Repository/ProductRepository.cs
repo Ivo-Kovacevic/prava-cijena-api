@@ -33,6 +33,13 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
+    public async Task<Product?> GetProductByBarcodeAsync(long productBarcode)
+    {
+        return await _context.Products
+            .Where(p => p.Barcode == productBarcode)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm)
     {
         var product = await _context.Database

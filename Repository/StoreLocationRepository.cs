@@ -1,0 +1,31 @@
+using Microsoft.EntityFrameworkCore;
+using PravaCijena.Api.Database;
+using PravaCijena.Api.Interfaces;
+using PravaCijena.Api.Models;
+
+namespace PravaCijena.Api.Repository;
+
+public class StoreLocationRepository : IStoreLocationRepository
+{
+    private readonly AppDbContext _context;
+
+    public StoreLocationRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<StoreLocation?> GetByCityAndAddressAsync(string city, string address)
+    {
+        return await _context.StoreLocations
+            .Where(sl => sl.City == city && sl.Address == address)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<StoreLocation> Create(StoreLocation storeLocation)
+    {
+        _context.ChangeTracker.Clear();
+        _context.StoreLocations.Add(storeLocation);
+        await _context.SaveChangesAsync();
+        return storeLocation;
+    }
+}

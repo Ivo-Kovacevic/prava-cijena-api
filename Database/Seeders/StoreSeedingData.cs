@@ -24,8 +24,17 @@ public class StoreSeedingData
                 Id = KonzumStoreId,
                 Name = "Konzum",
                 StoreUrl = "https://www.konzum.hr",
-                BaseCategoryUrl = "https://www.konzum.hr/web/t/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
+
+                PriceListUrl = "https://www.konzum.hr/cjenici",
+                PriceUrlListXPath = "//div[@class='tabs__content']",
+                PriceUrlXPath = ".//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
+                DataLocation = "on-site",
+                PriceUrlType = "relative",
+                PriceColumn = 5,
+                BarcodeColumn = 10,
+
+                BaseCategoryUrl = "https://www.konzum.hr/web/t/kategorije",
                 ProductListXPath =
                     "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article",
                 PageQuery = "page",
@@ -36,7 +45,11 @@ public class StoreSeedingData
                 Id = LidlStoreId,
                 Name = "Lidl",
                 StoreUrl = "https://www.lidl.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/lidl.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/lidl.webp",
+
+                PriceListUrl = "https://tvrtka.lidl.hr/cijene",
+                PriceUrlListXPath =
+                    "//section[@class='nuc-a-container nuc-a-container--width-responsive margin-top-32']"
             },
             new()
             {
@@ -44,6 +57,10 @@ public class StoreSeedingData
                 Name = "Studenac",
                 StoreUrl = "https://www.studenac.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/studenac.webp",
+
+                PriceListUrl = "https://www.studenac.hr/popis-maloprodajnih-cijena",
+                PriceUrlListXPath = "//div[@class='page__cta']",
+
                 CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
                 CatalogueListXPath = "//ul[@class='cataloguelisting__list']//div[@class='card__cta']"
             },
@@ -52,8 +69,11 @@ public class StoreSeedingData
                 Id = TommyStoreId,
                 Name = "Tommy",
                 StoreUrl = "https://www.tommy.hr",
-                BaseCategoryUrl = "https://www.tommy.hr/kategorije",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp",
+
+                PriceListUrl = "https://www.tommy.hr/objava-cjenika",
+
+                BaseCategoryUrl = "https://www.tommy.hr/kategorije",
                 ProductListXPath = "//section//article",
                 PageQuery = "page",
                 LimitQuery = "limit"
@@ -63,14 +83,20 @@ public class StoreSeedingData
                 Id = SparStoreId,
                 Name = "Spar",
                 StoreUrl = "https://www.spar.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/spar.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/spar.webp",
+
+                PriceListUrl = "https://www.spar.hr/usluge/cjenici",
+                PriceUrlListXPath = "//table[@id='fileTable']"
             },
             new()
             {
                 Id = EurospinStoreId,
                 Name = "Eurospin",
                 StoreUrl = "https://www.eurospin.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/eurospin.webp"
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/eurospin.webp",
+
+                PriceListUrl = "https://www.eurospin.hr/cjenik/",
+                PriceUrlListXPath = "//div[@class='pdf-grid ']"
             },
             new()
             {
@@ -78,6 +104,10 @@ public class StoreSeedingData
                 Name = "Kaufland",
                 StoreUrl = "https://www.kaufland.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/kaufland.webp",
+
+                PriceListUrl = "https://www.kaufland.hr/akcije-novosti/mpc-popis.html",
+                PriceUrlListXPath = "//div[@class='accordion2 abstractcomponent']",
+
                 CatalogueListUrl = "https://www.kaufland.hr/aktualni-katalozi.html",
                 CatalogueListXPath =
                     "//div[@class='m-tab-navigation__inner-container m-tab-navigation__inner-container--show']//div[@class='m-flyer-tile ']"
@@ -88,6 +118,7 @@ public class StoreSeedingData
                 Name = "Plodine",
                 StoreUrl = "https://www.plodine.hr",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/plodine.webp",
+
                 CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
                 CatalogueListXPath = "//div[@class='catalog__wrap']//a[@class='btn btn--iconR']"
             },

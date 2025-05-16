@@ -23,6 +23,16 @@ public static class CategoryMapper
         };
     }
 
+    public static BaseCategory ToBaseCategory(this Category category)
+    {
+        return new BaseCategory
+        {
+            Id = category.Id,
+            Name = category.Name,
+            SubCategories = category.Subcategories.Select(c=>c.ToBaseCategory()).ToList()
+        };
+    }
+
     public static Category CategoryFromCreateRequestDto(this CreateCategoryRequestDto categoryRequestDto)
     {
         var name = categoryRequestDto.Name.Trim();

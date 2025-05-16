@@ -14,6 +14,7 @@ Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 // Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(DatabaseConfig.GetConnectionString())
+        .EnableSensitiveDataLogging()
 );
 
 // Add Swagger services

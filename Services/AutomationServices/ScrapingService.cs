@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
 using PravaCijena.Api.Dto.Store;
@@ -10,19 +9,19 @@ namespace PravaCijena.Api.Services.AutomationServices;
 
 public class ScrapingService : IScrapingService
 {
-    private readonly IAutomationService _automationService;
     private readonly HttpClient _httpClient;
+    private readonly IProductRepository _productRepository;
     private readonly IStoreRepository _storeRepository;
 
     public ScrapingService(
         HttpClient httpClient,
-        IAutomationService automationService,
-        IStoreRepository storeRepository
+        IStoreRepository storeRepository,
+        IProductRepository productRepository
     )
     {
         _httpClient = httpClient;
-        _automationService = automationService;
         _storeRepository = storeRepository;
+        _productRepository = productRepository;
     }
 
     public async Task<AutomationResult> RunScraper()
@@ -36,10 +35,15 @@ public class ScrapingService : IScrapingService
             CreatedPrices = 0,
             UpdatedPrices = 0
         };
-        var storesWithCategories = await _storeRepository.GetAllWithCategories();
+        var storesWithCategories = await _storeRepository.GetAllWithMetadata();
         var random = new Random();
         foreach (var store in storesWithCategories)
         {
+            if (store.Slug != "konzum")
+            {
+                continue;
+            }
+
             var urlsInfo = GetCategoryUrls(store.BaseCategoryUrl, store.Categories);
 
             foreach (var urlInfo in urlsInfo)
@@ -62,20 +66,15 @@ public class ScrapingService : IScrapingService
                         htmlDocument.LoadHtml(html);
 
                         var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
-                        if (productNodes.Count == 0)
+                        if (productNodes.Count == 0 || urlInfo.EquivalentCategoryId == null)
                         {
                             hasMoreProducts = false;
                             continue;
                         }
 
-                        var productPreviews = ProductNodesToProductPreviewList(productNodes, store);
+                        await ProductNodesToProducts(productNodes, urlInfo.EquivalentCategoryId.Value);
 
-                        await _automationService.HandleFoundProducts(
-                            productPreviews,
-                            store,
-                            urlInfo.EquivalentCategoryId,
-                            results
-                        );
+
                         page++;
 
                         if (productNodes.Count < 100)
@@ -93,110 +92,30 @@ public class ScrapingService : IScrapingService
         return results;
     }
 
-    private static List<ProductPreview> ProductNodesToProductPreviewList(
+    private async Task ProductNodesToProducts(
         HtmlNodeCollection productNodes,
-        StoreWithMetadataDto store
+        Guid equivalentCategoryId
     )
     {
-        var productPreviews = new List<ProductPreview>();
-
         foreach (var productNode in productNodes)
         {
             ProductPreview? productPreview;
-            switch (store.Slug)
-            {
-                case "konzum":
-                    productPreview = GetKonzumNameAndPrice(productNode, store.StoreUrl);
-                    break;
-                case "tommy":
-                    productPreview = GetTommyNameAndPrice(productNode, store.StoreUrl);
-                    break;
-                default:
-                    continue;
-            }
+            var productName = WebUtility.HtmlDecode(
+                productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
+            );
+            var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
-            if (productPreview != null)
-            {
-                productPreviews.Add(productPreview);
-            }
-        }
-
-        return productPreviews;
-    }
-
-    private static ProductPreview? GetKonzumNameAndPrice(HtmlNode productNode, string storeUrl)
-    {
-        // Product name
-        var productName = WebUtility.HtmlDecode(
-            productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
-        );
-
-        // Get product price and in two vars
-        // Konzum keeps price in euros and cents separated so that's why price needs to be retrieved like this
-        var primaryPriceNode = productNode.SelectSingleNode(
-            ".//div[@class='price--primary']//span[@class='price--kn']"
-        ).InnerText.Trim();
-        var secondaryPriceNode = productNode.SelectSingleNode(
-            ".//div[@class='price--primary']//div[@class='price__ul']//span[@class='price--li']"
-        ).InnerText.Trim();
-
-        // Combine primary and secondary prices
-        var formattedPrice = $"{primaryPriceNode}.{secondaryPriceNode}";
-
-        // Product and image url
-        var productUrl = productNode.SelectNodes(".//a")[0].GetAttributeValue("href", "");
-        var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
-
-        if (decimal.TryParse(formattedPrice, out var productPrice))
-        {
-            return new ProductPreview
+            await _productRepository.CreateAsync(new Product
             {
                 Name = productName,
-                Price = productPrice,
-                ProductUrl = storeUrl + productUrl,
-                ImageUrl = imageUrl
-            };
+                ImageUrl = imageUrl,
+                CategoryId = equivalentCategoryId
+            });
         }
-
-        return null;
-    }
-
-    private static ProductPreview? GetTommyNameAndPrice(HtmlNode productNode, string storeUrl)
-    {
-        // Product name
-        var productName = WebUtility.HtmlDecode(
-            productNode.SelectSingleNode(".//h3/a").InnerText.Trim()
-        );
-
-        // Product price
-        var priceText = productNode.SelectSingleNode(
-            ".//span[@class='mt-auto inline-block-block text-sm font-bold text-gray-900']"
-        ).InnerText.Trim().Replace(',', '.');
-
-        var matchedPrice = Regex.Match(priceText, @"\d+(\.\d+)?");
-
-        // Product and image url
-        var productUrl = productNode.SelectNodes(".//a")[0].GetAttributeValue("href", "");
-
-        // Can't get image url this way, it is in format like this: data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
-        // var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
-
-        if (matchedPrice.Success && decimal.TryParse(matchedPrice.Value, out var productPrice))
-        {
-            return new ProductPreview
-            {
-                Name = productName,
-                Price = productPrice,
-                ProductUrl = storeUrl + productUrl,
-                ImageUrl = null
-            };
-        }
-
-        return null;
     }
 
     private static IEnumerable<UrlInfoDto> GetCategoryUrls(
-        string baseUrl,
+        string? baseUrl,
         List<StoreCategoryDto> categories,
         string path = ""
     )

@@ -39,7 +39,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
             CreatedPrices = 0,
             UpdatedPrices = 0
         };
-        var stores = await _storeRepository.GetAllWithCategories();
+        var stores = await _storeRepository.GetAllWithMetadata();
 
         foreach (var store in stores)
         {

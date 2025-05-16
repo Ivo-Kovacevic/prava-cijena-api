@@ -36,6 +36,58 @@ public class CategorySeedingData
     public static readonly Guid CandiesAndOtherSweetsSubcategoryId = new("b8b4fcca-2df9-4e73-bb2b-1a6e3b45dac3");
     public static readonly Guid CookiesSubcategoryId = new("23ba58da-3f31-491c-90b2-352c6f8ec551");
 
+    // Soups and canned food
+    public static readonly Guid SoupsAndCannedFoodCategoryId = new("abe37280-7738-4634-9c4e-ca8c0249bb1f");
+    public static readonly Guid SoupsSubcategoryId = new("26faf9f4-6b57-4567-a760-14ac644fbd22");
+    public static readonly Guid CannedFoodSubcategoryId = new("fcbc1b31-73a5-4a59-897e-5be37b0567cd");
+
+    // Meat
+    public static readonly Guid MeatCategoryId = new("bc7764da-28d6-4792-864e-78cbbd72d870");
+    public static readonly Guid PorkSubcategoryId = new("e16a2972-b640-432c-a13f-6d23d259e66c");
+    public static readonly Guid BeefSubcategoryId = new("2277e21f-087c-41b0-b006-193f7108e8f6");
+    public static readonly Guid SeaProductsSubcategoryId = new("6394a258-80ed-4247-8d51-d5594ebdaa43");
+    public static readonly Guid OtherMeatSubcategoryId = new("a6dce7f8-44ce-4575-b03b-cdbfe1f53d10");
+
+    // Bakery
+    public static readonly Guid BakeryCategoryId = new("f1b968d4-f39d-456d-828e-32167bf96b79");
+    public static readonly Guid BreadSubcategoryId = new("3624d22d-ddda-49ec-8a47-9a707bb61b83");
+    public static readonly Guid CakesSubcategoryId = new("87f81cfa-a03c-4101-983c-443c3ee275a4");
+
+    // Hygiene
+    public static readonly Guid HygieneCategoryId = new("b20e29d1-1976-4430-8dd9-070ed6b6cfb0");
+    public static readonly Guid ShowerSubcategoryId = new("ad811202-c9b5-46e5-bd8c-843262172ebf");
+    public static readonly Guid OralHygieneSubcategoryId = new("61b774cf-867c-47dd-851f-17005ada3468");
+    public static readonly Guid HairSkinAndOtherCareSubcategoryId = new("0fa350b5-e0ca-4d2c-9e11-844142533f75");
+
+    // Cooking
+    public static readonly Guid CookingCategoryId = new("13145362-a803-4cc8-92e9-6cea41d5a625");
+    public static readonly Guid FlourSubcategoryId = new("fa502e59-6a2d-48f1-acc7-fdccfeb16ae5");
+    public static readonly Guid SaltAndOtherSpicesSubcategoryId = new("f8b6a2a8-d316-4950-90a3-cdf6ffbca37d");
+    public static readonly Guid OilSubcategoryId = new("f5a488b4-f094-40b3-ba81-8804731d39fa");
+    public static readonly Guid KetchapMayoAndOtherSaucesSubcategoryId = new("0fb670a6-7b34-48ec-bcb1-bf3894dece71");
+    public static readonly Guid OtherCookingIngredientsSubcategoryId = new("21d88cfa-a2b4-475a-8bb8-292363affdde");
+
+    // Cereal, coffee and tea
+    public static readonly Guid CerealCoffeeAndTeaCategoryId = new("afa4406d-a9c7-4ce2-b199-1842879c6d47");
+    public static readonly Guid CoffeeSubcategoryId = new("a0737f42-9d31-414b-9506-7d5f2a961118");
+    public static readonly Guid TeaSubcategoryId = new("086a1be9-6277-4efd-8aec-2215e807e9fd");
+    public static readonly Guid CerealSubcategoryId = new("f1067e76-70c1-402b-8903-af51b0cab055");
+
+    // Pasta and rice
+    public static readonly Guid PastaRiceCategoryId = new("809e2079-64aa-48bf-aa29-29dcff99b8bc");
+    public static readonly Guid PastaSubcategoryId = new("18edbad7-1d0f-413c-9328-dca7cadcc735");
+    public static readonly Guid RiceSubcategoryId = new("7e1191aa-8996-4319-b7de-aa0c3d596077");
+
+    // Ready meals
+    public static readonly Guid ReadyMealsCategoryId = new("2bf0ab0c-6c0b-4783-99ea-e19b3be1a5af");
+    public static readonly Guid PizzaSubcategoryId = new("aa0174cf-601d-4df4-8dc5-0d98e8047d72");
+
+    // Frozen food
+    public static readonly Guid FrozenFoodCategoryId = new("bfba9f9e-4040-42d8-ab00-df46aa0935b9");
+
+    // Other groceries
+    public static readonly Guid OtherCategoryId = new("2c884ce7-7df9-4b24-a579-28493e62c5da");
+
     public static IEnumerable<Category> InitialCategories()
     {
         return new List<Category>
@@ -235,6 +287,292 @@ public class CategorySeedingData
                 ParentCategoryId = SnacksAndSweetsCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/cookies.svg",
                 HexColor = "#A4539E"
+            },
+
+            /*
+             * Soups and canned food
+             */
+            new()
+            {
+                Id = SoupsAndCannedFoodCategoryId,
+                Name = "Juhe i konzervirana hrana",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/soup-canned.svg",
+                HexColor = "#BFBF07"
+            },
+            new()
+            {
+                Id = SoupsSubcategoryId,
+                Name = "Juhe",
+                ParentCategoryId = SoupsAndCannedFoodCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/soup.svg",
+                HexColor = "#BFBF07"
+            },
+            new()
+            {
+                Id = CannedFoodSubcategoryId,
+                Name = "Konzervirana hrana",
+                ParentCategoryId = SoupsAndCannedFoodCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/canned.svg",
+                HexColor = "#BFBF07"
+            },
+
+            /*
+             * Meat
+             */
+            new()
+            {
+                Id = MeatCategoryId,
+                Name = "Mesni proizvodi",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/meat.svg",
+                HexColor = "#B54848"
+            },
+            new()
+            {
+                Id = PorkSubcategoryId,
+                Name = "Svinjetina",
+                ParentCategoryId = MeatCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/pork.svg",
+                HexColor = "#B54848"
+            },
+            new()
+            {
+                Id = BeefSubcategoryId,
+                Name = "Govedina",
+                ParentCategoryId = MeatCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/beef.svg",
+                HexColor = "#B54848"
+            },
+            new()
+            {
+                Id = SeaProductsSubcategoryId,
+                Name = "Riba i morski plodovi",
+                ParentCategoryId = MeatCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/fish.svg",
+                HexColor = "#B54848"
+            },
+            new()
+            {
+                Id = OtherMeatSubcategoryId,
+                Name = "Ostali mesni proizvodi",
+                ParentCategoryId = MeatCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-meat.svg",
+                HexColor = "#B54848"
+            },
+
+            /*
+             * Bakery
+             */
+            new()
+            {
+                Id = BakeryCategoryId,
+                Name = "Pekarnica",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/bakery.svg",
+                HexColor = "#E6C34F"
+            },
+            new()
+            {
+                Id = BreadSubcategoryId,
+                Name = "Kruh, peciva i ostali pekarski proizvodi",
+                ParentCategoryId = BakeryCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/bread.svg",
+                HexColor = "#E6C34F"
+            },
+            new()
+            {
+                Id = CakesSubcategoryId,
+                Name = "Torte i kolači",
+                ParentCategoryId = BakeryCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/cake.svg",
+                HexColor = "#E6C34F"
+            },
+
+            /*
+             * Hygiene
+             */
+            new()
+            {
+                Id = HygieneCategoryId,
+                Name = "Njega i higjena",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/hygiene.svg",
+                HexColor = "#219DA6"
+            },
+            new()
+            {
+                Id = ShowerSubcategoryId,
+                Name = "Tuširanje, kupanje i pranje",
+                ParentCategoryId = HygieneCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/shower.svg",
+                HexColor = "#219DA6"
+            },
+            new()
+            {
+                Id = HairSkinAndOtherCareSubcategoryId,
+                Name = "Njega kose, kože i ostalo",
+                ParentCategoryId = HygieneCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-care.svg",
+                HexColor = "#219DA6"
+            },
+            new()
+            {
+                Id = OralHygieneSubcategoryId,
+                Name = "Oralna higjena",
+                ParentCategoryId = HygieneCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/oral-hygiene.svg",
+                HexColor = "#219DA6"
+            },
+
+            /*
+             * Cooking
+             */
+            new()
+            {
+                Id = CookingCategoryId,
+                Name = "Priprema jela",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/cooking.svg",
+                HexColor = "#C28E01"
+            },
+            new()
+            {
+                Id = FlourSubcategoryId,
+                Name = "Brašno, krušne mrvice, tijesta",
+                ParentCategoryId = CookingCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/flour.svg",
+                HexColor = "#C28E01"
+            },
+            new()
+            {
+                Id = OilSubcategoryId,
+                Name = "Ulje",
+                ParentCategoryId = CookingCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/oil.svg",
+                HexColor = "#C28E01"
+            },
+            new()
+            {
+                Id = KetchapMayoAndOtherSaucesSubcategoryId,
+                Name = "Kečap, majoneza i ostali umaci",
+                ParentCategoryId = CookingCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/sauce.svg",
+                HexColor = "#C28E01"
+            },
+            new()
+            {
+                Id = SaltAndOtherSpicesSubcategoryId,
+                Name = "Sol i ostali začini",
+                ParentCategoryId = CookingCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/salt-spices.svg",
+                HexColor = "#C28E01"
+            },
+            new()
+            {
+                Id = OtherCookingIngredientsSubcategoryId,
+                Name = "Ostale namirnice za kuhanje",
+                ParentCategoryId = CookingCategoryId,
+                ImageUrl = "misc-cooking",
+                HexColor = "#C28E01"
+            },
+
+            /*
+             * Cereal, coffee and tea
+             */
+            new()
+            {
+                Id = CerealCoffeeAndTeaCategoryId,
+                Name = "Pahuljice, kava, čaj",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/cereal-coffee-tea.svg",
+                HexColor = "#8B623A"
+            },
+            new()
+            {
+                Id = CoffeeSubcategoryId,
+                Name = "Kava",
+                ParentCategoryId = CerealCoffeeAndTeaCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/coffee.svg",
+                HexColor = "#8B623A"
+            },
+            new()
+            {
+                Id = TeaSubcategoryId,
+                Name = "Čajevi",
+                ParentCategoryId = CerealCoffeeAndTeaCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/tea.svg",
+                HexColor = "#8B623A"
+            },
+            new()
+            {
+                Id = CerealSubcategoryId,
+                Name = "Pahuljice",
+                ParentCategoryId = CerealCoffeeAndTeaCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/cereal.svg",
+                HexColor = "#8B623A"
+            },
+
+            /*
+             * Pasta, rice
+             */
+            new()
+            {
+                Id = PastaRiceCategoryId,
+                Name = "Tjestenina, riža",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/pasta-rice.svg",
+                HexColor = "#A79353"
+            },
+            new()
+            {
+                Id = PastaSubcategoryId,
+                Name = "Tjestenina",
+                ParentCategoryId = PastaRiceCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/pasta.svg",
+                HexColor = "#A79353"
+            },
+            new()
+            {
+                Id = RiceSubcategoryId,
+                Name = "Riža",
+                ParentCategoryId = PastaRiceCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/rice.svg",
+                HexColor = "#A79353"
+            },
+
+            /*
+             * Frozen
+             */
+            new()
+            {
+                Id = FrozenFoodCategoryId,
+                Name = "Smrznuta hrana",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/frozen.svg",
+                HexColor = "#0840B9"
+            },
+
+            /*
+             * Ready meals
+             */
+            new()
+            {
+                Id = ReadyMealsCategoryId,
+                Name = "Gotova jela",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/ready-meals.svg",
+                HexColor = "#C02222"
+            },
+            new()
+            {
+                Id = PizzaSubcategoryId,
+                Name = "Pizza",
+                ParentCategoryId = ReadyMealsCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/pizza.svg",
+                HexColor = "#C02222"
+            },
+
+            /*
+             * Other groceries
+             */
+            new()
+            {
+                Id = OtherCategoryId,
+                Name = "Ostale namirnice",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc.svg",
+                HexColor = "#787878"
             }
         };
     }

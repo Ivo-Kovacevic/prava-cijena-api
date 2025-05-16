@@ -7,7 +7,7 @@ public interface IStoreRepository
 {
     Task<Store?> GetBySlugAsync(string storeSlug);
     Task<IEnumerable<Store>> GetAllAsync();
-    Task<List<StoreWithMetadataDto>> GetAllWithCategories();
+    Task<List<StoreWithMetadataDto>> GetAllWithMetadata();
     Task<Store?> GetByIdAsync(Guid id);
     Task<Store> CreateAsync(Store category);
     Task<Store> UpdateAsync(Store existingStore);

@@ -7,6 +7,14 @@ public class StoreWithMetadataDto : BaseEntity
 {
     public required string Name { get; set; }
     public required string Slug { get; set; }
+    public string? PriceListUrl { get; set; }
+    public string? PriceUrlListXPath { get; set; }
+    public string? PriceUrlXPath { get; set; }
+    public string? PriceUrlType { get; set; }
+    public int? BarcodeColumn { get; set; }
+    public int? PriceColumn { get; set; }
+
+    public string? DataLocation { get; set; }
     public string? BaseCategoryUrl { get; set; }
     public string? ProductListXPath { get; set; }
     public string? CatalogueListUrl { get; set; }

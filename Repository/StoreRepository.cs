@@ -29,7 +29,7 @@ public class StoreRepository : IStoreRepository
         return await _context.Stores.ToListAsync();
     }
 
-    public async Task<List<StoreWithMetadataDto>> GetAllWithCategories()
+    public async Task<List<StoreWithMetadataDto>> GetAllWithMetadata()
     {
         var stores = await _context.Stores
             .Select(store => new StoreWithMetadataDto
@@ -38,6 +38,13 @@ public class StoreRepository : IStoreRepository
                 Name = store.Name,
                 Slug = store.Slug,
                 StoreUrl = store.StoreUrl,
+                PriceListUrl = store.PriceListUrl,
+                PriceUrlListXPath = store.PriceUrlListXPath,
+                PriceUrlXPath = store.PriceUrlXPath,
+                PriceUrlType = store.PriceUrlType,
+                DataLocation = store.DataLocation,
+                BarcodeColumn = store.BarcodeColumn,
+                PriceColumn = store.PriceColumn,
                 BaseCategoryUrl = store.BaseCategoryUrl,
                 ProductListXPath = store.ProductListXPath,
                 CatalogueListUrl = store.CatalogueListUrl,
