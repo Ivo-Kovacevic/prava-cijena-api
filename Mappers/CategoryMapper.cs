@@ -28,8 +28,7 @@ public static class CategoryMapper
         return new BaseCategory
         {
             Id = category.Id,
-            Name = category.Name,
-            SubCategories = category.Subcategories.Select(c=>c.ToBaseCategory()).ToList()
+            Name = category.Name
         };
     }
 

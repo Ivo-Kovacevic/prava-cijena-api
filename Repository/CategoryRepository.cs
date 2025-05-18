@@ -35,6 +35,13 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories
             .Where(c => c.ParentCategoryId == null)
+            .Select(c => new
+            {
+                Category = c,
+                SubcategoryCount = c.Subcategories.Count()
+            })
+            .OrderByDescending(x => x.SubcategoryCount)
+            .Select(x => x.Category)
             .Include(c => c.Subcategories)
             .Include(c => c.Labels)
             .ToListAsync();

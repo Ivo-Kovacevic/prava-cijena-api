@@ -11,8 +11,12 @@ public class StoreWithMetadataDto : BaseEntity
     public string? PriceUrlListXPath { get; set; }
     public string? PriceUrlXPath { get; set; }
     public string? PriceUrlType { get; set; }
-    public int? BarcodeColumn { get; set; }
-    public int? PriceColumn { get; set; }
+    public int? CsvNameColumn { get; set; }
+    public int? CsvBarcodeColumn { get; set; }
+    public int? CsvPriceColumn { get; set; }
+    public string? XmlNameElement { get; set; }
+    public string? XmlBarcodeElement { get; set; }
+    public string? XmlPriceElement { get; set; }
 
     public string? DataLocation { get; set; }
     public string? BaseCategoryUrl { get; set; }

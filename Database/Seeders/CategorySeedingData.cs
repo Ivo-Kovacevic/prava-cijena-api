@@ -46,6 +46,7 @@ public class CategorySeedingData
     public static readonly Guid PorkSubcategoryId = new("e16a2972-b640-432c-a13f-6d23d259e66c");
     public static readonly Guid BeefSubcategoryId = new("2277e21f-087c-41b0-b006-193f7108e8f6");
     public static readonly Guid SeaProductsSubcategoryId = new("6394a258-80ed-4247-8d51-d5594ebdaa43");
+    public static readonly Guid PoultrySubcategoryId = new("4a6a6052-12b7-4d2e-ae92-6b10694164a2");
     public static readonly Guid OtherMeatSubcategoryId = new("a6dce7f8-44ce-4575-b03b-cdbfe1f53d10");
 
     // Bakery
@@ -145,7 +146,7 @@ public class CategorySeedingData
             new()
             {
                 Id = MilkSpreadsSubcategoryId,
-                Name = "Mliječni namazi",
+                Name = "Mliječni i sirni namazi",
                 ParentCategoryId = DairyCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/milk-spreads.svg",
                 HexColor = "#1E71B8"
@@ -153,7 +154,7 @@ public class CategorySeedingData
             new()
             {
                 Id = MilkDesertsSubcategoryId,
-                Name = "Mliječni deserti",
+                Name = "Sladoledi i ostali mliječni deserti",
                 ParentCategoryId = DairyCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/milk-desserts.svg",
                 HexColor = "#1E71B8"
@@ -352,8 +353,16 @@ public class CategorySeedingData
             },
             new()
             {
+                Id = PoultrySubcategoryId,
+                Name = "Perad",
+                ParentCategoryId = MeatCategoryId,
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/poultry.svg",
+                HexColor = "#B54848"
+            },
+            new()
+            {
                 Id = OtherMeatSubcategoryId,
-                Name = "Ostali mesni proizvodi",
+                Name = "Delikatese i ostali mesni proizvodi",
                 ParentCategoryId = MeatCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-meat.svg",
                 HexColor = "#B54848"
@@ -392,14 +401,14 @@ public class CategorySeedingData
             new()
             {
                 Id = HygieneCategoryId,
-                Name = "Njega i higjena",
+                Name = "Njega i higijena",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/hygiene.svg",
                 HexColor = "#219DA6"
             },
             new()
             {
                 Id = ShowerSubcategoryId,
-                Name = "Tuširanje, kupanje i pranje",
+                Name = "Tuširanje, kupanje, pranje ruku i ostalo",
                 ParentCategoryId = HygieneCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/shower.svg",
                 HexColor = "#219DA6"
@@ -409,13 +418,13 @@ public class CategorySeedingData
                 Id = HairSkinAndOtherCareSubcategoryId,
                 Name = "Njega kose, kože i ostalo",
                 ParentCategoryId = HygieneCategoryId,
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-care.svg",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-hygiene.svg",
                 HexColor = "#219DA6"
             },
             new()
             {
                 Id = OralHygieneSubcategoryId,
-                Name = "Oralna higjena",
+                Name = "Oralna higijena",
                 ParentCategoryId = HygieneCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/oral-hygiene.svg",
                 HexColor = "#219DA6"
@@ -468,7 +477,7 @@ public class CategorySeedingData
                 Id = OtherCookingIngredientsSubcategoryId,
                 Name = "Ostale namirnice za kuhanje",
                 ParentCategoryId = CookingCategoryId,
-                ImageUrl = "misc-cooking",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc-cooking.svg",
                 HexColor = "#C28E01"
             },
 
@@ -570,7 +579,7 @@ public class CategorySeedingData
             new()
             {
                 Id = OtherCategoryId,
-                Name = "Ostale namirnice",
+                Name = "Ostale namirnice i proizvodi",
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/misc.svg",
                 HexColor = "#787878"
             }

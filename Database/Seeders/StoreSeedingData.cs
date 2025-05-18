@@ -29,10 +29,9 @@ public class StoreSeedingData
                 PriceListUrl = "https://www.konzum.hr/cjenici",
                 PriceUrlListXPath = "//div[@class='tabs__content']",
                 PriceUrlXPath = ".//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
-                DataLocation = "on-site",
-                PriceUrlType = "relative",
-                PriceColumn = 5,
-                BarcodeColumn = 10,
+                CsvNameColumn = 0,
+                CsvPriceColumn = 5,
+                CsvBarcodeColumn = 10,
 
                 BaseCategoryUrl = "https://www.konzum.hr/web/t/kategorije",
                 ProductListXPath =
@@ -48,8 +47,11 @@ public class StoreSeedingData
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/lidl.webp",
 
                 PriceListUrl = "https://tvrtka.lidl.hr/cijene",
-                PriceUrlListXPath =
-                    "//section[@class='nuc-a-container nuc-a-container--width-responsive margin-top-32']"
+                PriceUrlListXPath = "//div[@class='landing-page__zone landing-page__zone--262536']",
+                PriceUrlXPath = ".//a",
+                CsvNameColumn = 0,
+                CsvPriceColumn = 6,
+                CsvBarcodeColumn = 8
             },
             new()
             {
@@ -60,6 +62,10 @@ public class StoreSeedingData
 
                 PriceListUrl = "https://www.studenac.hr/popis-maloprodajnih-cijena",
                 PriceUrlListXPath = "//div[@class='page__cta']",
+                PriceUrlXPath = ".//a[@class='btn btn--big btn--yellow']",
+                XmlNameElement = "NazivProizvoda",
+                XmlPriceElement = "MaloprodajnaCijena",
+                XmlBarcodeElement = "Barkod",
 
                 CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
                 CatalogueListXPath = "//ul[@class='cataloguelisting__list']//div[@class='card__cta']"
@@ -86,7 +92,12 @@ public class StoreSeedingData
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/spar.webp",
 
                 PriceListUrl = "https://www.spar.hr/usluge/cjenici",
-                PriceUrlListXPath = "//table[@id='fileTable']"
+                PriceUrlListXPath = "//table[@id='fileTable']",
+
+                PriceUrlXPath = ".//a",
+                DataLocation = "on-site",
+                PriceUrlType = "absolute",
+                CsvNameColumn = 0
             },
             new()
             {

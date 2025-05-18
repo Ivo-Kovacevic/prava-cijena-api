@@ -4,5 +4,4 @@ public class BaseCategory
 {
     public required string Name { get; set; }
     public required Guid Id { get; set; }
-    public List<BaseCategory> SubCategories = [];
 }

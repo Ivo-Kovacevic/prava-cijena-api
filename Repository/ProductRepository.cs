@@ -33,7 +33,7 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
-    public async Task<Product?> GetProductByBarcodeAsync(long productBarcode)
+    public async Task<Product?> GetProductByBarcodeAsync(string productBarcode)
     {
         return await _context.Products
             .Where(p => p.Barcode == productBarcode)

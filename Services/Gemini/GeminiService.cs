@@ -36,7 +36,7 @@ public class GeminiService : ApiConfig, IGeminiService
         };
 
         var url =
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GeminiApiKey}";
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GeminiApiKey}";
         var json = JsonSerializer.Serialize(requestBody);
         var request = new HttpRequestMessage(HttpMethod.Post, url)
         {

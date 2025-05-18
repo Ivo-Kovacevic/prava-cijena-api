@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
@@ -13,6 +14,7 @@ namespace PravaCijena.Api.Services.AutomationServices;
 public class StructuredDataService : IStructuredDataService
 {
     private readonly IAutomationService _automationService;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
     private readonly IProductRepository _productRepository;
@@ -20,7 +22,6 @@ public class StructuredDataService : IStructuredDataService
     private readonly IServiceProvider _serviceProvider;
     private readonly IStoreLocationRepository _storeLocationRepository;
     private readonly IStoreRepository _storeRepository;
-    private readonly ICategoryRepository _categoryRepository;
 
     public StructuredDataService(
         IAutomationService automationService,
@@ -59,195 +60,170 @@ public class StructuredDataService : IStructuredDataService
         var storesWithMetadata = await _storeRepository.GetAllWithMetadata();
 
         foreach (var store in storesWithMetadata)
-            switch (store.DataLocation)
+            try
             {
-                case "on-site":
-                    await HandleUrlsOnSite(store);
-                    break;
-                case "in-zip":
-                    break;
-                default:
+                if (store.PriceUrlListXPath == null || store.PriceUrlXPath == null)
+                {
                     continue;
+                }
+
+                var html = await _httpClient.GetStringAsync(store.PriceListUrl);
+                var htmlDocument = new HtmlDocument();
+                htmlDocument.LoadHtml(html);
+                var mainNode = htmlDocument.DocumentNode.SelectSingleNode(store.PriceUrlListXPath);
+                var urlNodes = mainNode.SelectNodes(store.PriceUrlXPath);
+
+                switch (store.Slug)
+                {
+                    case "konzum":
+                        await HandleKonzum(store, urlNodes);
+                        break;
+                    case "lidl":
+                        await HandleLidl(store, urlNodes);
+                        break;
+                    case "studenac":
+                        await HandleStudenac(store, urlNodes);
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
     }
 
-    private async Task HandleUrlsOnSite(StoreWithMetadataDto store)
+    private async Task HandleKonzum(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
     {
-        if (store.PriceUrlListXPath == null || store.PriceUrlXPath == null || store.PriceUrlType == null ||
-            store.BarcodeColumn == null || store.PriceColumn == null)
-        {
-            return;
-        }
-
-        var html = await _httpClient.GetStringAsync(store.PriceListUrl);
-        var htmlDocument = new HtmlDocument();
-        htmlDocument.LoadHtml(html);
-        var mainNode = htmlDocument.DocumentNode.SelectSingleNode(store.PriceUrlListXPath);
-        var urlNodes = mainNode.SelectNodes(store.PriceUrlXPath);
-
-        var semaphore = new SemaphoreSlim(100);
-        var tasks = new List<Task>();
-
         foreach (var urlNode in urlNodes)
         {
             var href = urlNode.GetAttributeValue("href", "");
-            string fullUrl;
-            switch (store.PriceUrlType)
+            var fullUrl = new Uri(new Uri(store.StoreUrl), href).ToString();
+
+            var storeLocation = await HandleStoreLocation(fullUrl, store.Id);
+            if (storeLocation == null)
             {
-                case "absolute":
-                    fullUrl = href;
-                    break;
-                case "relative":
-                    fullUrl = new Uri(new Uri(store.StoreUrl), href).ToString();
-                    break;
-                default:
-                    continue;
+                continue;
             }
 
             var csvData = await _httpClient.GetStringAsync(fullUrl);
             var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            var responseStoreLocation = await _geminiService.SendRequestAsync([
-                new Part
-                {
-                    Text = $@"You are an AI specializing in extracting city names and addresses.
-                              Input: {JsonSerializer.Serialize(fullUrl)}
+            await HandleCsv(lines, store, storeLocation);
+        }
+    }
 
-                              ### TASK:
-                              Extract city name and address. Do no include any other info such as zipcode, store type...
+    private async Task HandleLidl(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
+    {
+        var zipUrl = urlNodes.Last().GetAttributeValue("href", "");
 
-                              ### OUTPUT RULES:
-                              - Output MUST be a valid JSON object, not array, just single object.
-                              - Do NOT change or truncate any fields.
-                              - Do NOT include comments or explanations.
-                              - Do NOT output anything except the JSON.
+        var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
+        using var zipStream = new MemoryStream(zipBytes);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
-                              ### EXAMPLE OUTPUT:
-                              {{
-                                 ""city"": ""cityName"",
-                                 ""address"": ""address""
-                              }}
-                           "
-                }
-            ]);
-            var foundStoreLocation = JsonSerializer.Deserialize<BaseStoreLocation>
-            (
-                responseStoreLocation, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                }
-            );
-
-            if (foundStoreLocation == null)
+        foreach (var entry in archive.Entries)
+        {
+            var storeLocation = await HandleStoreLocation(entry.FullName, store.Id);
+            if (storeLocation == null)
             {
                 continue;
             }
 
-            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(
-                foundStoreLocation.City, foundStoreLocation.Address
-            );
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
 
+            var content = await reader.ReadToEndAsync();
+
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            await HandleCsv(lines, store, storeLocation);
+        }
+    }
+
+    private async Task HandleStudenac(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
+    {
+        var zipUrl = urlNodes.First().GetAttributeValue("href", "");
+
+        var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
+        using var zipStream = new MemoryStream(zipBytes);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+
+        foreach (var entry in archive.Entries)
+        {
+            var storeLocation = await HandleStoreLocation(entry.FullName, store.Id);
             if (storeLocation == null)
             {
-                storeLocation = await _storeLocationRepository.Create(new StoreLocation
-                {
-                    City = foundStoreLocation.City,
-                    Address = foundStoreLocation.Address,
-                    StoreId = store.Id
-                });
+                continue;
             }
 
-            foreach (var line in lines.Skip(1))
+            await using var entryStream = entry.Open();
+            var xdoc = XDocument.Load(entryStream);
+
+            await HandleXml(xdoc, store, storeLocation);
+        }
+    }
+
+    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation)
+    {
+        if (store.CsvNameColumn == null || store.CsvPriceColumn == null || store.CsvBarcodeColumn == null)
+        {
+            return;
+        }
+
+        var semaphore = new SemaphoreSlim(20);
+        var tasks = new List<Task>();
+
+        var numGeminiCalls = 0;
+
+        foreach (var line in lines.Skip(1))
+        {
+            await semaphore.WaitAsync();
+
+            var task = Task.Run(async () =>
             {
-                // using var scope = _serviceProvider.CreateScope();
-                // var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
-                // var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
-                // var productStoreRepo = scope.ServiceProvider.GetRequiredService<IProductStoreRepository>();
+                using var scope = _serviceProvider.CreateScope(); // this is the magic
+                var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+                var productStoreRepo = scope.ServiceProvider.GetRequiredService<IProductStoreRepository>();
+                var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
+                var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+
                 try
                 {
                     var cols = line.Split(',');
-                    var productName = cols[0].Trim();
-                    var barcodeStr = cols[store.BarcodeColumn.Value].Trim();
-                    var priceStr = cols[store.PriceColumn.Value].Trim().Replace(',', '.');
+                    var productName = cols[store.CsvNameColumn.Value].Trim();
+                    var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
+                    var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
 
-                    if (!long.TryParse(barcodeStr, out var barcode)
-                        || !decimal.TryParse(priceStr, out var price)
-                       )
+                    if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 1)
                     {
-                        continue;
+                        return;
                     }
 
-                    var product = await _productRepository.GetProductByBarcodeAsync(barcode);
+                    var product = await productRepo.GetProductByBarcodeAsync(barcode);
 
                     if (product == null)
                     {
-                        var allCategories =
-                            (await _categoryRepository.GetAllCategoriesWithSubcategoriesAsync())
-                            .Select(c => c.ToBaseCategory());
-
-                        var responseCategorizedProduct = await _geminiService.SendRequestAsync([
-                            new Part
-                            {
-                                Text = $@"You are an AI specializing in categorizing products.
-                                              Input: {JsonSerializer.Serialize(new { ProductName = productName, Categories = allCategories })}
-
-                                              Each object has:
-                                              - productName: Uncategorized product.
-                                              - categories: All available categories with their subcategories.
-
-                                              ### TASK:
-                                              Categorize product in the most appropriate subcategory.
-                                              Categorize product in subcategory and not top category.
-                                              You can categorize product in top category if no subcategories are appropriate and top category has no subcategories.
-                                              If no appropriate subcategory is found, categorize it in top category ""Ostalo"".
-
-                                              ### OUTPUT RULES:
-                                              - Output MUST be a valid JSON object, not array, just single object.
-                                              - Object must have:
-                                                - productName (unchanged from input)
-                                                - category (containing category name and GUID)
-                                              - Do NOT change or truncate any fields.
-                                              - Do NOT include comments or explanations.
-                                              - Do NOT output anything except the JSON.
-
-                                              ### EXAMPLE OUTPUT:
-                                              {{
-                                                 ""productName"": ""productName"",
-                                                 ""category"": {{
-                                                     ""name"": ""categoryName"",
-                                                     ""id"": categoryId
-                                                 }}
-                                              }}
-                                              "
-                            }
-                        ]);
-                        var categorizedProduct = JsonSerializer.Deserialize<CategorizedProduct>
-                        (
-                            responseCategorizedProduct, new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true
-                            }
-                        );
-
-                        if (categorizedProduct == null)
+                        product = await CategorizeProduct(productName, price, barcode, categoryRepo,
+                            productRepo, geminiService);
+                        if (product == null)
                         {
                             return;
                         }
 
-                        product = await _productRepository.CreateAsync(new Product
-                        {
-                            Name = productName,
-                            CategoryId = categorizedProduct.Category.Id,
-                            LowestPrice = price,
-                            Barcode = barcode
-                        });
+                        numGeminiCalls++;
+                    }
+
+                    if (price < product.LowestPrice)
+                    {
+                        await productRepo.UpdateLowestPriceAsync(product.Id, price);
                     }
 
                     var productStore =
-                        await _productStoreRepository.GetProductStoreByIdsAsync(product.Id, storeLocation.Id);
+                        await productStoreRepo.GetProductStoreByIdsAsync(product.Id, storeLocation.Id);
                     if (productStore == null)
                     {
-                        await _productStoreRepository.CreateAsync(new ProductStore
+                        await productStoreRepo.CreateAsync(new ProductStore
                         {
                             ProductId = product.Id,
                             StoreLocationId = storeLocation.Id,
@@ -259,83 +235,185 @@ public class StructuredDataService : IStructuredDataService
                 {
                     Console.WriteLine(ex);
                 }
-                // finally
-                // {
-                //     semaphore.Release();
-                // }
-            }
-
-            // await Task.WhenAll(tasks);
-            // tasks.Clear();
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+            tasks.Add(task);
         }
+
+        await Task.WhenAll(tasks);
+        
+        Console.WriteLine($"Number of Gemini API calls: {numGeminiCalls}");
     }
 
-    private async Task HandleKaufland(StoreWithMetadataDto store)
+    private async Task HandleXml(XDocument xdoc, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
-        var url =
-            "https://www.kaufland.hr/content/dam/kaufland/website/consumer/hr_HR/download/document/2025/mpc/Popis_maloprodajnih_cijena_15_5_2025.zip";
-        Console.WriteLine("Downloading zip...");
-
-        await using var zipStream = await _httpClient.GetStreamAsync(url);
-        using var memoryStream = new MemoryStream();
-        await zipStream.CopyToAsync(memoryStream);
-        memoryStream.Seek(0, SeekOrigin.Begin);
-
-        using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read);
-
-        foreach (var entry in archive.Entries)
+        if (store.XmlNameElement == null || store.XmlPriceElement == null || store.XmlBarcodeElement == null)
         {
-            // iterate over store.StoreLocations and connect address with file name
-            if (!entry.FullName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+            return;
+        }
+
+        foreach (var p in xdoc.Descendants("Proizvod"))
+        {
+            var productName = p.Element(store.XmlNameElement)?.Value;
+            var priceStr = p.Element(store.XmlPriceElement)?.Value;
+            var barcode = p.Element(store.XmlBarcodeElement)?.Value;
+
+            if (productName == null || !decimal.TryParse(priceStr, out var price) || barcode.Length < 5)
             {
                 continue;
             }
 
-            var nameWithoutExtension = Path.GetFileNameWithoutExtension(entry.FullName);
-            var parts = nameWithoutExtension.Split(',');
-            var addressFromFile = parts[0].Replace("Supermarket_", "").Replace("Hipermarket_", "").Replace('_', ' ')
-                .Trim();
+            var product = await _productRepository.GetProductByBarcodeAsync(barcode);
 
-            var matchedLocation = store.StoreLocations.FirstOrDefault(s => s.Address == addressFromFile);
-
-            if (matchedLocation == null)
+            if (product == null)
             {
-                Console.WriteLine($"No match found for address: {addressFromFile}");
-                continue;
-            }
-
-            await using var entryStream = entry.Open();
-            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
-
-            var content = await reader.ReadToEndAsync();
-
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            var previews = new List<ProductPreview>();
-
-            foreach (var line in lines.Skip(1))
-            {
-                var cols = line.Split('\t');
-                if (cols.Length < 6)
+                // product = await CategorizeProduct(productName, price, barcode);
+                if (product == null)
                 {
                     continue;
                 }
+            }
 
-                var name = cols[0].Trim();
-                var priceStr = cols[5].Trim().Replace(',', '.');
-                var barcodeStr = cols[13].Trim();
+            if (price < product.LowestPrice)
+            {
+                await _productRepository.UpdateLowestPriceAsync(product.Id, price);
+            }
 
-                if (decimal.TryParse(priceStr, out var price)
-                    && long.TryParse(barcodeStr, out var barcode)
-                   )
+            var productStore =
+                await _productStoreRepository.GetProductStoreByIdsAsync(product.Id, storeLocation.Id);
+            if (productStore == null)
+            {
+                await _productStoreRepository.CreateAsync(new ProductStore
                 {
-                    previews.Add(new ProductPreview
-                    {
-                        Name = name,
-                        Price = price,
-                        Barcode = barcode
-                    });
-                }
+                    ProductId = product.Id,
+                    StoreLocationId = storeLocation.Id,
+                    LatestPrice = price
+                });
             }
         }
+    }
+
+    private async Task<StoreLocation?> HandleStoreLocation(string filename, Guid storeId)
+    {
+        var responseStoreLocation = await _geminiService.SendRequestAsync([
+            new Part
+            {
+                Text = $@"You are an AI specializing in extracting city names and addresses.
+                              Input: {JsonSerializer.Serialize(filename)}
+
+                              ### TASK:
+                              Extract city name and address.
+                              Capitalize all letters.
+                              Do no include any other info such as zipcode, store type...
+
+                              ### OUTPUT RULES:
+                              - Output MUST be a valid JSON object, not array, just single object.
+                              - Capitalize all letters in both city and address.
+                              - Do NOT change or truncate any fields.
+                              - Do NOT include comments or explanations.
+                              - Do NOT output anything except the JSON.
+
+                              ### EXAMPLE OUTPUT:
+                              {{
+                                 ""city"": ""cityName"",
+                                 ""address"": ""address""
+                              }}
+                           "
+            }
+        ]);
+
+        var foundStoreLocation = JsonSerializer.Deserialize<BaseStoreLocation>
+        (
+            responseStoreLocation, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }
+        );
+
+        if (foundStoreLocation == null)
+        {
+            return null;
+        }
+
+        var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(
+            foundStoreLocation.City, foundStoreLocation.Address
+        );
+
+        if (storeLocation == null)
+        {
+            storeLocation = await _storeLocationRepository.Create(new StoreLocation
+            {
+                City = foundStoreLocation.City,
+                Address = foundStoreLocation.Address,
+                StoreId = storeId
+            });
+        }
+
+        return storeLocation;
+    }
+
+    private async Task<Product?> CategorizeProduct(
+        string productName, decimal price,
+        string barcode,
+        ICategoryRepository categoryRepo,
+        IProductRepository productRepo,
+        IGeminiService geminiService
+    )
+    {
+        var allCategories =
+            (await categoryRepo.GetAllCategoriesWithSubcategoriesAsync())
+            .Select(c => c.ToBaseCategory());
+
+        var responseCategorizedProduct = await geminiService.SendRequestAsync([
+            new Part
+            {
+                Text = $@"You are an AI specializing in categorizing products.
+                          Input: {JsonSerializer.Serialize(new { ProductName = productName, Categories = allCategories })}
+
+                          ### TASK:
+                          Categorize product in the most appropriate category.
+                          If no appropriate subcategory is found, categorize it in top category ""Ostale namirnice"".
+                          DO NOT MODIFY PRODUCT NAME.
+
+                          ### OUTPUT RULES:
+                          - Output MUST be a valid JSON object, not array, just single object.
+                          - Do NOT change or truncate any fields.
+                          - Do NOT include comments or explanations.
+                          - Do NOT output anything except the JSON.
+
+                          ### EXAMPLE OUTPUT:
+                          {{
+                             ""productName"": ""productName"",
+                             ""category"": {{
+                                 ""name"": ""categoryName"",
+                                 ""id"": categoryId
+                             }}
+                          }}
+                       "
+            }
+        ]);
+        var categorizedProduct = JsonSerializer.Deserialize<CategorizedProduct>
+        (
+            responseCategorizedProduct, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }
+        );
+
+        if (categorizedProduct == null)
+        {
+            return null;
+        }
+
+        return await productRepo.CreateAsync(new Product
+        {
+            Name = productName,
+            CategoryId = categorizedProduct.Category.Id,
+            LowestPrice = price,
+            Barcode = barcode
+        });
     }
 }

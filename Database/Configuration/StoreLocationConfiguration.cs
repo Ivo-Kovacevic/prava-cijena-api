@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PravaCijena.Api.Database.Seeders;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Database.Configuration;
@@ -28,6 +27,6 @@ public class StoreLocationConfiguration : IEntityTypeConfiguration<StoreLocation
         builder.Property(s => s.UpdatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-        builder.HasData(StoreLocationSeedingData.InitialStoreLocations());
+        // builder.HasData(StoreLocationSeedingData.InitialStoreLocations());
     }
 }
