@@ -1,9 +1,11 @@
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
 using PravaCijena.Api.Models;
@@ -78,10 +80,10 @@ public class StructuredDataService : IStructuredDataService
                     case "konzum":
                         await HandleKonzum(store, urlNodes);
                         break;
-                    case "lidl":
+                    case "lidl--":
                         await HandleLidl(store, urlNodes);
                         break;
-                    case "studenac":
+                    case "studenac--":
                         await HandleStudenac(store, urlNodes);
                         break;
                     default:
@@ -158,9 +160,9 @@ public class StructuredDataService : IStructuredDataService
             }
 
             await using var entryStream = entry.Open();
-            var xdoc = XDocument.Load(entryStream);
+            var xDoc = XDocument.Load(entryStream);
 
-            await HandleXml(xdoc, store, storeLocation);
+            await HandleXml(xDoc, store, storeLocation);
         }
     }
 
@@ -171,81 +173,118 @@ public class StructuredDataService : IStructuredDataService
             return;
         }
 
-        var semaphore = new SemaphoreSlim(20);
-        var tasks = new List<Task>();
-
-        var numGeminiCalls = 0;
+        var productPreviews = new List<ProductPreview>();
 
         foreach (var line in lines.Skip(1))
         {
-            await semaphore.WaitAsync();
+            var cols = line.Split(',');
+            var productName = cols[store.CsvNameColumn.Value].Trim();
+            var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
+            var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
 
-            var task = Task.Run(async () =>
+            if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 1)
             {
-                using var scope = _serviceProvider.CreateScope(); // this is the magic
-                var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
-                var productStoreRepo = scope.ServiceProvider.GetRequiredService<IProductStoreRepository>();
-                var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
-                var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+                continue;
+            }
 
-                try
-                {
-                    var cols = line.Split(',');
-                    var productName = cols[store.CsvNameColumn.Value].Trim();
-                    var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
-                    var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
-
-                    if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 1)
-                    {
-                        return;
-                    }
-
-                    var product = await productRepo.GetProductByBarcodeAsync(barcode);
-
-                    if (product == null)
-                    {
-                        product = await CategorizeProduct(productName, price, barcode, categoryRepo,
-                            productRepo, geminiService);
-                        if (product == null)
-                        {
-                            return;
-                        }
-
-                        numGeminiCalls++;
-                    }
-
-                    if (price < product.LowestPrice)
-                    {
-                        await productRepo.UpdateLowestPriceAsync(product.Id, price);
-                    }
-
-                    var productStore =
-                        await productStoreRepo.GetProductStoreByIdsAsync(product.Id, storeLocation.Id);
-                    if (productStore == null)
-                    {
-                        await productStoreRepo.CreateAsync(new ProductStore
-                        {
-                            ProductId = product.Id,
-                            StoreLocationId = storeLocation.Id,
-                            LatestPrice = price
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
+            productPreviews.Add(new ProductPreview
+            {
+                Name = productName,
+                Price = price,
+                Barcode = barcode
             });
-            tasks.Add(task);
         }
 
-        await Task.WhenAll(tasks);
-        
-        Console.WriteLine($"Number of Gemini API calls: {numGeminiCalls}");
+        var allBarcodes = productPreviews.Select(x => x.Barcode).Distinct().ToList();
+        var allSlugs = productPreviews.Select(x => SlugHelper.GenerateSlug(x.Name)).Distinct().ToList();
+        var productsByBarcodes = await _productRepository.GetProductsByBarcodesBatchAsync(allBarcodes);
+        var productsBySlugs = await _productRepository.GetProductsBySlugsBatchAsync(allSlugs);
+
+        var dbProductsByBarcode = productsByBarcodes.ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
+        var existingSlugs = new HashSet<string>(productsBySlugs.Select(p => p.Slug), StringComparer.OrdinalIgnoreCase);
+
+        var productPreviewsToUpdate = new List<ProductPreview>();
+        var productPreviewsToCategorize = new List<ProductPreview>();
+
+        foreach (var productPreview in productPreviews)
+            if (dbProductsByBarcode.TryGetValue(productPreview.Barcode, out var dbProduct))
+            {
+                var needsUpdate = productPreview.Price < dbProduct.LowestPrice ||
+                                  dbProduct.UpdatedAt.Date < DateTime.UtcNow.Date;
+
+                if (needsUpdate)
+                {
+                    productPreviewsToUpdate.Add(productPreview);
+                }
+            }
+            else
+            {
+                var baseName = productPreview.Name;
+                var slug = SlugHelper.GenerateSlug(baseName);
+                var i = 1;
+
+                while (existingSlugs.Contains(slug))
+                {
+                    productPreview.Name = $"{baseName} {i}";
+                    slug = SlugHelper.GenerateSlug(productPreview.Name);
+                    i++;
+                }
+
+                existingSlugs.Add(slug);
+
+                productPreviewsToCategorize.Add(productPreview);
+            }
+
+        if (productPreviewsToUpdate.Count > 0)
+        {
+            await _productRepository.UpdateLowestPricesBatchAsync(productPreviewsToUpdate);
+        }
+
+        if (productPreviewsToCategorize.Count > 0)
+        {
+            var categorizedProducts = new ConcurrentBag<Product>();
+
+            await Parallel.ForEachAsync(productPreviewsToCategorize, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = 100
+            }, async (productPreview, ct) =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
+                var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+                var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+
+                CategorizedProduct? categorizedProduct = null;
+                try
+                {
+                    categorizedProduct = await CategorizeProduct(
+                        productPreview.Name,
+                        productPreview.Price,
+                        productPreview.Barcode,
+                        categoryRepo,
+                        productRepo,
+                        geminiService
+                    );
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+
+                if (categorizedProduct != null)
+                {
+                    categorizedProducts.Add(new Product
+                    {
+                        Name = productPreview.Name,
+                        CategoryId = categorizedProduct.Category.Id,
+                        LowestPrice = productPreview.Price,
+                        Barcode = productPreview.Barcode
+                    });
+                }
+            });
+
+            await _productRepository.CreateProductsBatchAsync(categorizedProducts.ToList());
+        }
     }
 
     private async Task HandleXml(XDocument xdoc, StoreWithMetadataDto store, StoreLocation storeLocation)
@@ -306,7 +345,7 @@ public class StructuredDataService : IStructuredDataService
 
                               ### TASK:
                               Extract city name and address.
-                              Capitalize all letters.
+                              Capitalize all letters and remove other non-letter characters such as underscore, plus sign, dots or similar.
                               Do no include any other info such as zipcode, store type...
 
                               ### OUTPUT RULES:
@@ -355,7 +394,7 @@ public class StructuredDataService : IStructuredDataService
         return storeLocation;
     }
 
-    private async Task<Product?> CategorizeProduct(
+    private async Task<CategorizedProduct?> CategorizeProduct(
         string productName, decimal price,
         string barcode,
         ICategoryRepository categoryRepo,
@@ -380,6 +419,15 @@ public class StructuredDataService : IStructuredDataService
 
                           ### OUTPUT RULES:
                           - Output MUST be a valid JSON object, not array, just single object.
+                          - Output must be in the following format:
+                            {{
+                                ""productName"": ""productName"",
+                                ""category"":
+                                {{
+                                    ""name"": ""categoryName"",
+                                    ""id"": categoryId
+                                }}
+                            }}
                           - Do NOT change or truncate any fields.
                           - Do NOT include comments or explanations.
                           - Do NOT output anything except the JSON.
@@ -395,6 +443,9 @@ public class StructuredDataService : IStructuredDataService
                        "
             }
         ]);
+        Console.WriteLine("START");
+        Console.WriteLine(responseCategorizedProduct);
+        Console.WriteLine("END");
         var categorizedProduct = JsonSerializer.Deserialize<CategorizedProduct>
         (
             responseCategorizedProduct, new JsonSerializerOptions
@@ -408,12 +459,6 @@ public class StructuredDataService : IStructuredDataService
             return null;
         }
 
-        return await productRepo.CreateAsync(new Product
-        {
-            Name = productName,
-            CategoryId = categorizedProduct.Category.Id,
-            LowestPrice = price,
-            Barcode = barcode
-        });
+        return categorizedProduct;
     }
 }

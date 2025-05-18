@@ -12,6 +12,9 @@ public class ProductStoreConfiguration : IEntityTypeConfiguration<ProductStore>
             .HasDefaultValueSql("gen_random_uuid()")
             .IsRequired();
 
+        builder.HasIndex(p => new { p.ProductId, p.StoreLocationId })
+            .IsUnique();
+
         builder.HasOne<Product>(ps => ps.Product)
             .WithMany(p => p.ProductStores)
             .HasForeignKey(ps => ps.ProductId)
