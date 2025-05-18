@@ -168,7 +168,7 @@ public class StructuredDataService : IStructuredDataService
 
     private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
-        if (store.CsvNameColumn == null || store.CsvPriceColumn == null || store.CsvBarcodeColumn == null)
+        if (store.CsvNameColumn == null || store.CsvBrandColumn == null || store.CsvPriceColumn == null || store.CsvBarcodeColumn == null)
         {
             return;
         }
@@ -179,10 +179,11 @@ public class StructuredDataService : IStructuredDataService
         {
             var cols = line.Split(',');
             var productName = cols[store.CsvNameColumn.Value].Trim();
+            var productBrand = cols[store.CsvBrandColumn.Value].Trim();
             var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
             var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
 
-            if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 1)
+            if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
             {
                 continue;
             }
@@ -190,6 +191,7 @@ public class StructuredDataService : IStructuredDataService
             productPreviews.Add(new ProductPreview
             {
                 Name = productName,
+                Brand = productBrand,
                 Price = price,
                 Barcode = barcode
             });
@@ -221,11 +223,19 @@ public class StructuredDataService : IStructuredDataService
             {
                 var baseName = productPreview.Name;
                 var slug = SlugHelper.GenerateSlug(baseName);
-                var i = 1;
+                var i = 0;
 
                 while (existingSlugs.Contains(slug))
                 {
-                    productPreview.Name = $"{baseName} {i}";
+                    if (i == 0)
+                    {
+                        productPreview.Name = $"{productPreview.Brand} {baseName}";
+                    }
+                    else
+                    {
+                        productPreview.Name = $"{productPreview.Brand} {baseName} {i}";
+                    }
+                    
                     slug = SlugHelper.GenerateSlug(productPreview.Name);
                     i++;
                 }
@@ -245,62 +255,56 @@ public class StructuredDataService : IStructuredDataService
             var categorizedProducts = new ConcurrentBag<Product>();
 
             await Parallel.ForEachAsync(productPreviewsToCategorize, new ParallelOptions
-            {
-                MaxDegreeOfParallelism = 100
-            }, async (productPreview, ct) =>
-            {
-                using var scope = _serviceProvider.CreateScope();
-                var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
-                var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
-                var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+                {
+                    MaxDegreeOfParallelism = 100
+                },
+                async (productPreview, ct) =>
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
+                    var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
 
-                CategorizedProduct? categorizedProduct = null;
-                try
-                {
-                    categorizedProduct = await CategorizeProduct(
-                        productPreview.Name,
-                        productPreview.Price,
-                        productPreview.Barcode,
-                        categoryRepo,
-                        productRepo,
-                        geminiService
-                    );
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-
-                if (categorizedProduct != null)
-                {
-                    categorizedProducts.Add(new Product
+                    CategorizedProduct? categorizedProduct = null;
+                    try
                     {
-                        Name = productPreview.Name,
-                        CategoryId = categorizedProduct.Category.Id,
-                        LowestPrice = productPreview.Price,
-                        Barcode = productPreview.Barcode
-                    });
-                }
-            });
+                        categorizedProduct = await CategorizeProduct(productPreview.Name, categoryRepo, geminiService);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    if (categorizedProduct != null)
+                    {
+                        categorizedProducts.Add(new Product
+                        {
+                            Name = productPreview.Name,
+                            Brand = productPreview.Brand,
+                            CategoryId = categorizedProduct.Category.Id,
+                            LowestPrice = productPreview.Price,
+                            Barcode = productPreview.Barcode
+                        });
+                    }
+                });
 
             await _productRepository.CreateProductsBatchAsync(categorizedProducts.ToList());
         }
     }
 
-    private async Task HandleXml(XDocument xdoc, StoreWithMetadataDto store, StoreLocation storeLocation)
+    private async Task HandleXml(XDocument xDoc, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
         if (store.XmlNameElement == null || store.XmlPriceElement == null || store.XmlBarcodeElement == null)
         {
             return;
         }
 
-        foreach (var p in xdoc.Descendants("Proizvod"))
+        foreach (var p in xDoc.Descendants("Proizvod"))
         {
             var productName = p.Element(store.XmlNameElement)?.Value;
             var priceStr = p.Element(store.XmlPriceElement)?.Value;
             var barcode = p.Element(store.XmlBarcodeElement)?.Value;
 
-            if (productName == null || !decimal.TryParse(priceStr, out var price) || barcode.Length < 5)
+            if (productName == null || !decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
             {
                 continue;
             }
@@ -395,10 +399,8 @@ public class StructuredDataService : IStructuredDataService
     }
 
     private async Task<CategorizedProduct?> CategorizeProduct(
-        string productName, decimal price,
-        string barcode,
+        string productName,
         ICategoryRepository categoryRepo,
-        IProductRepository productRepo,
         IGeminiService geminiService
     )
     {
@@ -414,7 +416,7 @@ public class StructuredDataService : IStructuredDataService
 
                           ### TASK:
                           Categorize product in the most appropriate category.
-                          If no appropriate subcategory is found, categorize it in top category ""Ostale namirnice"".
+                          If no appropriate category is found, categorize it in category ""Ostale namirnice i proizvodi"".
                           DO NOT MODIFY PRODUCT NAME.
 
                           ### OUTPUT RULES:

@@ -30,6 +30,7 @@ public class StoreSeedingData
                 PriceUrlListXPath = "//div[@class='tabs__content']",
                 PriceUrlXPath = ".//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
                 CsvNameColumn = 0,
+                CsvBrandColumn = 2,
                 CsvPriceColumn = 5,
                 CsvBarcodeColumn = 10,
 

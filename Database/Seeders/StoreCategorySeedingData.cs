@@ -135,7 +135,7 @@ public class StoreCategorySeedingData
             {
                 Id = KonzumSpreadsId, Name = "namazi",
                 ParentCategoryId = KonzumDairyId,
-                EquivalentCategoryId = CategorySeedingData.MilkSpreadsSubcategoryId
+                EquivalentCategoryId = CategorySeedingData.SpreadsSubcategoryId
             },
             new()
             {
@@ -324,7 +324,7 @@ public class StoreCategorySeedingData
             {
                 Id = TommyMilkSpreadsId, Name = "namazi",
                 ParentCategoryId = TommyDairyId,
-                EquivalentCategoryId = CategorySeedingData.MilkSpreadsSubcategoryId
+                EquivalentCategoryId = CategorySeedingData.SpreadsSubcategoryId
             },
             new()
             {
