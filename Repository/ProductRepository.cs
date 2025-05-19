@@ -42,6 +42,22 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
+    public async Task<List<string>> GetAllSlugsAsync()
+    {
+        return await _context.Products
+            .Select(p => p.Slug)
+            .ToListAsync();
+    }
+
+    public async Task<List<string>> GetAllBarcodesAsync()
+    {
+        return await _context.Products
+            .Where(p => p.Barcode != null)
+            .Select(p => p.Barcode!)
+            .ToListAsync();
+    }
+
+
     public async Task<Product?> GetProductByBarcodeAsync(string productBarcode)
     {
         return await _context.Products

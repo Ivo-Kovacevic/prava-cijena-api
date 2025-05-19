@@ -28,7 +28,7 @@ public class StoreSeedingData
 
                 PriceListUrl = "https://www.konzum.hr/cjenici",
                 PriceUrlListXPath = "//div[@class='tabs__content']",
-                PriceUrlXPath = ".//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
+                PriceUrlXPath = "(.//div[@data-tab-type])[1]//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
                 CsvNameColumn = 0,
                 CsvBrandColumn = 2,
                 CsvPriceColumn = 5,

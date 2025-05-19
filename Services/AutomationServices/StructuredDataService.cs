@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
 using HtmlAgilityPack;
@@ -50,16 +51,20 @@ public class StructuredDataService : IStructuredDataService
 
     public async Task SyncStoreFiles()
     {
-        var results = new AutomationResult
-        {
-            CreatedProducts = 0,
-            UpdatedProducts = 0,
-            CreatedProductStores = 0,
-            UpdatedProductStores = 0,
-            CreatedPrices = 0,
-            UpdatedPrices = 0
-        };
+        var results = new AutomationResult();
         var storesWithMetadata = await _storeRepository.GetAllWithMetadata();
+
+        var existingSlugs = new ConcurrentDictionary<string, byte>(
+            (await _productRepository.GetAllSlugsAsync())
+            .Select(slug => new KeyValuePair<string, byte>(slug, 0)),
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        var existingBarcodes = new ConcurrentDictionary<string, byte>(
+            (await _productRepository.GetAllBarcodesAsync())
+            .Select(barcode => new KeyValuePair<string, byte>(barcode, 0)),
+            StringComparer.OrdinalIgnoreCase
+        );
 
         foreach (var store in storesWithMetadata)
             try
@@ -78,7 +83,7 @@ public class StructuredDataService : IStructuredDataService
                 switch (store.Slug)
                 {
                     case "konzum":
-                        await HandleKonzum(store, urlNodes);
+                        await HandleKonzum(store, urlNodes, existingSlugs, existingBarcodes);
                         break;
                     case "lidl--":
                         await HandleLidl(store, urlNodes);
@@ -96,7 +101,9 @@ public class StructuredDataService : IStructuredDataService
             }
     }
 
-    private async Task HandleKonzum(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
+    private async Task HandleKonzum(StoreWithMetadataDto store, HtmlNodeCollection urlNodes,
+        ConcurrentDictionary<string, byte> existingSlugs, ConcurrentDictionary<string, byte> existingBarcodes
+    )
     {
         foreach (var urlNode in urlNodes)
         {
@@ -112,7 +119,7 @@ public class StructuredDataService : IStructuredDataService
             var csvData = await _httpClient.GetStringAsync(fullUrl);
             var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            await HandleCsv(lines, store, storeLocation);
+            await HandleCsv(lines, store, storeLocation, existingSlugs, existingBarcodes);
         }
     }
 
@@ -139,7 +146,7 @@ public class StructuredDataService : IStructuredDataService
 
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            await HandleCsv(lines, store, storeLocation);
+            // await HandleCsv(lines, store, storeLocation);
         }
     }
 
@@ -166,9 +173,11 @@ public class StructuredDataService : IStructuredDataService
         }
     }
 
-    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation)
+    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation,
+        ConcurrentDictionary<string, byte> existingSlugs, ConcurrentDictionary<string, byte> existingBarcodes)
     {
-        if (store.CsvNameColumn == null || store.CsvBrandColumn == null || store.CsvPriceColumn == null || store.CsvBarcodeColumn == null)
+        if (store.CsvNameColumn == null || store.CsvBrandColumn == null || store.CsvPriceColumn == null ||
+            store.CsvBarcodeColumn == null)
         {
             return;
         }
@@ -197,27 +206,52 @@ public class StructuredDataService : IStructuredDataService
             });
         }
 
-        var allBarcodes = productPreviews.Select(x => x.Barcode).Distinct().ToList();
-        var allSlugs = productPreviews.Select(x => SlugHelper.GenerateSlug(x.Name)).Distinct().ToList();
-        var productsByBarcodes = await _productRepository.GetProductsByBarcodesBatchAsync(allBarcodes);
-        var productsBySlugs = await _productRepository.GetProductsBySlugsBatchAsync(allSlugs);
+        var allBarcodesInFile = productPreviews.Select(x => x.Barcode).Distinct().ToList();
 
+        var productsByBarcodes = await _productRepository.GetProductsByBarcodesBatchAsync(allBarcodesInFile);
         var dbProductsByBarcode = productsByBarcodes.ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
-        var existingSlugs = new HashSet<string>(productsBySlugs.Select(p => p.Slug), StringComparer.OrdinalIgnoreCase);
+
+        var productIds = dbProductsByBarcode.Values.Select(p => p.Id).ToList();
+
+        var existingProductStores =
+            await _productStoreRepository.GetProductStoresByIdsBatchAsync(productIds, storeLocation.Id);
+        var productStoreLookup =
+            existingProductStores.ToDictionary(ps => ps.Product.Barcode, StringComparer.OrdinalIgnoreCase);
+
 
         var productPreviewsToUpdate = new List<ProductPreview>();
-        var productPreviewsToCategorize = new List<ProductPreview>();
+        var productStoresToUpdate = new List<ProductStore>();
+        var productPreviewsToCreate = new List<ProductPreview>();
+        var productStoresToCreate = new List<ProductStore>();
 
         foreach (var productPreview in productPreviews)
             if (dbProductsByBarcode.TryGetValue(productPreview.Barcode, out var dbProduct))
             {
-                var needsUpdate = productPreview.Price < dbProduct.LowestPrice ||
-                                  dbProduct.UpdatedAt.Date < DateTime.UtcNow.Date;
-
-                if (needsUpdate)
+                if (productPreview.Price < dbProduct.LowestPrice || dbProduct.UpdatedAt.Date < DateTime.UtcNow.Date)
                 {
                     productPreviewsToUpdate.Add(productPreview);
                 }
+
+                if (productStoreLookup.TryGetValue(productPreview.Barcode, out var productStore))
+                {
+                    if (productStore.LatestPrice != productPreview.Price)
+                    {
+                        productStore.LatestPrice = productPreview.Price;
+                        productStoresToUpdate.Add(productStore);
+                    }
+                }
+                else
+                {
+                    // Product exists, but store mapping doesn't
+                    productStoresToCreate.Add(new ProductStore
+                    {
+                        ProductId = dbProduct.Id,
+                        StoreLocationId = storeLocation.Id,
+                        LatestPrice = productPreview.Price
+                    });
+                }
+
+                existingBarcodes.TryAdd(productPreview.Barcode, 0);
             }
             else
             {
@@ -225,7 +259,7 @@ public class StructuredDataService : IStructuredDataService
                 var slug = SlugHelper.GenerateSlug(baseName);
                 var i = 0;
 
-                while (existingSlugs.Contains(slug))
+                while (!existingSlugs.TryAdd(slug, 0))
                 {
                     if (i == 0)
                     {
@@ -235,14 +269,18 @@ public class StructuredDataService : IStructuredDataService
                     {
                         productPreview.Name = $"{productPreview.Brand} {baseName} {i}";
                     }
-                    
+
                     slug = SlugHelper.GenerateSlug(productPreview.Name);
                     i++;
                 }
 
-                existingSlugs.Add(slug);
+                productPreviewsToCreate.Add(productPreview);
 
-                productPreviewsToCategorize.Add(productPreview);
+                if (productStoreLookup.TryGetValue(productPreview.Barcode, out var productStore))
+                {
+                    productStore.LatestPrice = productPreview.Price;
+                    productStoresToCreate.Add(productStore);
+                }
             }
 
         if (productPreviewsToUpdate.Count > 0)
@@ -250,44 +288,89 @@ public class StructuredDataService : IStructuredDataService
             await _productRepository.UpdateLowestPricesBatchAsync(productPreviewsToUpdate);
         }
 
-        if (productPreviewsToCategorize.Count > 0)
+        if (productStoresToUpdate.Count > 0)
         {
-            var categorizedProducts = new ConcurrentBag<Product>();
+            await _productStoreRepository.UpdateProductStoresBatchAsync(productStoresToUpdate);
+        }
 
-            await Parallel.ForEachAsync(productPreviewsToCategorize, new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = 100
-                },
-                async (productPreview, ct) =>
-                {
-                    using var scope = _serviceProvider.CreateScope();
-                    var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
-                    var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+        if (productPreviewsToCreate.Count > 0)
+        {
+            var semaphore = new SemaphoreSlim(50);
+            var tasks = new List<Task>();
 
-                    CategorizedProduct? categorizedProduct = null;
+            var batches = productPreviewsToCreate
+                .Select((product, index) => new { product, index })
+                .GroupBy(x => x.index / 5)
+                .Select(g => g.Select(x => x.product).ToList());
+
+            foreach (var batch in batches)
+            {
+                tasks.Add(Task.Run(async () =>
+                {
                     try
                     {
-                        categorizedProduct = await CategorizeProduct(productPreview.Name, categoryRepo, geminiService);
+                        await semaphore.WaitAsync();
+                        using var scope = _serviceProvider.CreateScope();
+                        var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
+                        var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
+                        var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
+
+                        var productNames = batch.Select(p => p.Name).ToList();
+                        var results = await CategorizeProducts(productNames, categoryRepo, geminiService);
+
+                        if (results == null)
+                        {
+                            return;
+                        }
+
+                        var categorizedProducts = new List<Product>();
+                        for (var i = 0; i < results.Count; i++)
+                            categorizedProducts.Add(new Product
+                            {
+                                Name = batch[i].Name,
+                                Brand = batch[i].Brand,
+                                CategoryId = results[i].Category.Id,
+                                LowestPrice = batch[i].Price,
+                                Barcode = batch[i].Barcode
+                            });
+
+                        await productRepo.CreateProductsBatchAsync(categorizedProducts);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
-
-                    if (categorizedProduct != null)
+                    finally
                     {
-                        categorizedProducts.Add(new Product
-                        {
-                            Name = productPreview.Name,
-                            Brand = productPreview.Brand,
-                            CategoryId = categorizedProduct.Category.Id,
-                            LowestPrice = productPreview.Price,
-                            Barcode = productPreview.Barcode
-                        });
+                        semaphore.Release();
                     }
-                });
+                }));
+            }
 
-            await _productRepository.CreateProductsBatchAsync(categorizedProducts.ToList());
+            await Task.WhenAll(tasks);
+        }
+
+
+        var newlyInsertedBarcodes = productPreviewsToCreate.Select(p => p.Barcode).ToList();
+        var newDbProducts = await _productRepository.GetProductsByBarcodesBatchAsync(newlyInsertedBarcodes);
+        var newDbProductsByBarcode = newDbProducts.ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var preview in productPreviewsToCreate)
+            if (newDbProductsByBarcode.TryGetValue(preview.Barcode, out var newProduct))
+            {
+                productStoresToCreate.Add(new ProductStore
+                {
+                    ProductId = newProduct.Id,
+                    StoreLocationId = storeLocation.Id,
+                    LatestPrice = preview.Price
+                });
+            }
+
+        const int maxRowsPerBatch = 5000;
+        for (int i = 0; i < productStoresToCreate.Count; i += maxRowsPerBatch)
+        {
+            var chunk = productStoresToCreate.Skip(i).Take(maxRowsPerBatch).ToList();
+            await _productStoreRepository.CreateProductStoresBatchAsync(chunk);
         }
     }
 
@@ -341,32 +424,32 @@ public class StructuredDataService : IStructuredDataService
 
     private async Task<StoreLocation?> HandleStoreLocation(string filename, Guid storeId)
     {
+        var responseSchema = JsonDocument.Parse(@"{
+                           ""type"": ""OBJECT"",
+                           ""properties"": {
+                             ""city"": { ""type"": ""STRING"" },
+                             ""address"": { ""type"": ""STRING"" }
+                           },
+                           ""required"": [""city"", ""address""]
+                       }").RootElement;
+
         var responseStoreLocation = await _geminiService.SendRequestAsync([
-            new Part
-            {
-                Text = $@"You are an AI specializing in extracting city names and addresses.
-                              Input: {JsonSerializer.Serialize(filename)}
+                new Part
+                {
+                    Text = $@"Extract city name and address.
+                          Capitalize all letters in both city and address.
+                          Remove characters such as underscores or plus signs.
+                          Do no include any other info such as zipcode, store type...
 
-                              ### TASK:
-                              Extract city name and address.
-                              Capitalize all letters and remove other non-letter characters such as underscore, plus sign, dots or similar.
-                              Do no include any other info such as zipcode, store type...
-
-                              ### OUTPUT RULES:
-                              - Output MUST be a valid JSON object, not array, just single object.
-                              - Capitalize all letters in both city and address.
-                              - Do NOT change or truncate any fields.
-                              - Do NOT include comments or explanations.
-                              - Do NOT output anything except the JSON.
-
-                              ### EXAMPLE OUTPUT:
-                              {{
-                                 ""city"": ""cityName"",
-                                 ""address"": ""address""
-                              }}
-                           "
-            }
-        ]);
+                          Input: {JsonSerializer.Serialize(filename, new JsonSerializerOptions
+                          {
+                              WriteIndented = false,
+                              Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                          })}
+                         "
+                }
+            ],
+            responseSchema);
 
         var foundStoreLocation = JsonSerializer.Deserialize<BaseStoreLocation>
         (
@@ -398,8 +481,8 @@ public class StructuredDataService : IStructuredDataService
         return storeLocation;
     }
 
-    private async Task<CategorizedProduct?> CategorizeProduct(
-        string productName,
+    private async Task<List<CategorizedProduct>?> CategorizeProducts(
+        List<string> productNames,
         ICategoryRepository categoryRepo,
         IGeminiService geminiService
     )
@@ -408,59 +491,66 @@ public class StructuredDataService : IStructuredDataService
             (await categoryRepo.GetAllCategoriesWithSubcategoriesAsync())
             .Select(c => c.ToBaseCategory());
 
-        var responseCategorizedProduct = await geminiService.SendRequestAsync([
-            new Part
-            {
-                Text = $@"You are an AI specializing in categorizing products.
-                          Input: {JsonSerializer.Serialize(new { ProductName = productName, Categories = allCategories })}
+        var responseSchema = JsonDocument.Parse(@"{
+                         ""type"": ""ARRAY"",
+                         ""items"": {
+                           ""type"": ""OBJECT"",
+                           ""properties"": {
+                             ""productName"": { ""type"": ""STRING"" },
+                             ""category"": {
+                                ""type"": ""OBJECT"",
+                                ""properties"": {
+                                   ""name"": { ""type"": ""STRING"" },
+                                   ""id"": { ""type"": ""STRING"" }
+                                },
+                                ""required"": [""name"", ""id""]
+                             }
+                           },
+                           ""required"": [""productName"", ""category""]
+                         }
+                       }").RootElement;
 
-                          ### TASK:
-                          Categorize product in the most appropriate category.
-                          If no appropriate category is found, categorize it in category ""Ostale namirnice i proizvodi"".
-                          DO NOT MODIFY PRODUCT NAME.
-
-                          ### OUTPUT RULES:
-                          - Output MUST be a valid JSON object, not array, just single object.
-                          - Output must be in the following format:
-                            {{
-                                ""productName"": ""productName"",
-                                ""category"":
-                                {{
-                                    ""name"": ""categoryName"",
-                                    ""id"": categoryId
-                                }}
-                            }}
-                          - Do NOT change or truncate any fields.
-                          - Do NOT include comments or explanations.
-                          - Do NOT output anything except the JSON.
-
-                          ### EXAMPLE OUTPUT:
-                          {{
-                             ""productName"": ""productName"",
-                             ""category"": {{
-                                 ""name"": ""categoryName"",
-                                 ""id"": categoryId
-                             }}
-                          }}
-                       "
-            }
-        ]);
-        Console.WriteLine("START");
-        Console.WriteLine(responseCategorizedProduct);
-        Console.WriteLine("END");
-        var categorizedProduct = JsonSerializer.Deserialize<CategorizedProduct>
-        (
-            responseCategorizedProduct, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }
-        );
-
-        if (categorizedProduct == null)
+        try
         {
-            return null;
-        }
+            var responseCategorizedProduct = await geminiService.SendRequestAsync(
+                [
+                    new Part
+                    {
+                        Text = $@"Categorize products in the most appropriate category.
+                          If no appropriate category is found, categorize product it in category ""Ostale namirnice i proizvodi"".
+                          Expand abbreviations when you're confident (e.g. DALM → DALMATINSKA, DETERDŽ → DETERDŽENT, POLUTV → POLUTVRDI, EX DJEV → EKSTRA DJEVIČANSKO, and other similar).
+                          Keep the product name close to the original — do not translate, do not rewrite whole phrases, and do not invent new words.
 
-        return categorizedProduct;
+                          INPUT: {JsonSerializer.Serialize(new { ProductNames = productNames, Categories = allCategories }, new JsonSerializerOptions
+                          {
+                              WriteIndented = false,
+                              Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                          })}
+                         "
+                    }
+                ],
+                responseSchema
+            );
+
+            var categorizedProducts = JsonSerializer.Deserialize<List<CategorizedProduct>>
+            (
+                responseCategorizedProduct, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            );
+
+            if (categorizedProducts == null)
+            {
+                return null;
+            }
+
+            return categorizedProducts;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

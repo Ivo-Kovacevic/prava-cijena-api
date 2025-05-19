@@ -4,7 +4,7 @@ namespace PravaCijena.Api.Database.Seeders;
 
 public class CategorySeedingData
 {
-    /// Dairy category
+    // Dairy category
     public static readonly Guid DairyCategoryId = new("f5a5d762-7a8f-4a8e-8f30-d9f4db59b7f0");
 
     public static readonly Guid MilkSubcategoryId = new("2d15ec67-b47b-4756-bc7b-e7a4e4f1232f");
@@ -39,7 +39,10 @@ public class CategorySeedingData
 
     // Basic groceries
     public static readonly Guid BasicGroceriesCategoryId = new("abe37280-7738-4634-9c4e-ca8c0249bb1f");
+
     public static readonly Guid SoupsSubcategoryId = new("26faf9f4-6b57-4567-a760-14ac644fbd22");
+
+    // 0d4667bc-9675-4e55-8d3c-6f4763b053b2
     public static readonly Guid SpreadsSubcategoryId = new("0d4667bc-9675-4e55-8d3c-6f4763f053b2");
     public static readonly Guid PastaSubcategoryId = new("18edbad7-1d0f-413c-9328-dca7cadcc735");
     public static readonly Guid RiceSubcategoryId = new("7e1191aa-8996-4319-b7de-aa0c3d596077");
@@ -244,7 +247,7 @@ public class CategorySeedingData
             new()
             {
                 Id = NonCarbonatedSubcategoryId,
-                Name = "Negazirana pića",
+                Name = "Sokovi i ostala negazirana pića",
                 ParentCategoryId = BeveragesCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/non-carbonated.svg",
                 HexColor = "#41949E"
@@ -398,7 +401,7 @@ public class CategorySeedingData
             new()
             {
                 Id = PoultrySubcategoryId,
-                Name = "Perad",
+                Name = "Piletina i ostala perad",
                 ParentCategoryId = MeatCategoryId,
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/poultry.svg",
                 HexColor = "#B54848"

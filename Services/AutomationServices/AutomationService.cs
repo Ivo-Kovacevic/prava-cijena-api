@@ -75,7 +75,7 @@ public class AutomationService : IAutomationService
                                   }}
                                   "
                     }
-                ]);
+                ], null);
 
                 var result = JsonSerializer.Deserialize<ComparedResult>(response,
                     new JsonSerializerOptions

@@ -18,7 +18,7 @@ public class GeminiService : ApiConfig, IGeminiService
         _httpClient = httpClient;
     }
 
-    public async Task<string> SendRequestAsync(List<Part> parts)
+    public async Task<string> SendRequestAsync(List<Part> parts, JsonElement? responseSchema)
     {
         var requestBody = new GeminiRequestModel
         {
@@ -31,7 +31,8 @@ public class GeminiService : ApiConfig, IGeminiService
             ],
             GenerationConfig = new GenerationConfig
             {
-                ResponseMimeType = "application/json"
+                ResponseMimeType = "application/json",
+                ResponseSchema = responseSchema
             }
         };
 

@@ -111,7 +111,7 @@ public class CatalogueService : ApiConfig, ICatalogueService
                             Data = base64Pdf
                         }
                     }
-                ]);
+                ], null);
 
                 var result = JsonSerializer.Deserialize<List<ProductPreview>>(response, new JsonSerializerOptions
                 {

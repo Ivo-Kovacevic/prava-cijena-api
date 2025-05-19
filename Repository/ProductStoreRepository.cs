@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
@@ -30,6 +31,14 @@ public class ProductStoreRepository : IProductStoreRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task<List<ProductStore>> GetProductStoresByIdsBatchAsync(List<Guid> productIds, Guid storeLocationId)
+    {
+        return await _context.ProductStores
+            .Include(ps => ps.Product)
+            .Where(ps => productIds.Contains(ps.ProductId) && ps.StoreLocationId == storeLocationId)
+            .ToListAsync();
+    }
+
     public async Task<ProductStore> CreateAsync(ProductStore productStore)
     {
         _context.ProductStores.Add(productStore);
@@ -37,11 +46,79 @@ public class ProductStoreRepository : IProductStoreRepository
         return productStore;
     }
 
+    public async Task CreateProductStoresBatchAsync(List<ProductStore> productStores)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            var valueLines = new List<string>();
+            var parameters = new List<object>();
+
+            for (var i = 0; i < productStores.Count; i++)
+            {
+                valueLines.Add(
+                    $"(@p{i}_id, @p{i}_productId, @p{i}_storeLocationId, @p{i}_price, @p{i}_now, @p{i}_now)");
+
+                parameters.Add(new NpgsqlParameter($"p{i}_id", Guid.NewGuid()));
+                parameters.Add(new NpgsqlParameter($"p{i}_productId", productStores[i].ProductId));
+                parameters.Add(new NpgsqlParameter($"p{i}_storeLocationId", productStores[i].StoreLocationId));
+                parameters.Add(new NpgsqlParameter($"p{i}_price", productStores[i].LatestPrice));
+                parameters.Add(new NpgsqlParameter($"p{i}_now", now));
+            }
+
+            var sql = $@"
+            INSERT INTO ""ProductStores"" (
+                ""Id"", ""ProductId"", ""StoreLocationId"",
+                ""LatestPrice"", ""CreatedAt"", ""UpdatedAt""
+            ) VALUES
+            {string.Join(",\n", valueLines)}";
+
+            await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
     public async Task<ProductStore> UpdateAsync(ProductStore productStore)
     {
         _context.ProductStores.Update(productStore);
         await _context.SaveChangesAsync();
         return productStore;
+    }
+
+    public async Task UpdateProductStoresBatchAsync(List<ProductStore> productStores)
+    {
+        try
+        {
+            var updateLines = new List<string>();
+            var parameters = new List<object>();
+
+            for (var i = 0; i < productStores.Count; i++)
+            {
+                var paramPrice = new NpgsqlParameter($"p{i}_price", productStores[i].LatestPrice);
+                var paramId = new NpgsqlParameter($"p{i}_id", productStores[i].Id);
+
+                parameters.Add(paramPrice);
+                parameters.Add(paramId);
+
+                updateLines.Add($@"
+                UPDATE ""ProductStores""
+                SET ""LatestPrice"" = @p{i}_price,
+                    ""UpdatedAt"" = NOW()
+                WHERE ""Id"" = @p{i}_id;
+            ");
+            }
+
+            var sql = string.Join("\n", updateLines);
+
+            await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public async Task UpdatePriceAsync(Guid productStoreId, decimal price)

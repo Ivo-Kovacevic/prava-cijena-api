@@ -2,10 +2,10 @@ namespace PravaCijena.Api.Models;
 
 public class AutomationResult
 {
-    public required int CreatedProducts { get; set; }
-    public required int UpdatedProducts { get; set; }
-    public required int CreatedProductStores { get; set; }
-    public required int UpdatedProductStores { get; set; }
-    public required int CreatedPrices { get; set; }
-    public required int UpdatedPrices { get; set; }
+    public int CreatedProducts { get; set; } = 0;
+    public int UpdatedProducts { get; set; } = 0;
+    public int CreatedProductStores { get; set; } = 0;
+    public int UpdatedProductStores { get; set; } = 0;
+    public int CreatedPrices { get; set; } = 0;
+    public int UpdatedPrices { get; set; } = 0;
 }

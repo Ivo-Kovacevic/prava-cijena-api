@@ -9,6 +9,8 @@ public interface IProductRepository
     Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
     Task<Product?> GetProductBySlugAsync(string productSlug);
     Task<List<Product>> GetProductsBySlugsBatchAsync(IEnumerable<string> productSlugs);
+    Task<List<string>> GetAllSlugsAsync();
+    Task<List<string>> GetAllBarcodesAsync();
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);
     Task<List<Product>> GetProductsByBarcodesBatchAsync(IEnumerable<string> barcodes);
     Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm);
