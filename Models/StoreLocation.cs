@@ -6,5 +6,5 @@ public class StoreLocation : BaseEntity
     public required string Address { get; set; }
     public required Guid StoreId { get; set; }
     public Store Store { get; set; }
-    public ICollection<ProductStore> LocationProducts { get; set; } = [];
+    public List<ProductStore> LocationProducts { get; set; } = [];
 }

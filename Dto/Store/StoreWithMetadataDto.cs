@@ -15,6 +15,9 @@ public class StoreWithMetadataDto : BaseEntity
     public int? CsvBrandColumn { get; set; }
     public int? CsvBarcodeColumn { get; set; }
     public int? CsvPriceColumn { get; set; }
+    public string? CsvDelimiter { get; set; }
+
+    
     public string? XmlNameElement { get; set; }
     public string? XmlBrandElement { get; set; }
     public string? XmlBarcodeElement { get; set; }

@@ -12,7 +12,6 @@ public static class StoreMapper
         {
             Id = store.Id,
             Name = store.Name,
-            Slug = store.Slug,
             StoreUrl = store.StoreUrl,
             ImageUrl = store.ImageUrl,
             BaseUrl = store.BaseCategoryUrl,

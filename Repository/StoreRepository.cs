@@ -47,6 +47,7 @@ public class StoreRepository : IStoreRepository
                 CsvBrandColumn = store.CsvBrandColumn,
                 CsvPriceColumn = store.CsvPriceColumn,
                 CsvBarcodeColumn = store.CsvBarcodeColumn,
+                CsvDelimiter = store.CsvDelimiter,
                 XmlNameElement = store.XmlNameElement,
                 XmlBrandElement = store.XmlBrandElement,
                 XmlPriceElement = store.XmlPriceElement,

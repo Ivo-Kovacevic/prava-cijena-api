@@ -12,12 +12,12 @@ public static class ProductMapper
         {
             Id = product.Id,
             Name = product.Name,
-            Slug = product.Slug,
             LowestPrice = product.LowestPrice,
             ImageUrl = product.ImageUrl,
             CategoryId = product.CategoryId,
             CreatedAt = product.CreatedAt,
-            UpdatedAt = product.UpdatedAt
+            UpdatedAt = product.UpdatedAt,
+            ProductStores = product.ProductStores.Select(ps => ps.ToProductStoreDto()).ToList()
         };
     }
 
@@ -27,11 +27,9 @@ public static class ProductMapper
         {
             Id = product.Id,
             Name = product.Name,
-            Slug = product.Slug,
             LowestPrice = product.LowestPrice,
             ImageUrl = product.ImageUrl,
             CategoryId = product.CategoryId,
-            ProductStores = product.ProductStores.Select(ps => ps.ToPageProductStoreDto()).ToList(),
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt
         };
@@ -45,6 +43,7 @@ public static class ProductMapper
         return new Product
         {
             Name = name,
+            Barcode = productRequestDto.Barcode,
             ImageUrl = productRequestDto.ImageUrl,
             CategoryId = categoryId
         };

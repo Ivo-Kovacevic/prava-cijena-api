@@ -27,8 +27,9 @@ public class StoreSeedingData
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
 
                 PriceListUrl = "https://www.konzum.hr/cjenici",
-                PriceUrlListXPath = "//div[@class='tabs__content']",
-                PriceUrlXPath = "(.//div[@data-tab-type])[1]//a[@class='btn color-green bg-hover-green-lightest f-weight-bold btn-icon-left']",
+                PriceUrlListXPath = "//div[@class='col-8 col-md-9 col-lg-10']",
+                PriceUrlXPath = ".//h5//a",
+                CsvDelimiter = ",",
                 CsvNameColumn = 0,
                 CsvBrandColumn = 2,
                 CsvPriceColumn = 5,
@@ -50,9 +51,11 @@ public class StoreSeedingData
                 PriceListUrl = "https://tvrtka.lidl.hr/cijene",
                 PriceUrlListXPath = "//div[@class='landing-page__zone landing-page__zone--262536']",
                 PriceUrlXPath = ".//a",
+                CsvDelimiter = "\t",
                 CsvNameColumn = 0,
-                CsvPriceColumn = 6,
-                CsvBarcodeColumn = 8
+                CsvBrandColumn = 4,
+                CsvPriceColumn = 5,
+                CsvBarcodeColumn = 9
             },
             new()
             {
@@ -65,6 +68,7 @@ public class StoreSeedingData
                 PriceUrlListXPath = "//div[@class='page__cta']",
                 PriceUrlXPath = ".//a[@class='btn btn--big btn--yellow']",
                 XmlNameElement = "NazivProizvoda",
+                XmlBrandElement = "MarkaProizvoda",
                 XmlPriceElement = "MaloprodajnaCijena",
                 XmlBarcodeElement = "Barkod",
 

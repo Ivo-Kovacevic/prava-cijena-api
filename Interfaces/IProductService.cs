@@ -5,7 +5,7 @@ namespace PravaCijena.Api.Interfaces;
 
 public interface IProductService
 {
-    Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug, QueryObject query);
+    Task<IEnumerable<ProductWithStoresNumber>> GetProductsByCategorySlugAsync(string categorySlug, QueryObject query);
     Task<PageProductDto> GetProductBySlugAsync(string productSlug);
     Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName);
     Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);

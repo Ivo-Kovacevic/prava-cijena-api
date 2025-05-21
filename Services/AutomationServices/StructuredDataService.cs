@@ -1,16 +1,18 @@
-using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Web;
 using System.Xml.Linq;
 using HtmlAgilityPack;
+using PravaCijena.Api.Context;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
 using PravaCijena.Api.Models;
 using PravaCijena.Api.Services.Gemini.GeminiRequest;
+using static System.Text.RegularExpressions.Regex;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
@@ -18,6 +20,7 @@ public class StructuredDataService : IStructuredDataService
 {
     private readonly IAutomationService _automationService;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly ProductProcessingContext _context;
     private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
     private readonly IProductRepository _productRepository;
@@ -35,7 +38,8 @@ public class StructuredDataService : IStructuredDataService
         IGeminiService geminiService,
         IServiceProvider serviceProvider,
         IStoreLocationRepository storeLocationRepository,
-        ICategoryRepository categoryRepository
+        ICategoryRepository categoryRepository,
+        ProductProcessingContext productProcessingContext
     )
     {
         _automationService = automationService;
@@ -47,6 +51,7 @@ public class StructuredDataService : IStructuredDataService
         _serviceProvider = serviceProvider;
         _storeLocationRepository = storeLocationRepository;
         _categoryRepository = categoryRepository;
+        _context = productProcessingContext;
     }
 
     public async Task SyncStoreFiles()
@@ -54,17 +59,7 @@ public class StructuredDataService : IStructuredDataService
         var results = new AutomationResult();
         var storesWithMetadata = await _storeRepository.GetAllWithMetadata();
 
-        var existingSlugs = new ConcurrentDictionary<string, byte>(
-            (await _productRepository.GetAllSlugsAsync())
-            .Select(slug => new KeyValuePair<string, byte>(slug, 0)),
-            StringComparer.OrdinalIgnoreCase
-        );
-
-        var existingBarcodes = new ConcurrentDictionary<string, byte>(
-            (await _productRepository.GetAllBarcodesAsync())
-            .Select(barcode => new KeyValuePair<string, byte>(barcode, 0)),
-            StringComparer.OrdinalIgnoreCase
-        );
+        await _context.InitializeAsync(_productRepository);
 
         foreach (var store in storesWithMetadata)
             try
@@ -74,22 +69,16 @@ public class StructuredDataService : IStructuredDataService
                     continue;
                 }
 
-                var html = await _httpClient.GetStringAsync(store.PriceListUrl);
-                var htmlDocument = new HtmlDocument();
-                htmlDocument.LoadHtml(html);
-                var mainNode = htmlDocument.DocumentNode.SelectSingleNode(store.PriceUrlListXPath);
-                var urlNodes = mainNode.SelectNodes(store.PriceUrlXPath);
-
                 switch (store.Slug)
                 {
-                    case "konzum":
-                        await HandleKonzum(store, urlNodes, existingSlugs, existingBarcodes);
+                    case "konzum-":
+                        await HandleKonzum(store);
                         break;
-                    case "lidl--":
-                        await HandleLidl(store, urlNodes);
+                    case "lidl-":
+                        await HandleLidl(store);
                         break;
-                    case "studenac--":
-                        await HandleStudenac(store, urlNodes);
+                    case "studenac":
+                        await HandleStudenac(store);
                         break;
                     default:
                         continue;
@@ -101,30 +90,94 @@ public class StructuredDataService : IStructuredDataService
             }
     }
 
-    private async Task HandleKonzum(StoreWithMetadataDto store, HtmlNodeCollection urlNodes,
-        ConcurrentDictionary<string, byte> existingSlugs, ConcurrentDictionary<string, byte> existingBarcodes
-    )
+    private async Task HandleKonzum(StoreWithMetadataDto store)
     {
-        foreach (var urlNode in urlNodes)
-        {
-            var href = urlNode.GetAttributeValue("href", "");
-            var fullUrl = new Uri(new Uri(store.StoreUrl), href).ToString();
+        var page = 1;
+        var hasMoreProducts = true;
 
-            var storeLocation = await HandleStoreLocation(fullUrl, store.Id);
-            if (storeLocation == null)
+        while (hasMoreProducts)
+        {
+            var pageUrl = $"{store.PriceListUrl}?page={page}";
+
+            var html = await _httpClient.GetStringAsync(pageUrl);
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml(html);
+            var urlNodes = htmlDocument.DocumentNode.SelectNodes("//a[@format='csv']")
+                .DistinctBy(node => node.GetAttributeValue("href", string.Empty))
+                .ToList();
+
+            if (urlNodes.Count < 50)
             {
-                continue;
+                hasMoreProducts = false;
+
+                if (urlNodes.Count == 0)
+                {
+                    continue;
+                }
             }
 
-            var csvData = await _httpClient.GetStringAsync(fullUrl);
-            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var urlNode in urlNodes)
+            {
+                var href = urlNode.GetAttributeValue("href", "");
+                var fullUrl = new Uri(new Uri(store.StoreUrl), href).ToString();
+                var csvData = await _httpClient.GetStringAsync(fullUrl);
 
-            await HandleCsv(lines, store, storeLocation, existingSlugs, existingBarcodes);
+                var uri = new Uri(fullUrl);
+                var queryParams = HttpUtility.ParseQueryString(uri.Query);
+                var titleRaw = queryParams["title"];
+
+                if (string.IsNullOrEmpty(titleRaw))
+                {
+                    continue;
+                }
+
+                var decodedTitle = Uri.UnescapeDataString(titleRaw);
+                var filenameWithoutExtension = Path.GetFileNameWithoutExtension(decodedTitle);
+                var parts = filenameWithoutExtension.Split(',');
+
+                if (parts.Length < 2)
+                {
+                    continue;
+                }
+
+                var addressCity = parts[1];
+
+                var match = Match(addressCity, @"(.+?)\s(\d{5})\s(.+)");
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                var address = match.Groups[1].Value.Trim().ToUpper();
+                var city = match.Groups[3].Value.Trim().ToUpper();
+
+                var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+                if (storeLocation == null)
+                {
+                    storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                    {
+                        City = city,
+                        Address = address,
+                        StoreId = store.Id
+                    });
+                }
+
+                var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+                await HandleCsv(lines, store, storeLocation);
+            }
+
+            page++;
         }
     }
 
-    private async Task HandleLidl(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
+    private async Task HandleLidl(StoreWithMetadataDto store)
     {
+        var html = await _httpClient.GetStringAsync(store.PriceListUrl);
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
+        var urlNodes = htmlDocument.DocumentNode.SelectNodes("//a[contains(@href, '.zip')]");
+
         var zipUrl = urlNodes.Last().GetAttributeValue("href", "");
 
         var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
@@ -133,11 +186,18 @@ public class StructuredDataService : IStructuredDataService
 
         foreach (var entry in archive.Entries)
         {
-            var storeLocation = await HandleStoreLocation(entry.FullName, store.Id);
-            if (storeLocation == null)
+            var match = Match(entry.FullName, @"^[^\s]+ \d+_(.+?)_([\d\s_A-Za-z]+)_([0-9]{5})_(.+?)_");
+
+            if (!match.Success)
             {
                 continue;
             }
+
+            var street = match.Groups[1].Value.Replace('_', ' ').Trim().ToUpper();
+            var houseNumber = match.Groups[2].Value.Replace('_', ' ').Trim().ToUpper();
+            var city = match.Groups[4].Value.Replace('_', ' ').Trim().ToUpper();
+
+            var address = $"{street} {houseNumber}";
 
             await using var entryStream = entry.Open();
             using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
@@ -146,13 +206,25 @@ public class StructuredDataService : IStructuredDataService
 
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            // await HandleCsv(lines, store, storeLocation);
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                {
+                    City = city,
+                    Address = address,
+                    StoreId = store.Id
+                });
+            }
+
+            await HandleCsv(lines, store, storeLocation);
         }
     }
 
-    private async Task HandleStudenac(StoreWithMetadataDto store, HtmlNodeCollection urlNodes)
+    private async Task HandleStudenac(StoreWithMetadataDto store)
     {
-        var zipUrl = urlNodes.First().GetAttributeValue("href", "");
+        var date = DateTime.Today;
+        var zipUrl = $"https://www.studenac.hr/cjenici/PROIZVODI-{date:yyyy-MM-dd}.zip";
 
         var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
         using var zipStream = new MemoryStream(zipBytes);
@@ -160,21 +232,37 @@ public class StructuredDataService : IStructuredDataService
 
         foreach (var entry in archive.Entries)
         {
-            var storeLocation = await HandleStoreLocation(entry.FullName, store.Id);
-            if (storeLocation == null)
+            await using var entryStream = entry.Open();
+            var xDoc = XDocument.Load(entryStream);
+
+            var fullAddress = xDoc.Descendants("Adresa").First().Value;
+            var pattern = @"^(.*?)([A-ZČĆĐŠŽ][A-ZČĆĐŠŽ\s]+)$";
+            var match = Match(fullAddress, pattern);
+
+            if (!match.Success)
             {
                 continue;
             }
 
-            await using var entryStream = entry.Open();
-            var xDoc = XDocument.Load(entryStream);
+            var address = match.Groups[1].Value.Trim().ToUpper();
+            var city = match.Groups[2].Value.Trim().ToUpper();
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                {
+                    City = city,
+                    Address = address,
+                    StoreId = store.Id
+                });
+            }
 
             await HandleXml(xDoc, store, storeLocation);
         }
     }
 
-    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation,
-        ConcurrentDictionary<string, byte> existingSlugs, ConcurrentDictionary<string, byte> existingBarcodes)
+    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
         if (store.CsvNameColumn == null || store.CsvBrandColumn == null || store.CsvPriceColumn == null ||
             store.CsvBarcodeColumn == null)
@@ -186,11 +274,11 @@ public class StructuredDataService : IStructuredDataService
 
         foreach (var line in lines.Skip(1))
         {
-            var cols = line.Split(',');
+            var cols = line.Split(store.CsvDelimiter);
             var productName = cols[store.CsvNameColumn.Value].Trim();
             var productBrand = cols[store.CsvBrandColumn.Value].Trim();
-            var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
             var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
+            var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
 
             if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
             {
@@ -206,60 +294,34 @@ public class StructuredDataService : IStructuredDataService
             });
         }
 
-        var allBarcodesInFile = productPreviews.Select(x => x.Barcode).Distinct().ToList();
+        await ProcessProductPreviews(productPreviews, storeLocation);
+    }
 
-        var productsByBarcodes = await _productRepository.GetProductsByBarcodesBatchAsync(allBarcodesInFile);
-        var dbProductsByBarcode = productsByBarcodes.ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
-
-        var productIds = dbProductsByBarcode.Values.Select(p => p.Id).ToList();
-
-        var existingProductStores =
-            await _productStoreRepository.GetProductStoresByIdsBatchAsync(productIds, storeLocation.Id);
-        var productStoreLookup =
-            existingProductStores.ToDictionary(ps => ps.Product.Barcode, StringComparer.OrdinalIgnoreCase);
-
-
-        var productPreviewsToUpdate = new List<ProductPreview>();
+    private async Task ProcessProductPreviews(List<ProductPreview> productPreviews, StoreLocation storeLocation)
+    {
+        // var productsToCreate = new List<Product>();
+        var productsToUpdate = new List<Product>();
         var productStoresToUpdate = new List<ProductStore>();
-        var productPreviewsToCreate = new List<ProductPreview>();
+        var productPreviewsToCategorize = new List<ProductPreview>();
         var productStoresToCreate = new List<ProductStore>();
 
+        var allBarcodesInFile = productPreviews.Select(x => x.Barcode).Distinct().ToList();
+
+        var existingProducts = (await _productRepository.GetProductsByBarcodesBatchAsync(allBarcodesInFile))
+            .ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
+        var existingProductStores =
+            (await _productStoreRepository.GetProductStoresByProductBarcodesBatchAsync(allBarcodesInFile,
+                storeLocation.Id)).ToDictionary(ps => ps.Product.Barcode, StringComparer.OrdinalIgnoreCase);
+
         foreach (var productPreview in productPreviews)
-            if (dbProductsByBarcode.TryGetValue(productPreview.Barcode, out var dbProduct))
-            {
-                if (productPreview.Price < dbProduct.LowestPrice || dbProduct.UpdatedAt.Date < DateTime.UtcNow.Date)
-                {
-                    productPreviewsToUpdate.Add(productPreview);
-                }
-
-                if (productStoreLookup.TryGetValue(productPreview.Barcode, out var productStore))
-                {
-                    if (productStore.LatestPrice != productPreview.Price)
-                    {
-                        productStore.LatestPrice = productPreview.Price;
-                        productStoresToUpdate.Add(productStore);
-                    }
-                }
-                else
-                {
-                    // Product exists, but store mapping doesn't
-                    productStoresToCreate.Add(new ProductStore
-                    {
-                        ProductId = dbProduct.Id,
-                        StoreLocationId = storeLocation.Id,
-                        LatestPrice = productPreview.Price
-                    });
-                }
-
-                existingBarcodes.TryAdd(productPreview.Barcode, 0);
-            }
-            else
+            // Schedule new product to create cause barcode doesn't exist
+            if (_context.ExistingBarcodes.TryAdd(productPreview.Barcode, 0))
             {
                 var baseName = productPreview.Name;
                 var slug = SlugHelper.GenerateSlug(baseName);
                 var i = 0;
 
-                while (!existingSlugs.TryAdd(slug, 0))
+                while (!_context.ExistingSlugs.TryAdd(slug, 0))
                 {
                     if (i == 0)
                     {
@@ -274,43 +336,69 @@ public class StructuredDataService : IStructuredDataService
                     i++;
                 }
 
-                productPreviewsToCreate.Add(productPreview);
+                productPreviewsToCategorize.Add(productPreview);
+            }
 
-                if (productStoreLookup.TryGetValue(productPreview.Barcode, out var productStore))
+            // Barcode already exist so check if price needs to be updated
+            else
+            {
+                if (existingProducts.TryGetValue(productPreview.Barcode, out var existingProduct))
                 {
-                    productStore.LatestPrice = productPreview.Price;
-                    productStoresToCreate.Add(productStore);
+                    if (productPreview.Price < existingProduct.LowestPrice)
+                    {
+                        existingProduct.LowestPrice = productPreview.Price;
+                        productsToUpdate.Add(existingProduct);
+                    }
+                }
+
+                if (existingProductStores.TryGetValue(productPreview.Barcode, out var existingProductStore))
+                {
+                    existingProductStore.LatestPrice = productPreview.Price;
+                    productStoresToUpdate.Add(existingProductStore);
+                }
+                else if (existingProduct != null &&
+                         !productStoresToCreate.Any(ps =>
+                             ps.ProductId == existingProduct.Id && ps.StoreLocationId == storeLocation.Id))
+                {
+                    productStoresToCreate.Add(new ProductStore
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = existingProduct.Id,
+                        StoreLocationId = storeLocation.Id,
+                        LatestPrice = productPreview.Price
+                    });
                 }
             }
 
-        if (productPreviewsToUpdate.Count > 0)
+        try
         {
-            await _productRepository.UpdateLowestPricesBatchAsync(productPreviewsToUpdate);
+            await _productRepository.BulkUpdateAsync(productsToUpdate);
+            await _productStoreRepository.BulkCreateAsync(productStoresToCreate);
+            await _productStoreRepository.BulkUpdateAsync(productStoresToUpdate);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
 
-        if (productStoresToUpdate.Count > 0)
+        if (productPreviewsToCategorize.Count > 0)
         {
-            await _productStoreRepository.UpdateProductStoresBatchAsync(productStoresToUpdate);
-        }
-
-        if (productPreviewsToCreate.Count > 0)
-        {
-            var semaphore = new SemaphoreSlim(50);
+            var semaphore = new SemaphoreSlim(20);
             var tasks = new List<Task>();
 
-            var batches = productPreviewsToCreate
+            var batches = productPreviewsToCategorize
                 .Select((product, index) => new { product, index })
                 .GroupBy(x => x.index / 5)
                 .Select(g => g.Select(x => x.product).ToList());
 
             foreach (var batch in batches)
-            {
                 tasks.Add(Task.Run(async () =>
                 {
                     try
                     {
                         await semaphore.WaitAsync();
                         using var scope = _serviceProvider.CreateScope();
+                        var productStoreRepo = scope.ServiceProvider.GetRequiredService<IProductStoreRepository>();
                         var categoryRepo = scope.ServiceProvider.GetRequiredService<ICategoryRepository>();
                         var geminiService = scope.ServiceProvider.GetRequiredService<IGeminiService>();
                         var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
@@ -323,9 +411,9 @@ public class StructuredDataService : IStructuredDataService
                             return;
                         }
 
-                        var categorizedProducts = new List<Product>();
+                        var productsToCreate = new List<Product>();
                         for (var i = 0; i < results.Count; i++)
-                            categorizedProducts.Add(new Product
+                            productsToCreate.Add(new Product
                             {
                                 Name = batch[i].Name,
                                 Brand = batch[i].Brand,
@@ -334,7 +422,19 @@ public class StructuredDataService : IStructuredDataService
                                 Barcode = batch[i].Barcode
                             });
 
-                        await productRepo.CreateProductsBatchAsync(categorizedProducts);
+                        await productRepo.BulkCreateAsync(productsToCreate);
+                        var newProducts = await productRepo
+                            .GetProductsByBarcodesBatchAsync(productsToCreate.Select(p => p.Barcode).ToList());
+
+                        var productStores = new List<ProductStore>();
+                        foreach (var newProduct in newProducts)
+                            productStores.Add(new ProductStore
+                            {
+                                ProductId = newProduct.Id,
+                                StoreLocationId = storeLocation.Id
+                            });
+
+                        await productStoreRepo.BulkCreateAsync(productStores);
                     }
                     catch (Exception e)
                     {
@@ -345,81 +445,44 @@ public class StructuredDataService : IStructuredDataService
                         semaphore.Release();
                     }
                 }));
-            }
 
             await Task.WhenAll(tasks);
-        }
-
-
-        var newlyInsertedBarcodes = productPreviewsToCreate.Select(p => p.Barcode).ToList();
-        var newDbProducts = await _productRepository.GetProductsByBarcodesBatchAsync(newlyInsertedBarcodes);
-        var newDbProductsByBarcode = newDbProducts.ToDictionary(p => p.Barcode, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var preview in productPreviewsToCreate)
-            if (newDbProductsByBarcode.TryGetValue(preview.Barcode, out var newProduct))
-            {
-                productStoresToCreate.Add(new ProductStore
-                {
-                    ProductId = newProduct.Id,
-                    StoreLocationId = storeLocation.Id,
-                    LatestPrice = preview.Price
-                });
-            }
-
-        const int maxRowsPerBatch = 5000;
-        for (int i = 0; i < productStoresToCreate.Count; i += maxRowsPerBatch)
-        {
-            var chunk = productStoresToCreate.Skip(i).Take(maxRowsPerBatch).ToList();
-            await _productStoreRepository.CreateProductStoresBatchAsync(chunk);
         }
     }
 
     private async Task HandleXml(XDocument xDoc, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
-        if (store.XmlNameElement == null || store.XmlPriceElement == null || store.XmlBarcodeElement == null)
+        if (store.XmlNameElement == null || store.XmlBrandElement == null || store.XmlPriceElement == null ||
+            store.XmlBarcodeElement == null)
         {
             return;
         }
 
+        var productPreviews = new List<ProductPreview>();
+
         foreach (var p in xDoc.Descendants("Proizvod"))
         {
             var productName = p.Element(store.XmlNameElement)?.Value;
+            var productBrand = p.Element(store.XmlBrandElement)?.Value;
             var priceStr = p.Element(store.XmlPriceElement)?.Value;
             var barcode = p.Element(store.XmlBarcodeElement)?.Value;
 
-            if (productName == null || !decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
+            if (productName == null || productBrand == null || !decimal.TryParse(priceStr, out var price) ||
+                barcode == null || barcode.Length < 8)
             {
                 continue;
             }
 
-            var product = await _productRepository.GetProductByBarcodeAsync(barcode);
-
-            if (product == null)
+            productPreviews.Add(new ProductPreview
             {
-                // product = await CategorizeProduct(productName, price, barcode);
-                if (product == null)
-                {
-                    continue;
-                }
-            }
-
-            if (price < product.LowestPrice)
-            {
-                await _productRepository.UpdateLowestPriceAsync(product.Id, price);
-            }
-
-            var productStore =
-                await _productStoreRepository.GetProductStoreByIdsAsync(product.Id, storeLocation.Id);
-            if (productStore == null)
-            {
-                await _productStoreRepository.CreateAsync(new ProductStore
-                {
-                    ProductId = product.Id,
-                    StoreLocationId = storeLocation.Id,
-                    LatestPrice = price
-                });
-            }
+                Name = productName,
+                Brand = productBrand,
+                Price = price,
+                Barcode = barcode
+            });
         }
+
+        await ProcessProductPreviews(productPreviews, storeLocation);
     }
 
     private async Task<StoreLocation?> HandleStoreLocation(string filename, Guid storeId)
@@ -481,11 +544,8 @@ public class StructuredDataService : IStructuredDataService
         return storeLocation;
     }
 
-    private async Task<List<CategorizedProduct>?> CategorizeProducts(
-        List<string> productNames,
-        ICategoryRepository categoryRepo,
-        IGeminiService geminiService
-    )
+    private async Task<List<CategorizedProduct>?> CategorizeProducts(List<string> productNames,
+        ICategoryRepository categoryRepo, IGeminiService geminiService)
     {
         var allCategories =
             (await categoryRepo.GetAllCategoriesWithSubcategoriesAsync())

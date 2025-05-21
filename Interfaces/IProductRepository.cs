@@ -7,8 +7,8 @@ namespace PravaCijena.Api.Interfaces;
 public interface IProductRepository
 {
     Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
-    Task<Product?> GetProductBySlugAsync(string productSlug);
-    Task<List<Product>> GetProductsBySlugsBatchAsync(IEnumerable<string> productSlugs);
+    Task<IEnumerable<ProductWithStoresNumber>> GetPageProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
+    Task<PageProductDto?> GetProductBySlugAsync(string productSlug);
     Task<List<string>> GetAllSlugsAsync();
     Task<List<string>> GetAllBarcodesAsync();
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);
@@ -16,9 +16,9 @@ public interface IProductRepository
     Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm);
     Task<Product?> GetProductByIdAsync(Guid productId);
     Task<Product> CreateAsync(Product product);
-    Task CreateProductsBatchAsync(List<Product> products);
     Task<Product> UpdateAsync(Product existingProduct);
     Task UpdateLowestPriceAsync(Guid productId, decimal price);
-    Task UpdateLowestPricesBatchAsync(List<ProductPreview> productPreviews);
     Task DeleteAsync(Product existingProduct);
+    Task BulkCreateAsync(List<Product> products);
+    Task BulkUpdateAsync(List<Product> products);
 }

@@ -1,3 +1,4 @@
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using PravaCijena.Api.Database;
@@ -31,11 +32,11 @@ public class ProductStoreRepository : IProductStoreRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<ProductStore>> GetProductStoresByIdsBatchAsync(List<Guid> productIds, Guid storeLocationId)
+    public async Task<List<ProductStore>> GetProductStoresByProductBarcodesBatchAsync(List<string> barcodes,
+        Guid storeLocationId)
     {
         return await _context.ProductStores
-            .Include(ps => ps.Product)
-            .Where(ps => productIds.Contains(ps.ProductId) && ps.StoreLocationId == storeLocationId)
+            .Where(ps => barcodes.Contains(ps.Product.Barcode) && ps.StoreLocationId == storeLocationId)
             .ToListAsync();
     }
 
@@ -137,5 +138,16 @@ public class ProductStoreRepository : IProductStoreRepository
     public async Task<bool> ProductStoreExistsAsync(Guid productStoreId)
     {
         return await _context.ProductStores.AnyAsync(ps => ps.Id == productStoreId);
+    }
+
+    public async Task BulkCreateAsync(List<ProductStore> productStores)
+    {
+        await _context.BulkInsertAsync(productStores,
+            new BulkConfig { PropertiesToExclude = new List<string> { nameof(ProductStore.Id) } });
+    }
+
+    public async Task BulkUpdateAsync(List<ProductStore> productStores)
+    {
+        await _context.BulkUpdateAsync(productStores);
     }
 }

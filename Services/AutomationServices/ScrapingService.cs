@@ -108,6 +108,7 @@ public class ScrapingService : IScrapingService
             await _productRepository.CreateAsync(new Product
             {
                 Name = productName,
+                Barcode = "",
                 ImageUrl = imageUrl,
                 CategoryId = equivalentCategoryId
             });

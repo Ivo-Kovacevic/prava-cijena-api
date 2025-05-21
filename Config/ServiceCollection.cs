@@ -1,3 +1,4 @@
+using PravaCijena.Api.Context;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Repository;
 using PravaCijena.Api.Services;
@@ -47,6 +48,8 @@ public static class ServiceCollection
 
         services.AddHttpClient<IGeminiService, GeminiService>();
         services.AddScoped<IGeminiService, GeminiService>();
+
+        services.AddScoped<ProductProcessingContext>();
 
         return services;
     }

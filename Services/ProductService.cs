@@ -20,7 +20,8 @@ public class ProductService : IProductService
     /*
      * SLUG SERVICE
      */
-    public async Task<IEnumerable<ProductDto>> GetProductsByCategorySlugAsync(string categorySlug, QueryObject query)
+    public async Task<IEnumerable<ProductWithStoresNumber>> GetProductsByCategorySlugAsync(string categorySlug,
+        QueryObject query)
     {
         var category = await _categoryRepo.GetBySlugAsync(categorySlug);
         if (category == null)
@@ -28,9 +29,9 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category '{categorySlug}' not found.");
         }
 
-        var products = await _productRepo.GetProductsByCategoryIdAsync(category.Id, query);
+        var products = await _productRepo.GetPageProductsByCategoryIdAsync(category.Id, query);
 
-        return products.Select(p => p.ToProductDto());
+        return products;
     }
 
     public async Task<PageProductDto> GetProductBySlugAsync(string productSlug)
@@ -41,7 +42,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product '{productSlug}' not found.");
         }
 
-        return product.ToPageProductDto();
+        return product;
     }
 
     public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName)

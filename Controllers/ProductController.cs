@@ -18,7 +18,7 @@ public class ProductController : ControllerBase
     }
 
     /*
-     * SLUG ENDPOINTS
+     * SLUG ENDPOINTS FOR FRONTEND
      * These endpoints are for public access because they provide readable URLs
      */
     [HttpGet("categories/{categorySlug}/products")]
@@ -32,7 +32,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet("products/{productSlug}")]
-    public async Task<ActionResult<PageProductDto>> ShowBySlug(string productSlug)
+    public async Task<IActionResult> ShowBySlug(string productSlug)
     {
         var productDto = await _productService.GetProductBySlugAsync(productSlug);
         return Ok(productDto);

@@ -1,8 +1,8 @@
-using PravaCijena.Api.Dto.ProductStore;
+using PravaCijena.Api.Dto.Store;
 
 namespace PravaCijena.Api.Dto.Product;
 
 public class PageProductDto : ProductDto
 {
-    public List<PageProductStoreDto> ProductStores { get; set; }
+    public List<StoreWithPriceDto> Stores { get; set; }
 }

@@ -206,6 +206,7 @@ public class AutomationService : IAutomationService
                     var newProduct = await _productRepository.CreateAsync(new Product
                     {
                         Name = comparedResult.ProductPreview.Name,
+                        Barcode = "",
                         ImageUrl = comparedResult.ProductPreview.ImageUrl,
                         CategoryId = equivalentCategoryId.Value,
                         LowestPrice = comparedResult.ProductPreview.Price

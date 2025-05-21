@@ -1,11 +1,13 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using PravaCijena.Api.Dto.ProductStore;
 using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Dto.Product;
 
-public class ProductDto : BaseEntity
+public class ProductDto : BaseNamedEntity
 {
-    public required string Name { get; set; }
-    public required string Slug { get; set; }
+    [NotMapped] public List<ProductStoreDto>? ProductStores { get; set; } = [];
+
     public string? ImageUrl { get; set; }
     public required Guid CategoryId { get; set; }
     public decimal LowestPrice { get; set; }
