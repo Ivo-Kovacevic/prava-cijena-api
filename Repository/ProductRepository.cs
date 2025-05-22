@@ -114,6 +114,7 @@ public class ProductRepository : IProductRepository
     public async Task<List<string>> GetAllSlugsAsync()
     {
         return await _context.Products
+            .AsNoTracking()
             .Select(p => p.Slug)
             .ToListAsync();
     }
@@ -121,6 +122,7 @@ public class ProductRepository : IProductRepository
     public async Task<List<string>> GetAllBarcodesAsync()
     {
         return await _context.Products
+            .AsNoTracking()
             .Select(p => p.Barcode)
             .ToListAsync();
     }

@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using HtmlAgilityPack;
 using PravaCijena.Api.Context;
 using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Dto.Store.Spar;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
@@ -77,8 +78,14 @@ public class StructuredDataService : IStructuredDataService
                     case "lidl-":
                         await HandleLidl(store);
                         break;
-                    case "studenac":
+                    case "studenac-":
                         await HandleStudenac(store);
+                        break;
+                    case "plodine-":
+                        await HandlePlodine(store);
+                        break;
+                    case "spar":
+                        await HandleSpar(store);
                         break;
                     default:
                         continue;
@@ -259,6 +266,135 @@ public class StructuredDataService : IStructuredDataService
             }
 
             await HandleXml(xDoc, store, storeLocation);
+        }
+    }
+
+    private async Task HandlePlodine(StoreWithMetadataDto store)
+    {
+        var html = await _httpClient.GetStringAsync(store.PriceListUrl);
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(html);
+        var urlNodes = htmlDocument.DocumentNode.SelectNodes("//ul[@class='accordion']//a");
+
+        var zipUrl = urlNodes.First().GetAttributeValue("href", "");
+
+        var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
+        using var zipStream = new MemoryStream(zipBytes);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+
+        foreach (var entry in archive.Entries)
+        {
+            var parts = Path.GetFileNameWithoutExtension(entry.FullName).Split('_');
+
+            if (parts.Length < 6)
+            {
+                continue;
+            }
+
+            // Skip the first part (HIPERMARKET / SUPERMARKET)
+            var streetParts = new List<string>();
+            var i = 1;
+
+            // Collect street parts until we hit the house number (e.g., "14A", "2", "36B")
+            while (i < parts.Length && !IsMatch(parts[i], @"^\d+[A-Z]*$"))
+            {
+                streetParts.Add(parts[i]);
+                i++;
+            }
+
+            if (i >= parts.Length - 2)
+            {
+                continue;
+            }
+
+            var houseNumber = parts[i++];
+            var zip = parts[i++];
+            var cityParts = new List<string>();
+
+            // Remaining parts (at least one expected) are city name (can be multi-word)
+            while (i < parts.Length && !IsMatch(parts[i], @"^\d{3}$")) // until we hit store code like 064
+            {
+                cityParts.Add(parts[i]);
+                i++;
+            }
+
+            var address = $"{string.Join(' ', streetParts)} {houseNumber}".ToUpper();
+            var city = string.Join(' ', cityParts).ToUpper();
+
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
+
+            var content = await reader.ReadToEndAsync();
+
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                {
+                    City = city,
+                    Address = address,
+                    StoreId = store.Id
+                });
+            }
+
+            await HandleCsv(lines, store, storeLocation);
+        }
+    }
+
+    private async Task HandleSpar(StoreWithMetadataDto store)
+    {
+        var date = DateTime.UtcNow; // Or local time if needed
+        var dateString = date.ToString("yyyyMMdd");
+        var jsonUrl = $"https://www.spar.hr/datoteke_cjenici/Cjenik{dateString}.json";
+
+        var response = await _httpClient.GetStringAsync(jsonUrl);
+
+        var data = JsonSerializer.Deserialize<SparFileList>(response);
+
+        if (data?.Files == null)
+        {
+            return;
+        }
+
+        foreach (var file in data.Files)
+        {
+            var fullUrl = file.Url;
+            var csvData = await _httpClient.GetStringAsync(fullUrl);
+
+            var fileName = Path.GetFileNameWithoutExtension(file.Name);
+            var parts = fileName.Split('_');
+
+            // Let's assume the city is the second word after 'hipermarket_'
+            // e.g. hipermarket_zadar_bleiburskih... => city = zadar
+            var city = parts.Length > 1 ? parts[1].ToUpper() : null;
+
+            // Address = everything between city and the "_interspar" part
+            var addressParts = parts.Skip(2)
+                .TakeWhile(p => !p.StartsWith("interspar", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var address = string.Join(' ', addressParts).ToUpper();
+
+            if (string.IsNullOrWhiteSpace(city) || string.IsNullOrWhiteSpace(address))
+            {
+                continue;
+            }
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                {
+                    City = city,
+                    Address = address,
+                    StoreId = store.Id
+                });
+            }
+
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            await HandleCsv(lines, store, storeLocation);
         }
     }
 

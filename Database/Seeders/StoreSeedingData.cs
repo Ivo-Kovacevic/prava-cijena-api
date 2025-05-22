@@ -24,7 +24,7 @@ public class StoreSeedingData
                 Id = KonzumStoreId,
                 Name = "Konzum",
                 StoreUrl = "https://www.konzum.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/konzum.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/konzum.webp",
 
                 PriceListUrl = "https://www.konzum.hr/cjenici",
                 PriceUrlListXPath = "//div[@class='col-8 col-md-9 col-lg-10']",
@@ -46,7 +46,7 @@ public class StoreSeedingData
                 Id = LidlStoreId,
                 Name = "Lidl",
                 StoreUrl = "https://www.lidl.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/lidl.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/lidl.webp",
 
                 PriceListUrl = "https://tvrtka.lidl.hr/cijene",
                 PriceUrlListXPath = "//div[@class='landing-page__zone landing-page__zone--262536']",
@@ -62,7 +62,7 @@ public class StoreSeedingData
                 Id = StudenacStoreId,
                 Name = "Studenac",
                 StoreUrl = "https://www.studenac.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/studenac.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/studenac.webp",
 
                 PriceListUrl = "https://www.studenac.hr/popis-maloprodajnih-cijena",
                 PriceUrlListXPath = "//div[@class='page__cta']",
@@ -80,7 +80,7 @@ public class StoreSeedingData
                 Id = TommyStoreId,
                 Name = "Tommy",
                 StoreUrl = "https://www.tommy.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/tommy.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/tommy.webp",
 
                 PriceListUrl = "https://www.tommy.hr/objava-cjenika",
 
@@ -94,22 +94,23 @@ public class StoreSeedingData
                 Id = SparStoreId,
                 Name = "Spar",
                 StoreUrl = "https://www.spar.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/spar.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/spar.webp",
 
                 PriceListUrl = "https://www.spar.hr/usluge/cjenici",
                 PriceUrlListXPath = "//table[@id='fileTable']",
-
                 PriceUrlXPath = ".//a",
-                DataLocation = "on-site",
-                PriceUrlType = "absolute",
-                CsvNameColumn = 0
+                CsvDelimiter = ";",
+                CsvNameColumn = 0,
+                CsvBrandColumn = 2,
+                CsvPriceColumn = 5,
+                CsvBarcodeColumn = 10
             },
             new()
             {
                 Id = EurospinStoreId,
                 Name = "Eurospin",
                 StoreUrl = "https://www.eurospin.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/eurospin.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/eurospin.webp",
 
                 PriceListUrl = "https://www.eurospin.hr/cjenik/",
                 PriceUrlListXPath = "//div[@class='pdf-grid ']"
@@ -119,7 +120,7 @@ public class StoreSeedingData
                 Id = KauflandStoreId,
                 Name = "Kaufland",
                 StoreUrl = "https://www.kaufland.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/kaufland.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/kaufland.webp",
 
                 PriceListUrl = "https://www.kaufland.hr/akcije-novosti/mpc-popis.html",
                 PriceUrlListXPath = "//div[@class='accordion2 abstractcomponent']",
@@ -133,7 +134,16 @@ public class StoreSeedingData
                 Id = PlodineStoreId,
                 Name = "Plodine",
                 StoreUrl = "https://www.plodine.hr",
-                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/v1743770051/plodine.webp",
+                ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/plodine.webp",
+
+                PriceListUrl = "https://www.plodine.hr/info-o-cijenama",
+                PriceUrlListXPath = "//ul[@class='accordion']//a",
+                PriceUrlXPath = ".//a",
+                CsvDelimiter = ";",
+                CsvNameColumn = 0,
+                CsvBrandColumn = 2,
+                CsvPriceColumn = 5,
+                CsvBarcodeColumn = 10,
 
                 CatalogueListUrl = "https://www.plodine.hr/aktualni-katalozi",
                 CatalogueListXPath = "//div[@class='catalog__wrap']//a[@class='btn btn--iconR']"
