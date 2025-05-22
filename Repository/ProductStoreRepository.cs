@@ -32,6 +32,7 @@ public class ProductStoreRepository : IProductStoreRepository
             .FirstOrDefaultAsync();
     }
 
+
     public async Task<List<ProductStore>> GetProductStoresByProductBarcodesBatchAsync(List<string> barcodes,
         Guid storeLocationId)
     {

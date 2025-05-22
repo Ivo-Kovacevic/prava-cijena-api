@@ -20,6 +20,7 @@ public static class ServiceCollection
         services.AddScoped<IStoreService, StoreService>();
         services.AddScoped<IStoreRepository, StoreRepository>();
 
+        services.AddScoped<IStoreLocationService, StoreLocationService>();
         services.AddScoped<IStoreLocationRepository, StoreLocationRepository>();
 
         services.AddScoped<IProductStoreService, ProductStoreService>();

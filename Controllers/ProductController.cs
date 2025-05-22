@@ -21,6 +21,8 @@ public class ProductController : ControllerBase
      * SLUG ENDPOINTS FOR FRONTEND
      * These endpoints are for public access because they provide readable URLs
      */
+
+    // ENDPOINT FOR GETTING ALL PRODUCTS IN CATEGORY
     [HttpGet("categories/{categorySlug}/products")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> IndexBySlug(
         string categorySlug,
@@ -31,13 +33,23 @@ public class ProductController : ControllerBase
         return Ok(productsDto);
     }
 
+    // ENDPOINT FOR GETTING BASIC PRODUCT DATA
     [HttpGet("products/{productSlug}")]
-    public async Task<IActionResult> ShowBySlug(string productSlug)
+    public async Task<IActionResult> ProductBySlug(string productSlug)
     {
         var productDto = await _productService.GetProductBySlugAsync(productSlug);
         return Ok(productDto);
     }
 
+    // ENDPOINT FOR GETTING LIST OF STORES WITH LOWEST PRICE FROM THEIR LOCATIONS
+    [HttpGet("products/{productSlug}/product-stores")]
+    public async Task<IActionResult> StoresBySlug(string productSlug)
+    {
+        var productDto = await _productService.GetProductStoresBySlugAsync(productSlug);
+        return Ok(productDto);
+    }
+
+    // ENDPOINT FOR SEARCHING PRODUCTS
     [HttpGet("products/search")]
     public async Task<ActionResult<IEnumerable<Product>>> Search([FromQuery] string searchTerm)
     {

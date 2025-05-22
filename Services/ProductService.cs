@@ -1,4 +1,5 @@
 using PravaCijena.Api.Dto.Product;
+using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Exceptions;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
@@ -10,6 +11,7 @@ public class ProductService : IProductService
 {
     private readonly ICategoryRepository _categoryRepo;
     private readonly IProductRepository _productRepo;
+    private readonly IProductStoreRepository _productStoreRepo;
 
     public ProductService(ICategoryRepository categoryRepository, IProductRepository productRepository)
     {
@@ -34,7 +36,7 @@ public class ProductService : IProductService
         return products;
     }
 
-    public async Task<PageProductDto> GetProductBySlugAsync(string productSlug)
+    public async Task<ProductDto> GetProductBySlugAsync(string productSlug)
     {
         var product = await _productRepo.GetProductBySlugAsync(productSlug);
         if (product == null)
@@ -42,7 +44,14 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product '{productSlug}' not found.");
         }
 
-        return product;
+        return product.ToProductDto();
+    }
+
+    public async Task<List<StoreWithPriceDto>> GetProductStoresBySlugAsync(string productSlug)
+    {
+        var stores = await _productRepo.GetProductStoresBySlugsAsync(productSlug);
+
+        return stores;
     }
 
     public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName)

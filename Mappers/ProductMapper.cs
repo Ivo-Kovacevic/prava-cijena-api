@@ -17,7 +17,6 @@ public static class ProductMapper
             CategoryId = product.CategoryId,
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt,
-            ProductStores = product.ProductStores.Select(ps => ps.ToProductStoreDto()).ToList()
         };
     }
 

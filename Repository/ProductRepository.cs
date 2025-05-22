@@ -61,54 +61,51 @@ public class ProductRepository : IProductRepository
         return productsWithStoreCounts;
     }
 
-    public async Task<PageProductDto?> GetProductBySlugAsync(string productSlug)
+    public async Task<Product?> GetProductBySlugAsync(string productSlug)
     {
-        var product = await _context.Products
+        return await _context.Products
             .Where(p => p.Slug == productSlug)
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.CategoryId,
-                p.CreatedAt,
-                p.UpdatedAt,
-                Stores = _context.ProductStores
-                    .Where(ps => ps.ProductId == p.Id)
-                    .GroupBy(ps => ps.StoreLocation.Store)
-                    .Select(g => g
-                        .OrderBy(x => x.LatestPrice)
-                        .Select(x => new StoreWithPriceDto
-                        {
-                            Id = x.StoreLocation.Store.Id,
-                            Name = x.StoreLocation.Store.Name,
-                            StoreUrl = x.StoreLocation.Store.StoreUrl,
-                            ImageUrl = x.StoreLocation.Store.ImageUrl,
-                            Price = x.LatestPrice,
-                            CreatedAt = x.CreatedAt,
-                            UpdatedAt = x.UpdatedAt
-                        })
-                        .First()
-                    )
-                    .ToList()
-            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<StoreWithPriceDto>> GetProductStoresBySlugsAsync(string productSlug)
+    {
+        var productId = await _context.Products
+            .Where(p => p.Slug == productSlug)
+            .Select(p => p.Id)
             .FirstOrDefaultAsync();
 
-        if (product == null)
-        {
-            return null;
-        }
+        if (productId == Guid.Empty)
+            return new List<StoreWithPriceDto>();
 
-        var sortedStores = product.Stores.OrderBy(x => x.Price).ToList();
+        var grouped = await _context.ProductStores
+            .Where(ps => ps.ProductId == productId)
+            .Include(ps => ps.StoreLocation)
+            .ThenInclude(sl => sl.Store)
+            .ToListAsync();
 
-        return new PageProductDto
-        {
-            Id = product.Id,
-            Name = product.Name,
-            CreatedAt = product.CreatedAt,
-            UpdatedAt = product.UpdatedAt,
-            CategoryId = product.CategoryId,
-            Stores = sortedStores
-        };
+        var result = grouped
+            .GroupBy(ps => ps.StoreLocation.Store.Id)
+            .Select(g =>
+            {
+                var cheapest = g.OrderBy(x => x.LatestPrice).First();
+                var store = cheapest.StoreLocation.Store;
+
+                return new StoreWithPriceDto
+                {
+                    Id = store.Id,
+                    Name = store.Name,
+                    StoreUrl = store.StoreUrl,
+                    ImageUrl = store.ImageUrl,
+                    Price = cheapest.LatestPrice,
+                    CreatedAt = cheapest.CreatedAt,
+                    UpdatedAt = cheapest.UpdatedAt
+                };
+            })
+            .OrderBy(x => x.Price)
+            .ToList();
+
+        return result;
     }
 
     public async Task<List<string>> GetAllSlugsAsync()

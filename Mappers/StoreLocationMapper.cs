@@ -13,6 +13,7 @@ public static class StoreLocationMapper
             City = storeLocation.City,
             Address = storeLocation.Address,
             StoreId = storeLocation.StoreId,
+            LocationProduct = storeLocation.LocationProducts.Select(ps => ps.ToProductStoreDto()).FirstOrDefault(),
             CreatedAt = storeLocation.CreatedAt,
             UpdatedAt = storeLocation.UpdatedAt
         };
