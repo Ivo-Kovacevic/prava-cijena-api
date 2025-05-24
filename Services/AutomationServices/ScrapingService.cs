@@ -1,14 +1,18 @@
 using System.Net;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
+using PravaCijena.Api.Services.Gemini.GeminiRequest;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
 public class ScrapingService : IScrapingService
 {
+    private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
     private readonly IProductRepository _productRepository;
     private readonly IStoreRepository _storeRepository;
@@ -16,12 +20,14 @@ public class ScrapingService : IScrapingService
     public ScrapingService(
         HttpClient httpClient,
         IStoreRepository storeRepository,
-        IProductRepository productRepository
+        IProductRepository productRepository,
+        IGeminiService geminiService
     )
     {
         _httpClient = httpClient;
         _storeRepository = storeRepository;
         _productRepository = productRepository;
+        _geminiService = geminiService;
     }
 
     public async Task<AutomationResult> RunScraper()
@@ -39,7 +45,7 @@ public class ScrapingService : IScrapingService
         var random = new Random();
         foreach (var store in storesWithCategories)
         {
-            if (store.Slug != "konzum")
+            if (store.Slug != "konzum" || store.ProductListXPath == null)
             {
                 continue;
             }
@@ -65,15 +71,15 @@ public class ScrapingService : IScrapingService
                         var htmlDocument = new HtmlDocument();
                         htmlDocument.LoadHtml(html);
 
-                        var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
-                        if (productNodes.Count == 0 || urlInfo.EquivalentCategoryId == null)
+                        var productNodes =
+                            htmlDocument.DocumentNode.SelectNodes("//div[contains(@class, 'product-list')]/article");
+                        if (productNodes.Count == 0)
                         {
                             hasMoreProducts = false;
                             continue;
                         }
 
-                        await ProductNodesToProducts(productNodes, urlInfo.EquivalentCategoryId.Value);
-
+                        await ProductNodesToProducts(productNodes);
 
                         page++;
 
@@ -92,10 +98,7 @@ public class ScrapingService : IScrapingService
         return results;
     }
 
-    private async Task ProductNodesToProducts(
-        HtmlNodeCollection productNodes,
-        Guid equivalentCategoryId
-    )
+    private async Task ProductNodesToProducts(HtmlNodeCollection productNodes)
     {
         foreach (var productNode in productNodes)
         {
@@ -105,13 +108,72 @@ public class ScrapingService : IScrapingService
             );
             var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
-            await _productRepository.CreateAsync(new Product
+            var existingProduct = await _productRepository.Search(productName, 1, 20);
+        }
+    }
+
+    private async Task<List<CategorizedProduct>?> CompareProducts(string productName, List<string> existingProducts)
+    {
+        var responseSchema = JsonDocument.Parse(@"{
+                           ""type"": ""OBJECT"",
+                           ""properties"": {
+                             ""newProductWithImage"": { ""type"": ""STRING"" },
+                             ""existingProducts"": {
+                               ""type"": ""ARRAY"",
+                               ""items"": {
+                                 ""type"": ""OBJECT"",
+                                 ""properties"": {
+                                   ""existingProductId"": { ""type"": ""STRING"" },
+                                   ""existingProductName"": { ""type"": ""STRING"" },
+                                   ""isSimilarProduct"": { ""type"": ""BOOLEAN""}
+                                 },
+                                 ""required"": [""existingProductId"", ""existingProductName"", ""isSimilarProduct""]
+                               }
+                             }
+                           },
+                           ""required"": [""newProductWithImage"", ""existingProducts""]
+                       }").RootElement;
+
+        try
+        {
+            var responseCategorizedProduct = await _geminiService.SendRequestAsync(
+                [
+                    new Part
+                    {
+                        Text = $@"You will receive name of newly found product from Konzum web shop that I have an image for, and a list of products in my database that don't have images for.
+                                  Your task is to compare the names and decide if any of the existing products are the same or similar enough to the new one.
+                                  Be reasonably flexible with your matching. For example: 'Nutella 750g' can match with 'Nutella 700g', 'Nutella 3KG', or even 'NAMAZ NUTELLA'
+
+                          INPUT: {JsonSerializer.Serialize(new { NewProductWithImage = productName, ExistingProducts = existingProducts }, new JsonSerializerOptions
+                          {
+                              WriteIndented = false,
+                              Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                          })}
+                         "
+                    }
+                ],
+                responseSchema
+            );
+
+            var categorizedProducts = JsonSerializer.Deserialize<List<CategorizedProduct>>
+            (
+                responseCategorizedProduct, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            );
+
+            if (categorizedProducts == null)
             {
-                Name = productName,
-                Barcode = "",
-                ImageUrl = imageUrl,
-                CategoryId = equivalentCategoryId
-            });
+                return null;
+            }
+
+            return categorizedProducts;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 

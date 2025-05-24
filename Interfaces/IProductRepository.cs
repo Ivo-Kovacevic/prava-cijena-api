@@ -15,7 +15,7 @@ public interface IProductRepository
     Task<List<string>> GetAllBarcodesAsync();
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);
     Task<List<Product>> GetProductsByBarcodesBatchAsync(IEnumerable<string> barcodes);
-    Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm);
+    Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm, int page, int limit);
     Task<Product?> GetProductByIdAsync(Guid productId);
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product existingProduct);

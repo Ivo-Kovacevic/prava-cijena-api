@@ -103,7 +103,7 @@ public class AutomationService : IAutomationService
         var mappedProducts = new List<MappedProduct>();
         foreach (var productPreview in productPreviews)
         {
-            var existingProduct = (await _productRepository.Search(productPreview.Name)).FirstOrDefault();
+            var existingProduct = (await _productRepository.Search(productPreview.Name, 1, 5)).FirstOrDefault();
             if (existingProduct != null)
             {
                 mappedProducts.Add(

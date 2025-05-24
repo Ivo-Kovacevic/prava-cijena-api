@@ -81,10 +81,10 @@ public class StructuredDataService : IStructuredDataService
                     case "studenac-":
                         await HandleStudenac(store);
                         break;
-                    case "plodine-":
+                    case "plodine":
                         await HandlePlodine(store);
                         break;
-                    case "spar":
+                    case "spar-":
                         await HandleSpar(store);
                         break;
                     default:
@@ -140,23 +140,15 @@ public class StructuredDataService : IStructuredDataService
 
                 var decodedTitle = Uri.UnescapeDataString(titleRaw);
                 var filenameWithoutExtension = Path.GetFileNameWithoutExtension(decodedTitle);
-                var parts = filenameWithoutExtension.Split(',');
 
-                if (parts.Length < 2)
-                {
-                    continue;
-                }
-
-                var addressCity = parts[1];
-
-                var match = Match(addressCity, @"(.+?)\s(\d{5})\s(.+)");
+                var match = Match(filenameWithoutExtension, @"^([^,]+),(.+?)\s(\d{5})\s([^,]+),(.+)$");
                 if (!match.Success)
                 {
                     continue;
                 }
 
-                var address = match.Groups[1].Value.Trim().ToUpper();
-                var city = match.Groups[3].Value.Trim().ToUpper();
+                var address = match.Groups[2].Value.Trim().ToUpper();
+                var city = match.Groups[4].Value.Trim().ToUpper();
 
                 var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
                 if (storeLocation == null)
@@ -193,16 +185,16 @@ public class StructuredDataService : IStructuredDataService
 
         foreach (var entry in archive.Entries)
         {
-            var match = Match(entry.FullName, @"^[^\s]+ \d+_(.+?)_([\d\s_A-Za-z]+)_([0-9]{5})_(.+?)_");
+            var match = Match(entry.FullName, @"^([^_]+)_(.+?)_(\d.*)_(\d{5})_([^_]+)_(.+)$");
 
             if (!match.Success)
             {
                 continue;
             }
 
-            var street = match.Groups[1].Value.Replace('_', ' ').Trim().ToUpper();
-            var houseNumber = match.Groups[2].Value.Replace('_', ' ').Trim().ToUpper();
-            var city = match.Groups[4].Value.Replace('_', ' ').Trim().ToUpper();
+            var street = match.Groups[2].Value.Trim().ToUpper();
+            var houseNumber = match.Groups[3].Value.Replace("_", "").Replace(" ", "").Trim().ToUpper();
+            var city = match.Groups[5].Value.Trim().ToUpper();
 
             var address = $"{street} {houseNumber}";
 
@@ -243,8 +235,7 @@ public class StructuredDataService : IStructuredDataService
             var xDoc = XDocument.Load(entryStream);
 
             var fullAddress = xDoc.Descendants("Adresa").First().Value;
-            var pattern = @"^(.*?)([A-ZČĆĐŠŽ][A-ZČĆĐŠŽ\s]+)$";
-            var match = Match(fullAddress, pattern);
+            var match = Match(fullAddress, @"^(.+?\d\w*) (.+)$");
 
             if (!match.Success)
             {
@@ -284,49 +275,17 @@ public class StructuredDataService : IStructuredDataService
 
         foreach (var entry in archive.Entries)
         {
-            var parts = Path.GetFileNameWithoutExtension(entry.FullName).Split('_');
+            var filename = Path.GetFileNameWithoutExtension(entry.FullName);
 
-            if (parts.Length < 6)
+            var match = Match(filename, @"^([^_]+)_(.+?)_(\d{5})_(.+?)_(\d.+)$");
+
+            if (!match.Success)
             {
                 continue;
             }
 
-            // Skip the first part (HIPERMARKET / SUPERMARKET)
-            var streetParts = new List<string>();
-            var i = 1;
-
-            // Collect street parts until we hit the house number (e.g., "14A", "2", "36B")
-            while (i < parts.Length && !IsMatch(parts[i], @"^\d+[A-Z]*$"))
-            {
-                streetParts.Add(parts[i]);
-                i++;
-            }
-
-            if (i >= parts.Length - 2)
-            {
-                continue;
-            }
-
-            var houseNumber = parts[i++];
-            var zip = parts[i++];
-            var cityParts = new List<string>();
-
-            // Remaining parts (at least one expected) are city name (can be multi-word)
-            while (i < parts.Length && !IsMatch(parts[i], @"^\d{3}$")) // until we hit store code like 064
-            {
-                cityParts.Add(parts[i]);
-                i++;
-            }
-
-            var address = $"{string.Join(' ', streetParts)} {houseNumber}".ToUpper();
-            var city = string.Join(' ', cityParts).ToUpper();
-
-            await using var entryStream = entry.Open();
-            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
-
-            var content = await reader.ReadToEndAsync();
-
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var address = match.Groups[2].Value.Replace("_", " ").Trim().ToUpper();
+            var city = match.Groups[4].Value.Replace("_", " ").Trim().ToUpper();
 
             var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
             if (storeLocation == null)
@@ -339,13 +298,20 @@ public class StructuredDataService : IStructuredDataService
                 });
             }
 
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
+
+            var content = await reader.ReadToEndAsync();
+
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
             await HandleCsv(lines, store, storeLocation);
         }
     }
 
     private async Task HandleSpar(StoreWithMetadataDto store)
     {
-        var date = DateTime.UtcNow; // Or local time if needed
+        var date = DateTime.UtcNow;
         var dateString = date.ToString("yyyyMMdd");
         var jsonUrl = $"https://www.spar.hr/datoteke_cjenici/Cjenik{dateString}.json";
 
@@ -363,32 +329,21 @@ public class StructuredDataService : IStructuredDataService
             var fullUrl = file.Url;
             var csvData = await _httpClient.GetStringAsync(fullUrl);
 
-            var fileName = Path.GetFileNameWithoutExtension(file.Name);
-            var parts = fileName.Split('_');
-
-            // Let's assume the city is the second word after 'hipermarket_'
-            // e.g. hipermarket_zadar_bleiburskih... => city = zadar
-            var city = parts.Length > 1 ? parts[1].ToUpper() : null;
-
-            // Address = everything between city and the "_interspar" part
-            var addressParts = parts.Skip(2)
-                .TakeWhile(p => !p.StartsWith("interspar", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var address = string.Join(' ', addressParts).ToUpper();
-
-            if (string.IsNullOrWhiteSpace(city) || string.IsNullOrWhiteSpace(address))
+            var filename = Path.GetFileNameWithoutExtension(file.Name);
+            var baseLocation = await ExtractCityAndAddress(filename);
+            if (baseLocation == null)
             {
                 continue;
             }
 
-            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            var storeLocation =
+                await _storeLocationRepository.GetByCityAndAddressAsync(baseLocation.City, baseLocation.Address);
             if (storeLocation == null)
             {
                 storeLocation = await _storeLocationRepository.Create(new StoreLocation
                 {
-                    City = city,
-                    Address = address,
+                    City = baseLocation.City,
+                    Address = baseLocation.Address,
                     StoreId = store.Id
                 });
             }
@@ -411,12 +366,53 @@ public class StructuredDataService : IStructuredDataService
         foreach (var line in lines.Skip(1))
         {
             var cols = line.Split(store.CsvDelimiter);
+
             var productName = cols[store.CsvNameColumn.Value].Trim();
             var productBrand = cols[store.CsvBrandColumn.Value].Trim();
             var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
             var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
 
             if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
+            {
+                continue;
+            }
+
+            if (!BrandIsAlreadyInName(productName, productBrand))
+            {
+                productName = $"{productBrand} {productName}";
+            }
+
+            productPreviews.Add(new ProductPreview
+            {
+                Name = productName,
+                Brand = productBrand,
+                Price = price,
+                Barcode = barcode
+            });
+        }
+
+        await ProcessProductPreviews(productPreviews, storeLocation);
+    }
+
+    private async Task HandleXml(XDocument xDoc, StoreWithMetadataDto store, StoreLocation storeLocation)
+    {
+        if (store.XmlNameElement == null || store.XmlBrandElement == null || store.XmlPriceElement == null ||
+            store.XmlBarcodeElement == null)
+        {
+            return;
+        }
+
+        var productPreviews = new List<ProductPreview>();
+
+        foreach (var p in xDoc.Descendants("Proizvod"))
+        {
+            var productName = p.Element(store.XmlNameElement)?.Value;
+            var productBrand = p.Element(store.XmlBrandElement)?.Value;
+            var priceStr = p.Element(store.XmlPriceElement)?.Value;
+            var barcode = p.Element(store.XmlBarcodeElement)?.Value;
+
+            if (productName == null || productBrand == null || !decimal.TryParse(priceStr, out var price) ||
+                barcode == null || barcode.Length < 8)
             {
                 continue;
             }
@@ -459,14 +455,7 @@ public class StructuredDataService : IStructuredDataService
 
                 while (!_context.ExistingSlugs.TryAdd(slug, 0))
                 {
-                    if (i == 0)
-                    {
-                        productPreview.Name = $"{productPreview.Brand} {baseName}";
-                    }
-                    else
-                    {
-                        productPreview.Name = $"{productPreview.Brand} {baseName} {i}";
-                    }
+                    productPreview.Name = $"{baseName} {i}";
 
                     slug = SlugHelper.GenerateSlug(productPreview.Name);
                     i++;
@@ -483,6 +472,24 @@ public class StructuredDataService : IStructuredDataService
                     if (productPreview.Price < existingProduct.LowestPrice)
                     {
                         existingProduct.LowestPrice = productPreview.Price;
+                    }
+
+                    if (existingProduct.Name != productPreview.Name)
+                    {
+                        existingProduct.Name = productPreview.Name;
+
+                        var baseName = productPreview.Name;
+                        existingProduct.Name = productPreview.Name;
+                        var slug = SlugHelper.GenerateSlug(baseName);
+                        var i = 0;
+
+                        while (!_context.ExistingSlugs.TryAdd(existingProduct.Slug, 0))
+                        {
+                            existingProduct.Name = $"{baseName} {i}";
+
+                            i++;
+                        }
+
                         productsToUpdate.Add(existingProduct);
                     }
                 }
@@ -586,42 +593,7 @@ public class StructuredDataService : IStructuredDataService
         }
     }
 
-    private async Task HandleXml(XDocument xDoc, StoreWithMetadataDto store, StoreLocation storeLocation)
-    {
-        if (store.XmlNameElement == null || store.XmlBrandElement == null || store.XmlPriceElement == null ||
-            store.XmlBarcodeElement == null)
-        {
-            return;
-        }
-
-        var productPreviews = new List<ProductPreview>();
-
-        foreach (var p in xDoc.Descendants("Proizvod"))
-        {
-            var productName = p.Element(store.XmlNameElement)?.Value;
-            var productBrand = p.Element(store.XmlBrandElement)?.Value;
-            var priceStr = p.Element(store.XmlPriceElement)?.Value;
-            var barcode = p.Element(store.XmlBarcodeElement)?.Value;
-
-            if (productName == null || productBrand == null || !decimal.TryParse(priceStr, out var price) ||
-                barcode == null || barcode.Length < 8)
-            {
-                continue;
-            }
-
-            productPreviews.Add(new ProductPreview
-            {
-                Name = productName,
-                Brand = productBrand,
-                Price = price,
-                Barcode = barcode
-            });
-        }
-
-        await ProcessProductPreviews(productPreviews, storeLocation);
-    }
-
-    private async Task<StoreLocation?> HandleStoreLocation(string filename, Guid storeId)
+    private async Task<BaseStoreLocation?> ExtractCityAndAddress(string filename)
     {
         var responseSchema = JsonDocument.Parse(@"{
                            ""type"": ""OBJECT"",
@@ -635,9 +607,7 @@ public class StructuredDataService : IStructuredDataService
         var responseStoreLocation = await _geminiService.SendRequestAsync([
                 new Part
                 {
-                    Text = $@"Extract city name and address.
-                          Capitalize all letters in both city and address.
-                          Remove characters such as underscores or plus signs.
+                    Text = $@"Extract city name and address with number.
                           Do no include any other info such as zipcode, store type...
 
                           Input: {JsonSerializer.Serialize(filename, new JsonSerializerOptions
@@ -663,21 +633,11 @@ public class StructuredDataService : IStructuredDataService
             return null;
         }
 
-        var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(
-            foundStoreLocation.City, foundStoreLocation.Address
-        );
-
-        if (storeLocation == null)
+        return new BaseStoreLocation
         {
-            storeLocation = await _storeLocationRepository.Create(new StoreLocation
-            {
-                City = foundStoreLocation.City,
-                Address = foundStoreLocation.Address,
-                StoreId = storeId
-            });
-        }
-
-        return storeLocation;
+            City = foundStoreLocation.City.Replace("_", " ").ToUpper(),
+            Address = foundStoreLocation.Address.Replace("_", " ").ToUpper()
+        };
     }
 
     private async Task<List<CategorizedProduct>?> CategorizeProducts(List<string> productNames,
@@ -748,5 +708,17 @@ public class StructuredDataService : IStructuredDataService
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    private bool BrandIsAlreadyInName(string name, string brand)
+    {
+        var nameWords = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(w => w.ToUpperInvariant())
+            .ToHashSet();
+
+        var brandWords = brand.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(w => w.ToUpperInvariant());
+
+        return brandWords.Any(word => nameWords.Contains(word));
     }
 }

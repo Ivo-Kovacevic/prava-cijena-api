@@ -76,7 +76,9 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync();
 
         if (productId == Guid.Empty)
+        {
             return new List<StoreWithPriceDto>();
+        }
 
         var grouped = await _context.ProductStores
             .Where(ps => ps.ProductId == productId)
@@ -138,20 +140,34 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm)
+    public async Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm, int page,
+        int limit)
     {
-        var product = await _context.Database
+        var offset = (page - 1) * limit;
+
+
+        var products = await _context.Database
             .SqlQuery<ProductWithSimilarityDto>(
-                $@"SELECT *,
-                          similarity(""Name"", {searchTerm}) AS ""Similarity""
+                $@"SELECT *, similarity(""Name"", {searchTerm}) AS ""Similarity""
                    FROM ""Products""
-                   WHERE similarity(""Name"", {searchTerm}) > 0.00
+                   WHERE similarity(""Name"", {searchTerm}) > 0.3
                    ORDER BY similarity(""Name"", {searchTerm}) DESC
-                   LIMIT 5"
+                   LIMIT {limit}
+                   OFFSET {offset}"
             )
             .ToListAsync();
 
-        return product;
+        // var totalProducts = await _context.Database
+        //     .SqlQuery<int>(
+        //         $@"SELECT COUNT(*) AS ""Value""
+        //            FROM ""Products""
+        //            WHERE similarity(""Name"", {searchTerm}) > 0.3"
+        //     )
+        //     .FirstOrDefaultAsync();
+        //
+        // var totalPages = (int)Math.Ceiling(totalProducts / (double)limit);
+
+        return products;
     }
 
     public async Task<Product?> GetProductByIdAsync(Guid productId)

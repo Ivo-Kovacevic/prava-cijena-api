@@ -4,6 +4,7 @@ using PravaCijena.Api.Exceptions;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
+using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Services;
 
@@ -54,9 +55,9 @@ public class ProductService : IProductService
         return stores;
     }
 
-    public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName)
+    public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName, int page, int limit)
     {
-        var products = await _productRepo.Search(productName);
+        var products = await _productRepo.Search(productName, page, limit);
 
         return products;
     }

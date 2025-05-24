@@ -51,9 +51,13 @@ public class ProductController : ControllerBase
 
     // ENDPOINT FOR SEARCHING PRODUCTS
     [HttpGet("products/search")]
-    public async Task<ActionResult<IEnumerable<Product>>> Search([FromQuery] string searchTerm)
+    public async Task<IActionResult> Search(
+        [FromQuery] string searchTerm,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 5
+    )
     {
-        var productsDto = await _productService.SearchProduct(searchTerm);
+        var productsDto = await _productService.SearchProduct(searchTerm, page, limit);
         return Ok(productsDto);
     }
 
