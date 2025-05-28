@@ -11,10 +11,12 @@ namespace PravaCijena.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IHostEnvironment _env;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IHostEnvironment env)
     {
         _userService = userService;
+        _env = env;
     }
 
     [HttpPost("register")]
@@ -59,13 +61,20 @@ public class UserController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("jwtToken", new CookieOptions
+        var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = _env.IsProduction(), // Inject IWebHostEnvironment
             SameSite = SameSiteMode.None,
             Path = "/"
-        });
+        };
+
+        if (_env.IsProduction())
+        {
+            cookieOptions.Domain = ".pravacijena.eu";
+        }
+
+        Response.Cookies.Delete("jwtToken", cookieOptions);
 
         return Ok(new { message = "Logged out successfully" });
     }

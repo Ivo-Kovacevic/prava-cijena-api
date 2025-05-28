@@ -8,6 +8,7 @@ namespace PravaCijena.Api.Services;
 
 public class UserService : IUserService
 {
+    private readonly IHostEnvironment _env;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly SignInManager<User> _signInManager;
     private readonly ITokenService _tokenService;
@@ -17,13 +18,15 @@ public class UserService : IUserService
         UserManager<User> userManager,
         ITokenService tokenService,
         SignInManager<User> signInManager,
-        IHttpContextAccessor httpContextAccessor
+        IHttpContextAccessor httpContextAccessor,
+        IHostEnvironment env
     )
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _signInManager = signInManager;
         _httpContextAccessor = httpContextAccessor;
+        _env = env;
     }
 
     public async Task<UserInfoDto?> Register(RegisterDto registerDto)
@@ -89,8 +92,14 @@ public class UserService : IUserService
             Expires = DateTime.UtcNow.AddDays(7),
             Secure = true,
             SameSite = SameSiteMode.None,
-            Path = "/"
+            Path = "/",
         };
+
+        if (_env.IsProduction())
+        {
+            cookieOptions.Domain = ".pravacijena.eu";
+        }
+
         _httpContextAccessor.HttpContext.Response.Cookies.Append("jwtToken", token, cookieOptions);
     }
 }
