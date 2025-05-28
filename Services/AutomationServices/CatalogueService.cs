@@ -1,6 +1,5 @@
 using System.Text.Json;
 using HtmlAgilityPack;
-using PravaCijena.Api.Config;
 using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
@@ -9,7 +8,7 @@ using PravaCijena.Api.Services.Gemini.GeminiRequest;
 
 namespace PravaCijena.Api.Services.AutomationServices;
 
-public class CatalogueService : ApiConfig, ICatalogueService
+public class CatalogueService : ICatalogueService
 {
     private readonly IAutomationService _automationService;
     private readonly IGeminiService _geminiService;

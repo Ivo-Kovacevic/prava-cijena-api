@@ -63,8 +63,8 @@ public class UserController : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict
-            // Path = "/" // Ensure path matches the one used for setting
+            SameSite = SameSiteMode.None,
+            Path = "/"
         });
 
         return Ok(new { message = "Logged out successfully" });

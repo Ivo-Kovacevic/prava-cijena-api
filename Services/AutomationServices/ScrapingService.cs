@@ -18,6 +18,7 @@ namespace PravaCijena.Api.Services.AutomationServices;
 
 public class ScrapingService : IScrapingService
 {
+    private readonly IConfiguration _config;
     private readonly IGeminiService _geminiService;
     private readonly HttpClient _httpClient;
     private readonly IProductRepository _productRepository;
@@ -27,19 +28,21 @@ public class ScrapingService : IScrapingService
         HttpClient httpClient,
         IStoreRepository storeRepository,
         IProductRepository productRepository,
-        IGeminiService geminiService
+        IGeminiService geminiService,
+        IConfiguration config
     )
     {
         _httpClient = httpClient;
         _storeRepository = storeRepository;
         _productRepository = productRepository;
         _geminiService = geminiService;
+        _config = config;
     }
 
     public async Task RunScraper()
     {
-        DotEnv.Load(new DotEnvOptions(probeForEnv: true));
-        var cloudinary = new Cloudinary(Environment.GetEnvironmentVariable("CLOUDINARY_URL"));
+        var cloudinaryUrl = _config["ExternalServices:Cloudinary:CloudinaryUrl"];
+        var cloudinary = new Cloudinary(cloudinaryUrl);
         cloudinary.Api.Secure = true;
 
         var storesWithCategories = await _storeRepository.GetAllWithMetadata();
@@ -109,8 +112,9 @@ public class ScrapingService : IScrapingService
                                     Folder = "prava-cijena/proizvodi"
                                 };
                                 var uploadResult = await cloudinary.UploadAsync(uploadParams);
-                                
-                                var updatedUrl = Regex.Replace(uploadResult.SecureUrl.ToString(), @"/v\d+/", "/e_background_removal/");
+
+                                var updatedUrl = Regex.Replace(uploadResult.SecureUrl.ToString(), @"/v\d+/",
+                                    "/e_background_removal/");
                                 updatedUrl = Regex.Replace(updatedUrl, @"\.\w+$", ".webp");
                                 var productsToUpdate = new List<Product>();
 
@@ -145,7 +149,8 @@ public class ScrapingService : IScrapingService
         }
     }
 
-    private async Task<ProductMatchingResponse?> CompareProducts(string productName, List<ExistingProduct> similarProducts)
+    private async Task<ProductMatchingResponse?> CompareProducts(string productName,
+        List<ExistingProduct> similarProducts)
     {
         var responseSchema = JsonDocument.Parse(@"{
                            ""type"": ""OBJECT"",

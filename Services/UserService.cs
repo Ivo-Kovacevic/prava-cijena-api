@@ -87,8 +87,8 @@ public class UserService : IUserService
         {
             HttpOnly = true,
             Expires = DateTime.UtcNow.AddDays(7),
-            Secure = false,
-            SameSite = SameSiteMode.Lax,
+            Secure = true,
+            SameSite = SameSiteMode.None,
             Path = "/"
         };
         _httpContextAccessor.HttpContext.Response.Cookies.Append("jwtToken", token, cookieOptions);

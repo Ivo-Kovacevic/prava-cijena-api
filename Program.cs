@@ -1,60 +1,36 @@
 using System.Text;
 using CloudinaryDotNet;
-using dotenv.net;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using PravaCijena.Api.Config;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Middlewares;
 using PravaCijena.Api.Models;
 
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
+var isProduction = builder.Environment.IsProduction();
 var configuration = builder.Configuration;
 builder.Services.AddControllers()
     .AddJsonOptions(options => { options.JsonSerializerOptions.WriteIndented = true; });
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+var jwtSigningKeyFromConfig = configuration["JWT:SigningKey"];
+var jwtIssuerFromConfig = configuration["JWT:Issuer"];
+var jwtAudienceFromConfig = configuration["JWT:Audience"];
+var databaseConnection = configuration["ConnectionStrings:DefaultConnection"];
 
 // Connect to database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(DatabaseConfig.GetConnectionString())
-        .EnableSensitiveDataLogging()
-);
+    options.UseNpgsql(databaseConnection).EnableSensitiveDataLogging());
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSwaggerGen(option =>
-{
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
-    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] { }
-        }
-    });
-});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -70,13 +46,12 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     })
     .AddEntityFrameworkStores<AppDbContext>();
 
-var jwtSigningKeyString = configuration["JWT:SigningKey"];
-if (string.IsNullOrEmpty(jwtSigningKeyString))
+if (string.IsNullOrEmpty(jwtSigningKeyFromConfig))
 {
     throw new InvalidOperationException("JWT:SigningKey not found in configuration.");
 }
 
-var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKeyString));
+var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKeyFromConfig));
 builder.Services.AddSingleton(symmetricSecurityKey);
 
 builder.Services.AddAuthentication(options =>
@@ -88,9 +63,9 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["JWT:Issuer"],
+        ValidIssuer = jwtIssuerFromConfig,
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["JWT:Audience"],
+        ValidAudience = jwtAudienceFromConfig,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = symmetricSecurityKey,
         ValidateLifetime = true
@@ -99,7 +74,7 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            context.Token = context.Request.Cookies["jwtToken"]; // Read token from cookie
+            context.Token = context.Request.Cookies["jwtToken"];
             return Task.CompletedTask;
         }
     };
@@ -116,7 +91,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:3000")
+                .WithOrigins(isProduction ? "https://www.pravacijena.eu" : "http://localhost:3000")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -157,7 +132,6 @@ app.MapGet("/",
 app.MapFallback(() => Results.Problem(title: "Endpoint not found", statusCode: StatusCodes.Status404NotFound));
 
 // Cloudinary
-DotEnv.Load(new DotEnvOptions(probeForEnv: true));
 var cloudinary = new Cloudinary(Environment.GetEnvironmentVariable("CLOUDINARY_URL"));
 cloudinary.Api.Secure = true;
 

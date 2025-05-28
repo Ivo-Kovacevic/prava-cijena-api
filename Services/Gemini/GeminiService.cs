@@ -9,13 +9,15 @@ using Part = PravaCijena.Api.Services.Gemini.GeminiRequest.Part;
 
 namespace PravaCijena.Api.Services.Gemini;
 
-public class GeminiService : ApiConfig, IGeminiService
+public class GeminiService : IGeminiService
 {
     private readonly HttpClient _httpClient;
+    private readonly IConfiguration _config;
 
-    public GeminiService(HttpClient httpClient)
+    public GeminiService(HttpClient httpClient, IConfiguration config)
     {
         _httpClient = httpClient;
+        _config = config;
     }
 
     public async Task<string> SendRequestAsync(List<Part> parts, JsonElement? responseSchema)
@@ -36,8 +38,9 @@ public class GeminiService : ApiConfig, IGeminiService
             }
         };
 
+        var geminiApiKey = _config["ExternalServices:Gemini:ApiKey"];
         var url =
-            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GeminiApiKey}";
+            $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={geminiApiKey}";
         var json = JsonSerializer.Serialize(requestBody);
         var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
