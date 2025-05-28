@@ -1,8 +1,8 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
-using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Controllers;
 
@@ -29,7 +29,9 @@ public class ProductController : ControllerBase
         [FromQuery] QueryObject query
     )
     {
-        var productsDto = await _productService.GetProductsByCategorySlugAsync(categorySlug, query);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var productsDto = await _productService.GetProductsByCategorySlugAsync(categorySlug, userId, query);
         return Ok(productsDto);
     }
 

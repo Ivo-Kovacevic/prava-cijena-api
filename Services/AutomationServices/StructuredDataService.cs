@@ -1,13 +1,18 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Web;
 using System.Xml.Linq;
+using CsvHelper;
+using CsvHelper.Configuration;
 using HtmlAgilityPack;
 using PravaCijena.Api.Context;
+using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Dto.Store.Spar;
+using PravaCijena.Api.Dto.Store.Tommy;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
@@ -57,7 +62,6 @@ public class StructuredDataService : IStructuredDataService
 
     public async Task SyncStoreFiles()
     {
-        var results = new AutomationResult();
         var storesWithMetadata = await _storeRepository.GetAllWithMetadata();
 
         await _context.InitializeAsync(_productRepository);
@@ -81,11 +85,17 @@ public class StructuredDataService : IStructuredDataService
                     case "studenac-":
                         await HandleStudenac(store);
                         break;
-                    case "plodine":
+                    case "plodine-":
                         await HandlePlodine(store);
                         break;
                     case "spar-":
                         await HandleSpar(store);
+                        break;
+                    case "eurospin-":
+                        await HandleEurospin(store);
+                        break;
+                    case "tommy":
+                        await HandleTommy(store);
                         break;
                     default:
                         continue;
@@ -163,7 +173,7 @@ public class StructuredDataService : IStructuredDataService
 
                 var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-                await HandleCsv(lines, store, storeLocation);
+                await HandleCsv(csvData, store, storeLocation);
             }
 
             page++;
@@ -186,7 +196,6 @@ public class StructuredDataService : IStructuredDataService
         foreach (var entry in archive.Entries)
         {
             var match = Match(entry.FullName, @"^([^_]+)_(.+?)_(\d.*)_(\d{5})_([^_]+)_(.+)$");
-
             if (!match.Success)
             {
                 continue;
@@ -194,16 +203,9 @@ public class StructuredDataService : IStructuredDataService
 
             var street = match.Groups[2].Value.Trim().ToUpper();
             var houseNumber = match.Groups[3].Value.Replace("_", "").Replace(" ", "").Trim().ToUpper();
-            var city = match.Groups[5].Value.Trim().ToUpper();
 
             var address = $"{street} {houseNumber}";
-
-            await using var entryStream = entry.Open();
-            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
-
-            var content = await reader.ReadToEndAsync();
-
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var city = match.Groups[5].Value.Trim().ToUpper();
 
             var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
             if (storeLocation == null)
@@ -216,7 +218,12 @@ public class StructuredDataService : IStructuredDataService
                 });
             }
 
-            await HandleCsv(lines, store, storeLocation);
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
+            var csvData = await reader.ReadToEndAsync();
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            await HandleCsv(csvData, store, storeLocation);
         }
     }
 
@@ -229,8 +236,15 @@ public class StructuredDataService : IStructuredDataService
         using var zipStream = new MemoryStream(zipBytes);
         using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
+        var totalEntries = archive.Entries.Count;
+        var entryIndex = 0;
         foreach (var entry in archive.Entries)
         {
+            entryIndex++;
+            Console.WriteLine("--------------------");
+            Console.WriteLine($"Processing file: {entryIndex} / {totalEntries}");
+            Console.WriteLine("--------------------");
+            
             await using var entryStream = entry.Open();
             var xDoc = XDocument.Load(entryStream);
 
@@ -273,12 +287,18 @@ public class StructuredDataService : IStructuredDataService
         using var zipStream = new MemoryStream(zipBytes);
         using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
+        var totalEntries = archive.Entries.Count;
+        var entryIndex = 0;
         foreach (var entry in archive.Entries)
         {
+            entryIndex++;
+            Console.WriteLine("--------------------");
+            Console.WriteLine($"Processing file: {entryIndex} / {totalEntries}");
+            Console.WriteLine("--------------------");
+            
             var filename = Path.GetFileNameWithoutExtension(entry.FullName);
 
             var match = Match(filename, @"^([^_]+)_(.+?)_(\d{5})_(.+?)_(\d.+)$");
-
             if (!match.Success)
             {
                 continue;
@@ -301,11 +321,10 @@ public class StructuredDataService : IStructuredDataService
             await using var entryStream = entry.Open();
             using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
 
-            var content = await reader.ReadToEndAsync();
+            var csvData = await reader.ReadToEndAsync();
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
-            await HandleCsv(lines, store, storeLocation);
+            await HandleCsv(csvData, store, storeLocation);
         }
     }
 
@@ -324,71 +343,207 @@ public class StructuredDataService : IStructuredDataService
             return;
         }
 
+        var cities = new List<string>
+        {
+            "varazdin", "valpovo", "sibenik", "zadar", "zagreb", "cakovec", "rijeka", "split", "kastav", "selce",
+            "bibinje", "labin", "buje", "krizevci", "pozega", "jastrebarsko", "sesvetski_kraljevec",
+            "krapinske_toplice", "novi_marof", "ivanic_grad", "vukovar", "marija_bistrica", "zapresic", "velika_gorica",
+            "slavonski_brod", "osijek", "koprivnica", "bjelovar", "vinkovci", "dakovo", "orahovica", "pakrac",
+            "suhopolje", "daruvar", "nasice", "pula", "opatija", "porec", "knin", "zlatar", "ivanec", "popovaca", "nin",
+            "donja_stubica", "pregrada", "cepin", "ozalj", "dugo_selo", "gospic", "samobor", "karlovac", "kukuljanovo",
+            "umag", "kastel", "sisak", "donji_stupnik"
+        };
+
+        var totalEntries = data.Files.Count;
+        var entryIndex = 0;
         foreach (var file in data.Files)
         {
+            entryIndex++;
+            Console.WriteLine("--------------------");
+            Console.WriteLine($"Processing file: {entryIndex} / {totalEntries}");
+            Console.WriteLine("--------------------");
             var fullUrl = file.Url;
             var csvData = await _httpClient.GetStringAsync(fullUrl);
 
-            var filename = Path.GetFileNameWithoutExtension(file.Name);
-            var baseLocation = await ExtractCityAndAddress(filename);
-            if (baseLocation == null)
+            var match = Match(file.Name, @"^([^_]+)_(.+?)_(\d{4,6})_(.+?)$");
+            if (!match.Success)
             {
                 continue;
             }
 
-            var storeLocation =
-                await _storeLocationRepository.GetByCityAndAddressAsync(baseLocation.City, baseLocation.Address);
+            var cityAndAddress = match.Groups[2].Value.ToLower();
+            var matchedCity = cities.FirstOrDefault(c => cityAndAddress.Contains(c));
+            if (matchedCity == null)
+            {
+                continue;
+            }
+
+            var city = matchedCity.Replace("_", " ").ToUpper();
+            var address = cityAndAddress.Replace(matchedCity, "").Replace("_", " ").Trim().ToUpper();
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                try
+                {
+                    storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                    {
+                        City = city,
+                        Address = address,
+                        StoreId = store.Id
+                    });
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    continue;
+                }
+            }
+
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            await HandleCsv(csvData, store, storeLocation);
+        }
+    }
+
+    private async Task HandleEurospin(StoreWithMetadataDto store)
+    {
+        var date = DateTime.Today;
+        var formattedDate = date.ToString("dd.MM.yyyy-7.30");
+        var zipUrl = $"https://www.eurospin.hr/wp-content/themes/eurospin/documenti-prezzi/cjenik_{formattedDate}.zip";
+
+        var zipBytes = await _httpClient.GetByteArrayAsync(zipUrl);
+        using var zipStream = new MemoryStream(zipBytes);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+
+        foreach (var entry in archive.Entries)
+        {
+            var match = Match(entry.FullName, @"^(.*?\d{6})-([^-]+)-([^-]+)-(\d{5})-(.*)$");
+            if (!match.Success)
+            {
+                continue;
+            }
+
+            var address = match.Groups[2].Value.Replace("_", " ").Trim().ToUpper();
+            var city = match.Groups[3].Value.Replace("_", " ").Trim().ToUpper();
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
             if (storeLocation == null)
             {
                 storeLocation = await _storeLocationRepository.Create(new StoreLocation
                 {
-                    City = baseLocation.City,
-                    Address = baseLocation.Address,
+                    City = city,
+                    Address = address,
                     StoreId = store.Id
                 });
             }
 
-            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            await HandleCsv(lines, store, storeLocation);
+            await using var entryStream = entry.Open();
+            using var reader = new StreamReader(entryStream, Encoding.GetEncoding("windows-1250"));
+            var csvData = await reader.ReadToEndAsync();
+
+            await HandleCsv(csvData.Replace("\"", ""), store, storeLocation);
         }
     }
 
-    private async Task HandleCsv(string[] lines, StoreWithMetadataDto store, StoreLocation storeLocation)
+    private async Task HandleTommy(StoreWithMetadataDto store)
+    {
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var apiUrl =
+            $"https://spiza.tommy.hr/api/v2/shop/store-prices-tables?date={date}&page=1&itemsPerPage=100&channelCode=general";
+
+        var response = await _httpClient.GetStringAsync(apiUrl);
+        var data = JsonSerializer.Deserialize<TommyFileList>(response);
+
+        if (data?.Items == null)
+        {
+            return;
+        }
+
+        var totalEntries = data.Items.Count;
+        var entryIndex = 0;
+        foreach (var item in data.Items)
+        {
+            entryIndex++;
+            Console.WriteLine("--------------------");
+            Console.WriteLine($"Processing file: {entryIndex} / {totalEntries}");
+            Console.WriteLine("--------------------");
+            
+            var match = Match(item.FileName, @"^(.*),\s([^,]+),\s(\d{5}) ([^,]+),\s(.*)$");
+            if (!match.Success)
+            {
+                continue;
+            }
+
+            var address = match.Groups[2].Value.Trim().ToUpper();
+            var city = match.Groups[4].Value.Trim().ToUpper();
+
+            var storeLocation = await _storeLocationRepository.GetByCityAndAddressAsync(city, address);
+            if (storeLocation == null)
+            {
+                storeLocation = await _storeLocationRepository.Create(new StoreLocation
+                {
+                    City = city,
+                    Address = address,
+                    StoreId = store.Id
+                });
+            }
+
+            var csvData = await _httpClient.GetStringAsync($"https://spiza.tommy.hr{item.Id}");
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            await HandleCsv(csvData, store, storeLocation);
+        }
+    }
+
+    private async Task HandleCsv(string csvData, StoreWithMetadataDto store, StoreLocation storeLocation)
     {
         if (store.CsvNameColumn == null || store.CsvBrandColumn == null || store.CsvPriceColumn == null ||
-            store.CsvBarcodeColumn == null)
+            store.CsvBarcodeColumn == null || store.CsvDelimiter == null)
         {
             return;
         }
 
         var productPreviews = new List<ProductPreview>();
-
-        foreach (var line in lines.Skip(1))
+        using (var reader = new StringReader(csvData))
+        using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                   {
+                       HasHeaderRecord = true,
+                       Delimiter = store.CsvDelimiter,
+                       BadDataFound = null
+                   }
+               ))
         {
-            var cols = line.Split(store.CsvDelimiter);
-
-            var productName = cols[store.CsvNameColumn.Value].Trim();
-            var productBrand = cols[store.CsvBrandColumn.Value].Trim();
-            var barcode = cols[store.CsvBarcodeColumn.Value].Trim();
-            var priceStr = cols[store.CsvPriceColumn.Value].Trim().Replace(',', '.');
-
-            if (!decimal.TryParse(priceStr, out var price) || barcode.Length < 8)
+            while (await csv.ReadAsync())
             {
-                continue;
+                var productName = csv.GetField(store.CsvNameColumn.Value);
+                var productBrand = csv.GetField(store.CsvBrandColumn.Value) ?? "";
+                var barcode = csv.GetField(store.CsvBarcodeColumn.Value);
+                var priceStr = csv.GetField(store.CsvPriceColumn.Value)?.Replace(',', '.');
+
+                if (string.IsNullOrWhiteSpace(productName)
+                    || string.IsNullOrWhiteSpace(barcode)
+                    || string.IsNullOrWhiteSpace(priceStr)
+                    || !decimal.TryParse(priceStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var price)
+                    || price == 0
+                    || barcode.Length < 8)
+                {
+                    continue;
+                }
+
+                if (!BrandIsAlreadyInName(productName, productBrand))
+                {
+                    productName = $"{productBrand} {productName}";
+                }
+
+                productPreviews.Add(new ProductPreview
+                {
+                    Name = productName,
+                    Brand = productBrand,
+                    Price = price,
+                    Barcode = barcode
+                });
             }
-
-            if (!BrandIsAlreadyInName(productName, productBrand))
-            {
-                productName = $"{productBrand} {productName}";
-            }
-
-            productPreviews.Add(new ProductPreview
-            {
-                Name = productName,
-                Brand = productBrand,
-                Price = price,
-                Barcode = barcode
-            });
         }
 
         await ProcessProductPreviews(productPreviews, storeLocation);
@@ -472,24 +627,6 @@ public class StructuredDataService : IStructuredDataService
                     if (productPreview.Price < existingProduct.LowestPrice)
                     {
                         existingProduct.LowestPrice = productPreview.Price;
-                    }
-
-                    if (existingProduct.Name != productPreview.Name)
-                    {
-                        existingProduct.Name = productPreview.Name;
-
-                        var baseName = productPreview.Name;
-                        existingProduct.Name = productPreview.Name;
-                        var slug = SlugHelper.GenerateSlug(baseName);
-                        var i = 0;
-
-                        while (!_context.ExistingSlugs.TryAdd(existingProduct.Slug, 0))
-                        {
-                            existingProduct.Name = $"{baseName} {i}";
-
-                            i++;
-                        }
-
                         productsToUpdate.Add(existingProduct);
                     }
                 }

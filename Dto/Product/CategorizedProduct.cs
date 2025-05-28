@@ -1,4 +1,6 @@
-namespace PravaCijena.Api.Models;
+using PravaCijena.Api.Dto.Category;
+
+namespace PravaCijena.Api.Dto.Product;
 
 public class CategorizedProduct
 {

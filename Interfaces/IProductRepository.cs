@@ -8,14 +8,17 @@ namespace PravaCijena.Api.Interfaces;
 public interface IProductRepository
 {
     Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
-    Task<IEnumerable<ProductWithStoresNumber>> GetPageProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
+
+    Task<IEnumerable<ProductWithMetadata>> GetPageProductsByCategoryIdAsync(Guid categoryId, string? userId,
+        QueryObject query);
+
     Task<Product?> GetProductBySlugAsync(string productSlug);
     Task<List<StoreWithPriceDto>> GetProductStoresBySlugsAsync(string productSlug);
     Task<List<string>> GetAllSlugsAsync();
     Task<List<string>> GetAllBarcodesAsync();
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);
     Task<List<Product>> GetProductsByBarcodesBatchAsync(IEnumerable<string> barcodes);
-    Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm, int page, int limit);
+    Task<List<Product>> Search(string searchTerm, int page, int limit);
     Task<Product?> GetProductByIdAsync(Guid productId);
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product existingProduct);

@@ -11,6 +11,11 @@ public static class ServiceCollection
 {
     public static IServiceCollection AddAppServices(this IServiceCollection services)
     {
+        services.AddScoped<ITokenService, TokenService>();
+
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IUserRepository, UserRepository>();
+
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
 
@@ -49,6 +54,15 @@ public static class ServiceCollection
 
         services.AddHttpClient<IGeminiService, GeminiService>();
         services.AddScoped<IGeminiService, GeminiService>();
+
+        services.AddScoped<ICartService, CartService>();
+        services.AddScoped<ICartRepository, CartRepository>();
+
+        services.AddScoped<ISavedProductService, SavedProductService>();
+        services.AddScoped<ISavedProductRepository, SavedProductRepository>();
+
+        services.AddScoped<ISavedStoreService, SavedStoreService>();
+        services.AddScoped<ISavedStoreRepository, SavedStoreRepository>();
 
         services.AddScoped<ProductProcessingContext>();
 

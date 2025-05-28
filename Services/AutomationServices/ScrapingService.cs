@@ -1,9 +1,15 @@
 using System.Net;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using dotenv.net;
 using HtmlAgilityPack;
 using PravaCijena.Api.Dto.Category;
+using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
+using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
 using PravaCijena.Api.Services.Gemini.GeminiRequest;
@@ -30,17 +36,12 @@ public class ScrapingService : IScrapingService
         _geminiService = geminiService;
     }
 
-    public async Task<AutomationResult> RunScraper()
+    public async Task RunScraper()
     {
-        var results = new AutomationResult
-        {
-            CreatedProducts = 0,
-            UpdatedProducts = 0,
-            CreatedProductStores = 0,
-            UpdatedProductStores = 0,
-            CreatedPrices = 0,
-            UpdatedPrices = 0
-        };
+        DotEnv.Load(new DotEnvOptions(probeForEnv: true));
+        var cloudinary = new Cloudinary(Environment.GetEnvironmentVariable("CLOUDINARY_URL"));
+        cloudinary.Api.Secure = true;
+
         var storesWithCategories = await _storeRepository.GetAllWithMetadata();
         var random = new Random();
         foreach (var store in storesWithCategories)
@@ -65,7 +66,7 @@ public class ScrapingService : IScrapingService
                         var pageUrl = $"{urlInfo.Url}?{store.PageQuery}={page}&{store.LimitQuery}={perPage}";
 
                         Console.WriteLine($"Delaying request to \"{pageUrl}\" by few seconds...");
-                        await Task.Delay(random.Next(2, 5) * 1000);
+                        await Task.Delay(random.Next(2, 4) * 1000);
 
                         var html = await _httpClient.GetStringAsync(pageUrl);
                         var htmlDocument = new HtmlDocument();
@@ -79,7 +80,55 @@ public class ScrapingService : IScrapingService
                             continue;
                         }
 
-                        await ProductNodesToProducts(productNodes);
+                        foreach (var productNode in productNodes)
+                        {
+                            var productName = WebUtility.HtmlDecode(
+                                productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
+                            );
+                            var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
+
+                            var similarProducts = await _productRepository.Search(productName, 1, 10);
+                            var comparedProducts = await CompareProducts(
+                                productName,
+                                similarProducts.Select(p => new ExistingProduct
+                                {
+                                    ExistingProductId = p.Id,
+                                    ExistingProductName = p.Name
+                                }).ToList()
+                            );
+
+                            if (comparedProducts.ExistingProducts.Any(p => p.IsSameProduct))
+                            {
+                                var uploadParams = new ImageUploadParams
+                                {
+                                    File = new FileDescription(imageUrl),
+                                    PublicId = SlugHelper.GenerateSlug(productName),
+                                    UseFilename = true,
+                                    UniqueFilename = true,
+                                    Overwrite = false,
+                                    Folder = "prava-cijena/proizvodi"
+                                };
+                                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+                                
+                                var updatedUrl = Regex.Replace(uploadResult.SecureUrl.ToString(), @"/v\d+/", "/e_background_removal/");
+                                updatedUrl = Regex.Replace(updatedUrl, @"\.\w+$", ".webp");
+                                var productsToUpdate = new List<Product>();
+
+                                foreach (var existingProduct in comparedProducts.ExistingProducts)
+                                    if (existingProduct.IsSameProduct)
+                                    {
+                                        var product = similarProducts.FirstOrDefault(p =>
+                                            p.Id == existingProduct.ExistingProductId);
+                                        if (product != null)
+                                        {
+                                            product.ImageUrl = updatedUrl;
+                                            productsToUpdate.Add(product);
+                                        }
+                                    }
+
+                                await _productRepository.BulkUpdateAsync(productsToUpdate);
+                            }
+                        }
 
                         page++;
 
@@ -94,25 +143,9 @@ public class ScrapingService : IScrapingService
                     Console.WriteLine($"Failed to scrape URL: {urlInfo.Url}, Error: {ex.Message}");
                 }
         }
-
-        return results;
     }
 
-    private async Task ProductNodesToProducts(HtmlNodeCollection productNodes)
-    {
-        foreach (var productNode in productNodes)
-        {
-            ProductPreview? productPreview;
-            var productName = WebUtility.HtmlDecode(
-                productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
-            );
-            var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
-
-            var existingProduct = await _productRepository.Search(productName, 1, 20);
-        }
-    }
-
-    private async Task<List<CategorizedProduct>?> CompareProducts(string productName, List<string> existingProducts)
+    private async Task<ProductMatchingResponse?> CompareProducts(string productName, List<ExistingProduct> similarProducts)
     {
         var responseSchema = JsonDocument.Parse(@"{
                            ""type"": ""OBJECT"",
@@ -125,9 +158,9 @@ public class ScrapingService : IScrapingService
                                  ""properties"": {
                                    ""existingProductId"": { ""type"": ""STRING"" },
                                    ""existingProductName"": { ""type"": ""STRING"" },
-                                   ""isSimilarProduct"": { ""type"": ""BOOLEAN""}
+                                   ""isSameProduct"": { ""type"": ""BOOLEAN""}
                                  },
-                                 ""required"": [""existingProductId"", ""existingProductName"", ""isSimilarProduct""]
+                                 ""required"": [""existingProductId"", ""existingProductName"", ""isSameProduct""]
                                }
                              }
                            },
@@ -140,11 +173,13 @@ public class ScrapingService : IScrapingService
                 [
                     new Part
                     {
-                        Text = $@"You will receive name of newly found product from Konzum web shop that I have an image for, and a list of products in my database that don't have images for.
-                                  Your task is to compare the names and decide if any of the existing products are the same or similar enough to the new one.
-                                  Be reasonably flexible with your matching. For example: 'Nutella 750g' can match with 'Nutella 700g', 'Nutella 3KG', or even 'NAMAZ NUTELLA'
+                        Text =
+                            $@"You will receive name of newly found product from Konzum web shop that I have an image for, and a list of products in my database that don't have images for.
+                               Your task is to compare the names and decide if any of the existing products are the same or similar enough to the new one.
+                               Put field 'isSameProduct' to equal true in cases when brand is same but differences are in weight, milk fat or similar.
+                               Be reasonably flexible with your matching. For example: 'Nutella 750g' can match with 'Nutella 700g', 'Nutella 3KG', or even 'NAMAZ NUTELLA'.
 
-                          INPUT: {JsonSerializer.Serialize(new { NewProductWithImage = productName, ExistingProducts = existingProducts }, new JsonSerializerOptions
+                          INPUT: {JsonSerializer.Serialize(new { NewProductWithImage = productName, ExistingProducts = similarProducts }, new JsonSerializerOptions
                           {
                               WriteIndented = false,
                               Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -155,18 +190,13 @@ public class ScrapingService : IScrapingService
                 responseSchema
             );
 
-            var categorizedProducts = JsonSerializer.Deserialize<List<CategorizedProduct>>
+            var categorizedProducts = JsonSerializer.Deserialize<ProductMatchingResponse>
             (
                 responseCategorizedProduct, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 }
             );
-
-            if (categorizedProducts == null)
-            {
-                return null;
-            }
 
             return categorizedProducts;
         }

@@ -4,7 +4,6 @@ using PravaCijena.Api.Exceptions;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
-using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Services;
 
@@ -23,7 +22,8 @@ public class ProductService : IProductService
     /*
      * SLUG SERVICE
      */
-    public async Task<IEnumerable<ProductWithStoresNumber>> GetProductsByCategorySlugAsync(string categorySlug,
+    public async Task<IEnumerable<ProductWithMetadata>> GetProductsByCategorySlugAsync(string categorySlug,
+        string? userId,
         QueryObject query)
     {
         var category = await _categoryRepo.GetBySlugAsync(categorySlug);
@@ -32,7 +32,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Category '{categorySlug}' not found.");
         }
 
-        var products = await _productRepo.GetPageProductsByCategoryIdAsync(category.Id, query);
+        var products = await _productRepo.GetPageProductsByCategoryIdAsync(category.Id, userId, query);
 
         return products;
     }
@@ -55,11 +55,11 @@ public class ProductService : IProductService
         return stores;
     }
 
-    public async Task<IEnumerable<ProductWithSimilarityDto>> SearchProduct(string productName, int page, int limit)
+    public async Task<IEnumerable<ProductDto>> SearchProduct(string productName, int page, int limit)
     {
         var products = await _productRepo.Search(productName, page, limit);
 
-        return products;
+        return products.Select(p => p.ToProductDto());
     }
 
     /*

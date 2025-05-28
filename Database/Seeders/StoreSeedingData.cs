@@ -51,7 +51,7 @@ public class StoreSeedingData
                 PriceListUrl = "https://tvrtka.lidl.hr/cijene",
                 PriceUrlListXPath = "//div[@class='landing-page__zone landing-page__zone--262536']",
                 PriceUrlXPath = ".//a",
-                CsvDelimiter = "\t",
+                CsvDelimiter = ",",
                 CsvNameColumn = 0,
                 CsvBrandColumn = 4,
                 CsvPriceColumn = 5,
@@ -83,6 +83,13 @@ public class StoreSeedingData
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/tommy.webp",
 
                 PriceListUrl = "https://www.tommy.hr/objava-cjenika",
+                PriceUrlListXPath = "//div[@class='page__cta']",
+                PriceUrlXPath = ".//a[@class='btn btn--big btn--yellow']",
+                CsvDelimiter = ",",
+                CsvNameColumn = 2,
+                CsvBrandColumn = 3,
+                CsvPriceColumn = 7,
+                CsvBarcodeColumn = 0,
 
                 BaseCategoryUrl = "https://www.tommy.hr/kategorije",
                 ProductListXPath = "//section//article",
@@ -113,7 +120,13 @@ public class StoreSeedingData
                 ImageUrl = "https://res.cloudinary.com/dqbe0apqn/image/upload/eurospin.webp",
 
                 PriceListUrl = "https://www.eurospin.hr/cjenik/",
-                PriceUrlListXPath = "//div[@class='pdf-grid ']"
+                PriceUrlListXPath = "//div[@class='pdf-grid ']",
+                PriceUrlXPath = ".//a",
+                CsvDelimiter = ";",
+                CsvNameColumn = 0,
+                CsvBrandColumn = 2,
+                CsvPriceColumn = 5,
+                CsvBarcodeColumn = 11
             },
             new()
             {

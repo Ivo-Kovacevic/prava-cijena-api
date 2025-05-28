@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;

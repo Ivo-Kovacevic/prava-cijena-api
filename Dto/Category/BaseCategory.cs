@@ -1,4 +1,4 @@
-namespace PravaCijena.Api.Models;
+namespace PravaCijena.Api.Dto.Category;
 
 public class BaseCategory
 {

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using PravaCijena.Api.Interfaces;
-using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Controllers;
 
@@ -34,10 +33,10 @@ public class AutomationController : ControllerBase
     // }
 
     [HttpPost("scrape")]
-    public async Task<ActionResult<AutomationResult>> Scrape()
+    public async Task<IActionResult> Scrape()
     {
-        var result = await _scrapingService.RunScraper();
-        return Ok(result);
+        await _scrapingService.RunScraper();
+        return Ok();
     }
 
     [HttpPost("analyze-catalogue")]

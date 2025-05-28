@@ -18,49 +18,6 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<ProductWithStoresNumber>> GetPageProductsByCategoryIdAsync(Guid categoryId,
-        QueryObject query)
-    {
-        var subcategoryIds = await _context.Categories
-            .Where(c => c.ParentCategoryId == categoryId)
-            .Select(c => c.Id)
-            .ToListAsync();
-
-        var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
-
-        var productsWithStoreCounts = await _context.Products
-            .Where(p => categoryIdsToSearch.Contains(p.CategoryId))
-            .Where(p =>
-                _context.ProductStores
-                    .Where(ps => ps.ProductId == p.Id)
-                    .Select(ps => ps.StoreLocation.StoreId)
-                    .Distinct()
-                    .Any()
-            )
-            .Select(p => new ProductWithStoresNumber
-            {
-                Id = p.Id,
-                Name = p.Name,
-                ImageUrl = p.ImageUrl,
-                LowestPrice = p.LowestPrice,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                CategoryId = p.CategoryId,
-
-                NumberOfStores = _context.ProductStores
-                    .Where(ps => ps.ProductId == p.Id)
-                    .Select(ps => ps.StoreLocation.StoreId)
-                    .Distinct()
-                    .Count()
-            })
-            .OrderByDescending(p => p.NumberOfStores)
-            .Skip((query.Page - 1) * query.Limit)
-            .Take(query.Limit)
-            .ToListAsync();
-
-        return productsWithStoreCounts;
-    }
-
     public async Task<Product?> GetProductBySlugAsync(string productSlug)
     {
         return await _context.Products
@@ -140,15 +97,14 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ProductWithSimilarityDto>> Search(string searchTerm, int page,
+    public async Task<List<Product>> Search(string searchTerm, int page,
         int limit)
     {
         var offset = (page - 1) * limit;
 
-
         var products = await _context.Database
-            .SqlQuery<ProductWithSimilarityDto>(
-                $@"SELECT *, similarity(""Name"", {searchTerm}) AS ""Similarity""
+            .SqlQuery<Product>(
+                $@"SELECT *
                    FROM ""Products""
                    WHERE similarity(""Name"", {searchTerm}) > 0.3
                    ORDER BY similarity(""Name"", {searchTerm}) DESC
@@ -231,5 +187,53 @@ public class ProductRepository : IProductRepository
     public async Task BulkUpdateAsync(List<Product> products)
     {
         await _context.BulkUpdateAsync(products);
+    }
+
+    public async Task<IEnumerable<ProductWithMetadata>> GetPageProductsByCategoryIdAsync(
+        Guid categoryId,
+        string? userId,
+        QueryObject query
+    )
+    {
+        var subcategoryIds = await _context.Categories
+            .Where(c => c.ParentCategoryId == categoryId)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
+
+        var productsWithStoreCounts = await _context.Products
+            .Where(p => categoryIdsToSearch.Contains(p.CategoryId))
+            .Where(p =>
+                _context.ProductStores
+                    .Where(ps => ps.ProductId == p.Id)
+                    .Select(ps => ps.StoreLocation.StoreId)
+                    .Distinct()
+                    .Any()
+            )
+            .Select(p => new ProductWithMetadata
+            {
+                Id = p.Id,
+                Name = p.Name,
+                ImageUrl = p.ImageUrl,
+                LowestPrice = p.LowestPrice,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                CategoryId = p.CategoryId,
+
+                NumberOfStores = _context.ProductStores
+                    .Where(ps => ps.ProductId == p.Id)
+                    .Select(ps => ps.StoreLocation.StoreId)
+                    .Distinct()
+                    .Count(),
+                SavedProduct = userId != null && _context.SavedProducts
+                    .Any(sp => sp.ProductId == p.Id && sp.UserId == userId)
+            })
+            .OrderByDescending(p => p.NumberOfStores)
+            .Skip((query.Page - 1) * query.Limit)
+            .Take(query.Limit)
+            .ToListAsync();
+
+        return productsWithStoreCounts;
     }
 }

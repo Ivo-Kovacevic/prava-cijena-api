@@ -1,4 +1,4 @@
-namespace PravaCijena.Api.Models;
+namespace PravaCijena.Api.Dto.Product;
 
 public class ProductWithImage
 {

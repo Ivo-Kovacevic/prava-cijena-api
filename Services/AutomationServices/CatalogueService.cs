@@ -1,6 +1,7 @@
 using System.Text.Json;
 using HtmlAgilityPack;
 using PravaCijena.Api.Config;
+using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Models;
