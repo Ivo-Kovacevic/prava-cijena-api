@@ -1,4 +1,3 @@
-using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Models;
@@ -9,9 +8,7 @@ public interface IProductRepository
 {
     Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
 
-    Task<IEnumerable<ProductWithMetadata>> GetPageProductsByCategoryIdAsync(Guid categoryId, string? userId,
-        QueryObject query);
-
+    Task<Pagination> GetPageProductsByCategoryIdAsync(Guid categoryId, string? userId, QueryObject query);
     Task<Product?> GetProductBySlugAsync(string productSlug);
     Task<List<StoreWithPriceDto>> GetProductStoresBySlugsAsync(string productSlug);
     Task<List<string>> GetAllSlugsAsync();

@@ -103,7 +103,7 @@ public class ProductRepository : IProductRepository
         var offset = (page - 1) * limit;
 
         var products = await _context.Products
-            .Where(p => EF.Functions.ToTsVector("english", p.Name)
+            .Where(p => EF.Functions.ToTsVector("simple", p.Name)
                 .Matches(searchTerm))
             .Take(limit)
             .Skip(offset)
@@ -185,7 +185,7 @@ public class ProductRepository : IProductRepository
         await _context.BulkUpdateAsync(products);
     }
 
-    public async Task<IEnumerable<ProductWithMetadata>> GetPageProductsByCategoryIdAsync(
+    public async Task<Pagination> GetPageProductsByCategoryIdAsync(
         Guid categoryId,
         string? userId,
         QueryObject query
@@ -199,7 +199,7 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
 
         var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
-        
+
         var baseProducts = await _context.Products
             .Where(p =>
                 categoryIdsToSearch.Contains(p.CategoryId) &&
@@ -221,7 +221,9 @@ public class ProductRepository : IProductRepository
                     .Any(sp => sp.ProductId == p.Id && sp.UserId == userId)
             })
             .ToListAsync();
-        
+
+        var totalPages = (int)Math.Ceiling((double)baseProducts.Count / query.Limit);
+
         var productStoreCounts = await _context.ProductStores
             .Where(ps => baseProducts.Select(p => p.Id).Contains(ps.ProductId))
             .Select(ps => new
@@ -247,13 +249,19 @@ public class ProductRepository : IProductRepository
                 SavedProduct = p.SavedProduct
             })
             .OrderByDescending(p => p.NumberOfStores)
+            .ThenBy(p => p.LowestPrice)
             .Skip((query.Page - 1) * query.Limit)
             .Take(query.Limit)
             .ToList();
 
         Console.WriteLine("END");
         Console.WriteLine("-----------------------------------");
-        
-        return productsWithMetadata;
+
+        return new Pagination
+        {
+            CurrentPage = query.Page,
+            TotalPages = totalPages,
+            Products = productsWithMetadata
+        };
     }
 }

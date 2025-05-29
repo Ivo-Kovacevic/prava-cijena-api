@@ -4,6 +4,7 @@ using PravaCijena.Api.Exceptions;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Interfaces;
 using PravaCijena.Api.Mappers;
+using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Services;
 
@@ -22,7 +23,7 @@ public class ProductService : IProductService
     /*
      * SLUG SERVICE
      */
-    public async Task<IEnumerable<ProductWithMetadata>> GetProductsByCategorySlugAsync(string categorySlug,
+    public async Task<Pagination> GetProductsByCategorySlugAsync(string categorySlug,
         string? userId,
         QueryObject query)
     {

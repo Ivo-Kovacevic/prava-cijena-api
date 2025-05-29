@@ -1,13 +1,13 @@
 using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Helpers;
+using PravaCijena.Api.Models;
 
 namespace PravaCijena.Api.Interfaces;
 
 public interface IProductService
 {
-    Task<IEnumerable<ProductWithMetadata>> GetProductsByCategorySlugAsync(string categorySlug, string? userId,
-        QueryObject query);
+    Task<Pagination> GetProductsByCategorySlugAsync(string categorySlug, string? userId, QueryObject query);
 
     Task<ProductDto> GetProductBySlugAsync(string productSlug);
     Task<List<StoreWithPriceDto>> GetProductStoresBySlugAsync(string productSlug);
