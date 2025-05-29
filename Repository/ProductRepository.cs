@@ -102,15 +102,11 @@ public class ProductRepository : IProductRepository
     {
         var offset = (page - 1) * limit;
 
-        var products = await _context.Database
-            .SqlQuery<Product>(
-                $@"SELECT *
-                   FROM ""Products""
-                   WHERE similarity(""Name"", {searchTerm}) > 0.3
-                   ORDER BY similarity(""Name"", {searchTerm}) DESC
-                   LIMIT {limit}
-                   OFFSET {offset}"
-            )
+        var products = await _context.Products
+            .Where(p => EF.Functions.ToTsVector("english", p.Name)
+                .Matches(searchTerm))
+            .Take(limit)
+            .Skip(offset)
             .ToListAsync();
 
         // var totalProducts = await _context.Database
