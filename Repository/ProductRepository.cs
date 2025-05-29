@@ -195,6 +195,8 @@ public class ProductRepository : IProductRepository
         QueryObject query
     )
     {
+        Console.WriteLine("-------------------------------------------------------");
+        Console.WriteLine("START");
         var subcategoryIds = await _context.Categories
             .Where(c => c.ParentCategoryId == categoryId)
             .Select(c => c.Id)
@@ -202,11 +204,10 @@ public class ProductRepository : IProductRepository
 
         var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
 
-        var productsWithStoreCounts = await _context.Products
-            .Where(p => categoryIdsToSearch.Contains(p.CategoryId))
+        var productsWithMetadata = await _context.Products
             .Where(p =>
-                _context.ProductStores
-                    .Where(ps => ps.ProductId == p.Id)
+                categoryIdsToSearch.Contains(p.CategoryId) &&
+                p.ProductStores
                     .Select(ps => ps.StoreLocation.StoreId)
                     .Distinct()
                     .Any()
@@ -221,8 +222,7 @@ public class ProductRepository : IProductRepository
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
 
-                NumberOfStores = _context.ProductStores
-                    .Where(ps => ps.ProductId == p.Id)
+                NumberOfStores = p.ProductStores
                     .Select(ps => ps.StoreLocation.StoreId)
                     .Distinct()
                     .Count(),
@@ -234,6 +234,9 @@ public class ProductRepository : IProductRepository
             .Take(query.Limit)
             .ToListAsync();
 
-        return productsWithStoreCounts;
+        Console.WriteLine("END");
+        Console.WriteLine("-----------------------------------");
+        
+        return productsWithMetadata;
     }
 }
