@@ -199,8 +199,8 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
 
         var categoryIdsToSearch = subcategoryIds.Any() ? subcategoryIds : [categoryId];
-
-        var productsWithMetadata = await _context.Products
+        
+        var baseProducts = await _context.Products
             .Where(p =>
                 categoryIdsToSearch.Contains(p.CategoryId) &&
                 p.ProductStores
@@ -208,6 +208,32 @@ public class ProductRepository : IProductRepository
                     .Distinct()
                     .Any()
             )
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.ImageUrl,
+                p.LowestPrice,
+                p.CreatedAt,
+                p.UpdatedAt,
+                p.CategoryId,
+                SavedProduct = userId != null && _context.SavedProducts
+                    .Any(sp => sp.ProductId == p.Id && sp.UserId == userId)
+            })
+            .ToListAsync();
+        
+        var productStoreCounts = await _context.ProductStores
+            .Where(ps => baseProducts.Select(p => p.Id).Contains(ps.ProductId))
+            .Select(ps => new
+            {
+                ps.ProductId,
+                ps.StoreLocation.StoreId
+            })
+            .Distinct()
+            .GroupBy(x => x.ProductId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count());
+
+        var productsWithMetadata = baseProducts
             .Select(p => new ProductWithMetadata
             {
                 Id = p.Id,
@@ -217,18 +243,13 @@ public class ProductRepository : IProductRepository
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
-
-                NumberOfStores = p.ProductStores
-                    .Select(ps => ps.StoreLocation.StoreId)
-                    .Distinct()
-                    .Count(),
-                SavedProduct = userId != null && _context.SavedProducts
-                    .Any(sp => sp.ProductId == p.Id && sp.UserId == userId)
+                NumberOfStores = productStoreCounts.TryGetValue(p.Id, out var count) ? count : 0,
+                SavedProduct = p.SavedProduct
             })
             .OrderByDescending(p => p.NumberOfStores)
             .Skip((query.Page - 1) * query.Limit)
             .Take(query.Limit)
-            .ToListAsync();
+            .ToList();
 
         Console.WriteLine("END");
         Console.WriteLine("-----------------------------------");
