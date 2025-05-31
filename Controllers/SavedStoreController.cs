@@ -7,11 +7,11 @@ namespace PravaCijena.Api.Controllers;
 
 [ApiController]
 [Route("/api/saved-stores")]
-public class SavedStoresController : ControllerBase
+public class SavedStoreController : ControllerBase
 {
     private readonly ISavedStoreService _savedStoreService;
 
-    public SavedStoresController(ISavedStoreService savedStoreService)
+    public SavedStoreController(ISavedStoreService savedStoreService)
     {
         _savedStoreService = savedStoreService;
     }
@@ -59,7 +59,7 @@ public class SavedStoresController : ControllerBase
         {
             return NotFound();
         }
-        
+
         return NoContent();
     }
 }
