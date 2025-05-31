@@ -29,54 +29,55 @@ public class UserService : IUserService
         _env = env;
     }
 
-    public async Task<UserInfoDto?> Register(RegisterDto registerDto)
+    public async Task<Result<UserInfoDto>> Register(RegisterDto registerDto)
     {
         var user = new User { UserName = registerDto.Email, Email = registerDto.Email };
 
         var createUser = await _userManager.CreateAsync(user, registerDto.Password);
         if (createUser.Succeeded == false)
         {
-            return null;
+            var error = string.Join("\n", createUser.Errors.Select(e => e.Description));
+            return Result<UserInfoDto>.Fail(error);
         }
 
         var roleResult = await _userManager.AddToRoleAsync(user, "User");
         if (roleResult.Succeeded == false)
         {
-            return null;
+            return Result<UserInfoDto>.Fail("Failed to assign role.");
         }
 
         var token = _tokenService.CreateToken(user);
         SetJwtCookie(token);
 
-        return new UserInfoDto
+        return Result<UserInfoDto>.Success(new UserInfoDto
         {
             Username = user.UserName,
             Email = user.Email
-        };
+        });
     }
 
-    public async Task<UserInfoDto?> Login(LoginDto loginDto)
+    public async Task<Result<UserInfoDto>> Login(LoginDto loginDto)
     {
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
         if (user == null)
         {
-            return null;
+            return Result<UserInfoDto>.Fail("Email ili lozinka je netočna.");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
         if (result.Succeeded == false)
         {
-            return null;
+            return Result<UserInfoDto>.Fail("Email ili lozinka je netočna.");
         }
 
         var token = _tokenService.CreateToken(user);
         SetJwtCookie(token);
 
-        return new UserInfoDto
+        return Result<UserInfoDto>.Success(new UserInfoDto
         {
             Username = user.UserName,
             Email = user.Email
-        };
+        });
     }
 
     private void SetJwtCookie(string token)
@@ -92,7 +93,7 @@ public class UserService : IUserService
             Expires = DateTime.UtcNow.AddDays(7),
             Secure = true,
             SameSite = SameSiteMode.None,
-            Path = "/",
+            Path = "/"
         };
 
         if (_env.IsProduction())

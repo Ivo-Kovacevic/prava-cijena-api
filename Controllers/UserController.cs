@@ -10,8 +10,8 @@ namespace PravaCijena.Api.Controllers;
 [Route("/api/users")]
 public class UserController : ControllerBase
 {
-    private readonly IUserService _userService;
     private readonly IHostEnvironment _env;
+    private readonly IUserService _userService;
 
     public UserController(IUserService userService, IHostEnvironment env)
     {
@@ -22,25 +22,27 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto registerDto)
     {
-        var user = await _userService.Register(registerDto);
-        if (user == null)
+        var result = await _userService.Register(registerDto);
+
+        if (!result.IsSuccess)
         {
-            return BadRequest();
+            return BadRequest(new { error = result.Error });
         }
 
-        return Ok(user);
+        return Ok(result.Data);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto loginDto)
     {
-        var user = await _userService.Login(loginDto);
-        if (user == null)
+        var result = await _userService.Login(loginDto);
+
+        if (!result.IsSuccess)
         {
-            return Unauthorized();
+            return BadRequest(new { error = result.Error });
         }
 
-        return Ok(user);
+        return Ok(result.Data);
     }
 
     [Authorize]
@@ -61,18 +63,17 @@ public class UserController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        foreach (var c in Request.Cookies) Console.WriteLine($"{c.Key} = {c.Value}");
+
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = _env.IsProduction(), // Inject IWebHostEnvironment
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Secure = true,
             SameSite = SameSiteMode.None,
-            Path = "/"
+            Path = "/",
+            Domain = _env.IsProduction() ? ".pravacijena.eu" : null
         };
-
-        if (_env.IsProduction())
-        {
-            cookieOptions.Domain = ".pravacijena.eu";
-        }
 
         Response.Cookies.Delete("jwtToken", cookieOptions);
 
