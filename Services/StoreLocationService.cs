@@ -19,4 +19,11 @@ public class StoreLocationService : IStoreLocationService
 
         return storeLocations.Select(sl => sl.ToStoreLocationDto()).ToList();
     }
+
+    public async Task<List<StoreLocationDto>> GetStorelocationsByStoreId(Guid storeId)
+    {
+        var storeLocations = await _storeLocationRepository.GetByStoreIdAsync(storeId);
+
+        return storeLocations.Select(sl => sl.ToStoreLocationDto()).ToList();
+    }
 }

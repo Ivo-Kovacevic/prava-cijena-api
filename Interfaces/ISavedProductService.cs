@@ -6,6 +6,6 @@ namespace PravaCijena.Api.Interfaces;
 public interface ISavedProductService
 {
     public Task<List<ProductWithMetadata>> GetAll(string userId);
-    public Task<SavedProduct> Store(string userId, Guid productId);
-    public Task Destroy(string userId, Guid productId);
+    public Task<Product> Store(string userId, Guid productId);
+    public Task<SavedProduct?> Destroy(string userId, Guid productId);
 }

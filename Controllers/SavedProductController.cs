@@ -54,7 +54,12 @@ public class SavedProductController : ControllerBase
             return Unauthorized();
         }
 
-        await _savedProductService.Destroy(userId, productId);
-        return Ok();
+        var existingSavedProduct = await _savedProductService.Destroy(userId, productId);
+        if (existingSavedProduct == null)
+        {
+            return NotFound();
+        }
+        
+        return NoContent();
     }
 }

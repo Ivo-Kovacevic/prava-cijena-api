@@ -21,7 +21,7 @@ public class SavedProductService : ISavedProductService
         return savedProducts;
     }
 
-    public async Task<SavedProduct> Store(string userId, Guid productId)
+    public async Task<Product> Store(string userId, Guid productId)
     {
         var savedProduct = await _savedProductRepository.Create(new SavedProduct
         {
@@ -32,14 +32,15 @@ public class SavedProductService : ISavedProductService
         return savedProduct;
     }
 
-    public async Task Destroy(string userId, Guid productId)
+    public async Task<SavedProduct?> Destroy(string userId, Guid productId)
     {
         var existingSavedProduct = await _savedProductRepository.Get(userId, productId);
         if (existingSavedProduct == null)
         {
-            throw new NotFoundException($"SavedProduct with id '{existingSavedProduct}' not found.");
+            return null;
         }
 
         await _savedProductRepository.Delete(existingSavedProduct);
+        return existingSavedProduct;
     }
 }

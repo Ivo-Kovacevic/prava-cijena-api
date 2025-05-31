@@ -48,11 +48,24 @@ public class SavedProductRepository : ISavedProductRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<SavedProduct> Create(SavedProduct savedProduct)
+    public async Task<Product> Create(SavedProduct savedProduct)
     {
         _context.SavedProducts.Add(savedProduct);
         await _context.SaveChangesAsync();
-        return savedProduct;
+        
+        return await _context.SavedProducts
+            .Where(sp => sp.ProductId == savedProduct.ProductId)
+            .Select(sp => new Product
+            {
+                Id = sp.Product.Id,
+                Name = sp.Product.Name,
+                Barcode = sp.Product.Barcode,
+                CategoryId = sp.Product.CategoryId,
+                ImageUrl = sp.Product.ImageUrl,
+                Brand = sp.Product.Brand,
+                LowestPrice = sp.Product.LowestPrice
+            })
+            .FirstAsync();
     }
 
     public async Task Delete(SavedProduct savedProduct)

@@ -25,6 +25,13 @@ public class StoreLocationRepository : IStoreLocationRepository
             .ToListAsync();
     }
 
+    public async Task<List<StoreLocation>> GetByStoreIdAsync(Guid storeId)
+    {
+        return await _context.StoreLocations
+            .Where(sl => sl.Store.Id == storeId)
+            .ToListAsync();
+    }
+
     public async Task<StoreLocation?> GetByCityAndAddressAsync(string city, string address)
     {
         return await _context.StoreLocations

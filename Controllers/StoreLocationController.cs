@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Interfaces;
-
 
 namespace PravaCijena.Api.Controllers;
 
@@ -21,6 +18,13 @@ public class StoreLocationController : ControllerBase
     public async Task<IActionResult> ShowBySlug(string productSlug, string storeSlug)
     {
         var storelocationsDto = await _storeLocationService.GetStorelocationsBySlug(productSlug, storeSlug);
+        return Ok(storelocationsDto);
+    }
+
+    [HttpGet("{storeId}")]
+    public async Task<IActionResult> ShowBySlug(Guid storeId)
+    {
+        var storelocationsDto = await _storeLocationService.GetStorelocationsByStoreId(storeId);
         return Ok(storelocationsDto);
     }
 }
