@@ -50,7 +50,8 @@ public class CartRepository : ICartRepository
                             Id = lp.Product.Id,
                             Name = lp.Product.Name,
                             Barcode = lp.Product.Barcode,
-                            CategoryId = lp.Product.CategoryId
+                            CategoryId = lp.Product.CategoryId,
+                            ImageUrl = lp.Product.ImageUrl
                         }
                     }).ToList()
             })

@@ -36,7 +36,7 @@ public class UserService : IUserService
         var createUser = await _userManager.CreateAsync(user, registerDto.Password);
         if (createUser.Succeeded == false)
         {
-            var error = string.Join("\n", createUser.Errors.Select(e => e.Description));
+            var error = string.Join(", ", createUser.Errors.Select(e => e.Description));
             return Result<UserInfoDto>.Fail(error);
         }
 
