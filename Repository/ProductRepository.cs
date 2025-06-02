@@ -102,22 +102,39 @@ public class ProductRepository : IProductRepository
     {
         var offset = (page - 1) * limit;
 
-        var products = await _context.Products
-            .Where(p => EF.Functions.ToTsVector("simple", p.Name)
-                .Matches(searchTerm))
-            .Take(limit)
-            .Skip(offset)
-            .ToListAsync();
+        var products = await _context.Database
+            .SqlQuery<Product>(
+                $@"SELECT *
+                   FROM ""Products""
+                   WHERE similarity(""Name"", {searchTerm}) > 0.3
+                   ORDER BY similarity(""Name"", {searchTerm}) DESC
+                   LIMIT {limit}
+                   OFFSET {offset}"
+            ).ToListAsync();
 
-        // var totalProducts = await _context.Database
-        //     .SqlQuery<int>(
-        //         $@"SELECT COUNT(*) AS ""Value""
-        //            FROM ""Products""
-        //            WHERE similarity(""Name"", {searchTerm}) > 0.3"
-        //     )
-        //     .FirstOrDefaultAsync();
-        //
-        // var totalPages = (int)Math.Ceiling(totalProducts / (double)limit);
+        return products;
+    }
+
+    public async Task<List<ProductWithMetadata>> SearchPageProducts(string searchTerm, int page, int limit)
+    {
+        var offset = (page - 1) * limit;
+
+        var products = await _context.Database
+            .SqlQuery<ProductWithMetadata>(
+                $@"SELECT
+                   p.*,
+                   (
+                       SELECT COUNT(DISTINCT sl.""StoreId"")
+                       FROM ""ProductStores"" ps
+                       JOIN ""StoreLocations"" sl ON ps.""StoreLocationId"" = sl.""Id""
+                       WHERE ps.""ProductId"" = p.""Id""
+                   ) AS ""NumberOfStores""
+                   FROM ""Products"" p
+                   WHERE similarity(p.""Name"", {searchTerm}) > 0.3
+                   ORDER BY similarity(p.""Name"", {searchTerm}) DESC
+                   LIMIT {limit}
+                   OFFSET {offset}"
+            ).ToListAsync();
 
         return products;
     }
@@ -246,7 +263,7 @@ public class ProductRepository : IProductRepository
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
                 NumberOfStores = productStoreCounts.TryGetValue(p.Id, out var count) ? count : 0,
-                SavedProduct = p.SavedProduct
+                // SavedProduct = p.SavedProduct
             })
             .OrderByDescending(p => p.NumberOfStores)
             .ThenBy(p => p.LowestPrice)

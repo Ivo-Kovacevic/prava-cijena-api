@@ -12,7 +12,6 @@ public class ProductService : IProductService
 {
     private readonly ICategoryRepository _categoryRepo;
     private readonly IProductRepository _productRepo;
-    private readonly IProductStoreRepository _productStoreRepo;
 
     public ProductService(ICategoryRepository categoryRepository, IProductRepository productRepository)
     {
@@ -56,11 +55,11 @@ public class ProductService : IProductService
         return stores;
     }
 
-    public async Task<IEnumerable<ProductDto>> SearchProduct(string productName, int page, int limit)
+    public async Task<IEnumerable<ProductWithMetadata>> SearchProduct(string productName, int page, int limit)
     {
-        var products = await _productRepo.Search(productName, page, limit);
+        var products = await _productRepo.SearchPageProducts(productName, page, limit);
 
-        return products.Select(p => p.ToProductDto());
+        return products;
     }
 
     /*

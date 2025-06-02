@@ -1,3 +1,4 @@
+using PravaCijena.Api.Dto.Product;
 using PravaCijena.Api.Dto.Store;
 using PravaCijena.Api.Helpers;
 using PravaCijena.Api.Models;
@@ -16,6 +17,7 @@ public interface IProductRepository
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);
     Task<List<Product>> GetProductsByBarcodesBatchAsync(IEnumerable<string> barcodes);
     Task<List<Product>> Search(string searchTerm, int page, int limit);
+    Task<List<ProductWithMetadata>> SearchPageProducts(string searchTerm, int page, int limit);
     Task<Product?> GetProductByIdAsync(Guid productId);
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product existingProduct);

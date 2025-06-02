@@ -11,7 +11,7 @@ public interface IProductService
 
     Task<ProductDto> GetProductBySlugAsync(string productSlug);
     Task<List<StoreWithPriceDto>> GetProductStoresBySlugAsync(string productSlug);
-    Task<IEnumerable<ProductDto>> SearchProduct(string searchTerm, int page, int limit);
+    Task<IEnumerable<ProductWithMetadata>> SearchProduct(string searchTerm, int page, int limit);
     Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
     Task<ProductDto> GetProductByIdAsync(Guid categoryId, Guid productId);
     Task<ProductDto> CreateProductAsync(Guid categoryId, CreateProductRequestDto productRequestDto);

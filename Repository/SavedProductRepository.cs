@@ -34,7 +34,7 @@ public class SavedProductRepository : ISavedProductRepository
                     .Select(ps => ps.StoreLocation.StoreId)
                     .Distinct()
                     .Count(),
-                SavedProduct = true
+                // SavedProduct = true
             })
             .ToListAsync();
 
