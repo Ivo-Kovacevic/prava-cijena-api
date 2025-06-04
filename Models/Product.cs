@@ -17,5 +17,6 @@ public class Product : BaseNamedEntity
     [NotMapped] public Category Category { get; set; }
     [NotMapped] public List<Cart> CartItems { get; set; } = [];
     [NotMapped] public List<SavedProduct> SavedProducts { get; set; } = [];
+    [NotMapped] public List<ProductStoreLink> ProductStoreLinks { get; set; } = [];
     [NotMapped] public double Price { get; set; }
 }

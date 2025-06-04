@@ -25,7 +25,7 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<StoreWithPriceDto>> GetProductStoresBySlugsAsync(string productSlug)
+    public async Task<List<StoreWithPageInfoDto>> GetProductStoresBySlugsAsync(string productSlug)
     {
         var productId = await _context.Products
             .Where(p => p.Slug == productSlug)
@@ -34,13 +34,17 @@ public class ProductRepository : IProductRepository
 
         if (productId == Guid.Empty)
         {
-            return new List<StoreWithPriceDto>();
+            return new List<StoreWithPageInfoDto>();
         }
 
         var grouped = await _context.ProductStores
             .Where(ps => ps.ProductId == productId)
             .Include(ps => ps.StoreLocation)
             .ThenInclude(sl => sl.Store)
+            .ToListAsync();
+        
+        var productStoreLinks = await _context.ProductStoreLinks
+            .Where(link => link.ProductId == productId)
             .ToListAsync();
 
         var result = grouped
@@ -50,13 +54,18 @@ public class ProductRepository : IProductRepository
                 var cheapest = g.OrderBy(x => x.LatestPrice).First();
                 var store = cheapest.StoreLocation.Store;
 
-                return new StoreWithPriceDto
+                return new StoreWithPageInfoDto
                 {
                     Id = store.Id,
                     Name = store.Name,
                     StoreUrl = store.StoreUrl,
                     ImageUrl = store.ImageUrl,
                     Price = cheapest.LatestPrice,
+                    ProductUrl = productStoreLinks
+                        .FirstOrDefault(link =>
+                            link.StoreId == store.Id &&
+                            link.ProductId == productId
+                        )?.ProductLink,
                     CreatedAt = cheapest.CreatedAt,
                     UpdatedAt = cheapest.UpdatedAt
                 };

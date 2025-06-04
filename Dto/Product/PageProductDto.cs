@@ -4,5 +4,5 @@ namespace PravaCijena.Api.Dto.Product;
 
 public class PageProductDto : ProductDto
 {
-    public List<StoreWithPriceDto> Stores { get; set; }
+    public List<StoreWithPageInfoDto> Stores { get; set; }
 }

@@ -36,8 +36,8 @@ public class StoreSeedingData
                 CsvBarcodeColumn = 10,
 
                 BaseCategoryUrl = "https://www.konzum.hr/web/t/kategorije",
-                ProductListXPath =
-                    "//div[@class='product-list product-list--md-5 js-product-layout-container product-list--grid']//article",
+                ProductListXPath = "//div[contains(@class, 'product-list')]/article",
+
                 PageQuery = "page",
                 LimitQuery = "per_page"
             },

@@ -30,6 +30,7 @@ public static class ServiceCollection
 
         services.AddScoped<IProductStoreService, ProductStoreService>();
         services.AddScoped<IProductStoreRepository, ProductStoreRepository>();
+        services.AddScoped<IProductStoreLinkRepository, ProductStoreLinkRepository>();
 
         services.AddScoped<IPriceService, PriceService>();
         services.AddScoped<IPriceRepository, PriceRepository>();

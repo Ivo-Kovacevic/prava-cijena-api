@@ -11,7 +11,7 @@ public interface IProductRepository
 
     Task<Pagination> GetPageProductsByCategoryIdAsync(Guid categoryId, string? userId, QueryObject query);
     Task<Product?> GetProductBySlugAsync(string productSlug);
-    Task<List<StoreWithPriceDto>> GetProductStoresBySlugsAsync(string productSlug);
+    Task<List<StoreWithPageInfoDto>> GetProductStoresBySlugsAsync(string productSlug);
     Task<List<string>> GetAllSlugsAsync();
     Task<List<string>> GetAllBarcodesAsync();
     Task<Product?> GetProductByBarcodeAsync(string productBarcode);

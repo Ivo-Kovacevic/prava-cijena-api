@@ -10,7 +10,7 @@ public interface IProductService
     Task<Pagination> GetProductsByCategorySlugAsync(string categorySlug, string? userId, QueryObject query);
 
     Task<ProductDto> GetProductBySlugAsync(string productSlug);
-    Task<List<StoreWithPriceDto>> GetProductStoresBySlugAsync(string productSlug);
+    Task<List<StoreWithPageInfoDto>> GetProductStoresBySlugAsync(string productSlug);
     Task<IEnumerable<ProductWithMetadata>> SearchProduct(string searchTerm, int page, int limit);
     Task<IEnumerable<ProductDto>> GetProductsByCategoryIdAsync(Guid categoryId, QueryObject query);
     Task<ProductDto> GetProductByIdAsync(Guid categoryId, Guid productId);

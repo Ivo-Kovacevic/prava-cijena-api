@@ -25,6 +25,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Cart> Cart { get; set; }
     public DbSet<SavedProduct> SavedProducts { get; set; }
     public DbSet<SavedStore> SavedStores { get; set; }
+    public DbSet<ProductStoreLink> ProductStoreLinks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -45,6 +46,7 @@ public class AppDbContext : IdentityDbContext<User>
         builder.ApplyConfiguration(new CartConfiguration());
         builder.ApplyConfiguration(new SavedProductConfiguration());
         builder.ApplyConfiguration(new SavedStoreConfiguration());
+        builder.ApplyConfiguration(new ProductStoreLinkConfiguration());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

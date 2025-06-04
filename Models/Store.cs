@@ -33,4 +33,5 @@ public class Store : BaseNamedEntity
     public string? LimitQuery { get; set; }
     public List<StoreCategory> Categories { get; set; }
     public List<StoreLocation> StoreLocations { get; set; }
+    public List<ProductStoreLink> StoreProductLinks { get; set; }
 }

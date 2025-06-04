@@ -25,17 +25,17 @@ public class AutomationController : ControllerBase
         _structuredDataService = structuredDataService;
     }
 
-    // [HttpPost("compare")]
-    // public async Task<IActionResult> Compare(string existingProduct, string newProduct)
-    // {
-    //     var result = await _geminiService.CompareProductsAsync();
-    //     return Ok(result);
-    // }
-
-    [HttpPost("scrape")]
+    [HttpPost("scrape-images")]
     public async Task<IActionResult> Scrape()
     {
-        await _scrapingService.RunScraper();
+        await _scrapingService.RunImageScraper();
+        return Ok();
+    }
+
+    [HttpPost("scrape-links")]
+    public async Task<IActionResult> ScrapeLinks()
+    {
+        await _scrapingService.RunLinkScraper();
         return Ok();
     }
 

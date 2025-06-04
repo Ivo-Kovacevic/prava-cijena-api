@@ -48,7 +48,7 @@ public class ProductService : IProductService
         return product.ToProductDto();
     }
 
-    public async Task<List<StoreWithPriceDto>> GetProductStoresBySlugAsync(string productSlug)
+    public async Task<List<StoreWithPageInfoDto>> GetProductStoresBySlugAsync(string productSlug)
     {
         var stores = await _productRepo.GetProductStoresBySlugsAsync(productSlug);
 
