@@ -29,6 +29,7 @@ public class StoreLocationRepository : IStoreLocationRepository
     {
         return await _context.StoreLocations
             .Where(sl => sl.Store.Id == storeId)
+            .OrderBy(sl => sl.City)
             .ToListAsync();
     }
 

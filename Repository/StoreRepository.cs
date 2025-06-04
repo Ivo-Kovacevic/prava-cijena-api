@@ -26,7 +26,7 @@ public class StoreRepository : IStoreRepository
 
     public async Task<IEnumerable<Store>> GetAllAsync()
     {
-        return await _context.Stores.ToListAsync();
+        return await _context.Stores.OrderBy(s => s.Name).ToListAsync();
     }
 
     public async Task<List<StoreWithMetadataDto>> GetAllWithMetadata()
