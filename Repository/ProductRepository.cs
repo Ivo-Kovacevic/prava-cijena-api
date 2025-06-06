@@ -115,8 +115,8 @@ public class ProductRepository : IProductRepository
             .SqlQuery<Product>(
                 $@"SELECT *
                    FROM ""Products""
-                   WHERE similarity(""Name"", {searchTerm}) > 0.3
-                   ORDER BY similarity(""Name"", {searchTerm}) DESC
+                   WHERE GREATEST(similarity(""Name"", @searchTerm), similarity(""Slug"", @searchTerm)) > 0.3
+                   ORDER BY GREATEST(similarity(""Name"", @searchTerm), similarity(""Slug"", @searchTerm)) DESC
                    LIMIT {limit}
                    OFFSET {offset}"
             ).ToListAsync();
@@ -139,8 +139,8 @@ public class ProductRepository : IProductRepository
                        WHERE ps.""ProductId"" = p.""Id""
                    ) AS ""NumberOfStores""
                    FROM ""Products"" p
-                   WHERE similarity(p.""Name"", {searchTerm}) > 0.3
-                   ORDER BY similarity(p.""Name"", {searchTerm}) DESC
+                   WHERE similarity(p.""Slug"", {searchTerm}) > 0.1
+                   ORDER BY similarity(p.""Slug"", {searchTerm}) DESC
                    LIMIT {limit}
                    OFFSET {offset}"
             ).ToListAsync();
