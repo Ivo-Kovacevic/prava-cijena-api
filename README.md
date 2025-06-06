@@ -27,7 +27,7 @@ this API and display data.
 - [Price Endpoints](#price-endpoints)
 - [Value Endpoints](#value-endpoints)
 
-### Slug endpoints
+### API slug endpoints
 
 - [Slug Endpoints](#slug-endpoints)
 - [Category Slug Endpoints](#category-slug-endpoints)
