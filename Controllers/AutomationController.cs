@@ -25,17 +25,10 @@ public class AutomationController : ControllerBase
         _structuredDataService = structuredDataService;
     }
 
-    [HttpPost("scrape-images")]
+    [HttpPost("scrape")]
     public async Task<IActionResult> Scrape()
     {
-        await _scrapingService.RunImageScraper();
-        return Ok();
-    }
-
-    [HttpPost("scrape-links")]
-    public async Task<IActionResult> ScrapeLinks()
-    {
-        await _scrapingService.RunLinkScraper();
+        await _scrapingService.RunScraper();
         return Ok();
     }
 

@@ -46,7 +46,8 @@ public class ScrapingService : IScrapingService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task RunImageScraper()
+
+    public async Task RunScraper()
     {
         var cloudinaryUrl = _config["ExternalServices:Cloudinary:CloudinaryUrl"];
         var cloudinary = new Cloudinary(cloudinaryUrl);
@@ -54,6 +55,8 @@ public class ScrapingService : IScrapingService
 
         var storesWithCategories = await _storeRepository.GetAllWithMetadata();
         var random = new Random();
+        var semaphore = new SemaphoreSlim(20);
+
         foreach (var store in storesWithCategories)
         {
             if (store.Slug != "konzum" || store.ProductListXPath == null)
@@ -84,116 +87,14 @@ public class ScrapingService : IScrapingService
 
                         var productNodes =
                             htmlDocument.DocumentNode.SelectNodes("//div[contains(@class, 'product-list')]/article");
-                        if (productNodes.Count == 0)
-                        {
-                            hasMoreProducts = false;
-                            continue;
-                        }
-
-                        foreach (var productNode in productNodes)
-                        {
-                            var productName = WebUtility.HtmlDecode(
-                                productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
-                            );
-                            var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
-
-                            var similarProducts = await _productRepository.Search(productName, 1, 10);
-                            var comparedProducts = await CompareProducts(
-                                productName,
-                                similarProducts.Select(p => new ExistingProduct
-                                {
-                                    ExistingProductId = p.Id,
-                                    ExistingProductName = p.Name
-                                }).ToList()
-                            );
-
-                            if (comparedProducts.ExistingProducts.Any(p => p.IsSameProduct))
-                            {
-                                var uploadParams = new ImageUploadParams
-                                {
-                                    File = new FileDescription(imageUrl),
-                                    PublicId = SlugHelper.GenerateSlug(productName),
-                                    UseFilename = true,
-                                    UniqueFilename = true,
-                                    Overwrite = false,
-                                    Folder = "prava-cijena/proizvodi"
-                                };
-                                var uploadResult = await cloudinary.UploadAsync(uploadParams);
-
-                                var updatedUrl = Regex.Replace(uploadResult.SecureUrl.ToString(), @"/v\d+/",
-                                    "/e_background_removal/");
-                                updatedUrl = Regex.Replace(updatedUrl, @"\.\w+$", ".webp");
-                                var productsToUpdate = new List<Product>();
-
-                                foreach (var existingProduct in comparedProducts.ExistingProducts)
-                                    if (existingProduct.IsSameProduct)
-                                    {
-                                        var product = similarProducts.FirstOrDefault(p =>
-                                            p.Id == existingProduct.ExistingProductId);
-                                        if (product != null)
-                                        {
-                                            product.ImageUrl = updatedUrl;
-                                            productsToUpdate.Add(product);
-                                        }
-                                    }
-
-                                await _productRepository.BulkUpdateAsync(productsToUpdate);
-                            }
-                        }
-
-                        page++;
-
-                        if (productNodes.Count < 100)
-                        {
-                            hasMoreProducts = false;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to scrape URL: {urlInfo.Url}, Error: {ex.Message}");
-                }
-        }
-    }
-
-    public async Task RunLinkScraper()
-    {
-        var storesWithCategories = await _storeRepository.GetAllWithMetadata();
-        var random = new Random();
-        var semaphore = new SemaphoreSlim(25);
-
-        foreach (var store in storesWithCategories)
-        {
-            if (store.Slug != "tommy" || store.ProductListXPath == null)
-            {
-                continue;
-            }
-
-            var urlsInfo = GetCategoryUrls(store.BaseCategoryUrl, store.Categories);
-
-            foreach (var urlInfo in urlsInfo)
-                try
-                {
-                    var page = 1;
-                    const int perPage = 100;
-                    var hasMoreProducts = true;
-
-                    while (hasMoreProducts)
-                    {
-                        var pageUrl = $"{urlInfo.Url}?{store.PageQuery}={page}&{store.LimitQuery}={perPage}";
-                        Console.WriteLine($"Delaying request to \"{pageUrl}\" by few seconds...");
-                        await Task.Delay(random.Next(2000, 4000));
-
-                        var html = await _httpClient.GetStringAsync(pageUrl);
-                        var htmlDocument = new HtmlDocument();
-                        htmlDocument.LoadHtml(html);
-
-                        var productNodes = htmlDocument.DocumentNode.SelectNodes(store.ProductListXPath);
                         if (productNodes == null || productNodes.Count == 0)
                         {
                             hasMoreProducts = false;
                             continue;
                         }
+
+                        var productsToUpdate = new ConcurrentBag<Product>();
+                        var productsStoreLinksToCreate = new ConcurrentBag<ProductStoreLink>();
 
                         var tasks = productNodes.Select(async productNode =>
                         {
@@ -204,12 +105,11 @@ public class ScrapingService : IScrapingService
                                 var productStoreLinkRepo =
                                     scope.ServiceProvider.GetRequiredService<IProductStoreLinkRepository>();
                                 var productRepo = scope.ServiceProvider.GetRequiredService<IProductRepository>();
-
                                 var productName = WebUtility.HtmlDecode(
-                                    productNode.SelectSingleNode(
-                                            ".//h3[@class='mb-2 text-sm pr-2 font-normal text-gray-900 line-clamp-2 hover:underline cursor-pointer']/a").InnerText.Trim()
+                                    productNode.SelectNodes(".//a[@class='link-to-product']")[1].InnerText.Trim()
                                 );
                                 var productUrl = productNode.SelectSingleNode(".//a").GetAttributeValue("href", "");
+                                var imageUrl = productNode.SelectSingleNode(".//img").GetAttributeValue("src", "");
 
                                 var similarProducts = await productRepo.Search(productName, 1, 10);
                                 var comparedProducts = await CompareProducts(
@@ -217,7 +117,7 @@ public class ScrapingService : IScrapingService
                                     similarProducts.Select(p => new ExistingProduct
                                     {
                                         ExistingProductId = p.Id,
-                                        ExistingProductName = p.Name
+                                        ExistingProductName = p.Brand != null ? $"{p.Brand} {p.Name}" : p.Name
                                     }).ToList()
                                 );
 
@@ -230,18 +130,43 @@ public class ScrapingService : IScrapingService
                                     return;
                                 }
 
+                                var product =
+                                    similarProducts.FirstOrDefault(p => p.Id == sameProduct.ExistingProductId);
+                                if (product == null || product.ImageUrl != null)
+                                {
+                                    return;
+                                }
+
+                                // Upload image to cloudinary
+                                var uploadParams = new ImageUploadParams
+                                {
+                                    File = new FileDescription(imageUrl),
+                                    PublicId = SlugHelper.GenerateSlug(productName),
+                                    UseFilename = true,
+                                    UniqueFilename = true,
+                                    Overwrite = false,
+                                    Folder = "prava-cijena/proizvodi"
+                                };
+                                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                                var updatedImageUrl = Regex.Replace(uploadResult.SecureUrl.ToString(), @"/v\d+/",
+                                    "/e_background_removal/");
+                                updatedImageUrl = Regex.Replace(updatedImageUrl, @"\.\w+$", ".webp");
+
+                                product.ImageUrl = updatedImageUrl;
+                                productsToUpdate.Add(product);
+
+                                // Create product store link
                                 var existingProductStoreLink =
                                     await productStoreLinkRepo.Get(store.Id, sameProduct.ExistingProductId);
-
                                 if (existingProductStoreLink == null)
                                 {
-                                    await productStoreLinkRepo.Create(new ProductStoreLink
+                                    productsStoreLinksToCreate.Add(new ProductStoreLink
                                     {
                                         StoreId = store.Id,
                                         ProductId = sameProduct.ExistingProductId,
                                         ProductLink = $"{store.StoreUrl}{productUrl}"
                                     });
-                                    Console.WriteLine(productUrl);
                                 }
                             }
                             catch (Exception ex)
@@ -256,7 +181,11 @@ public class ScrapingService : IScrapingService
 
                         await Task.WhenAll(tasks);
 
+                        await _productRepository.BulkUpdateAsync(productsToUpdate.ToList());
+                        await _productStoreLinkRepository.BulkCreateAsync(productsStoreLinksToCreate.ToList());
+
                         page++;
+
                         if (productNodes.Count < 100)
                         {
                             hasMoreProducts = false;
@@ -265,7 +194,7 @@ public class ScrapingService : IScrapingService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to scrape URL: {urlInfo.Url}, Error: {ex.Message}");
+                    Console.WriteLine($"Failed to scrape URL: {urlInfo}, Error: {ex.Message}");
                 }
         }
     }
@@ -300,8 +229,8 @@ public class ScrapingService : IScrapingService
                     new Part
                     {
                         Text =
-                            $@"You will receive name of newly found product from Konzum web shop that I have an link for, and a list of products in my database that don't have links for.
-                               Your task is to compare the names and decide if any of the existing products is the same product the as the new one.
+                            $@"You will receive name of newly found product from Konzum web shop that I have an link and image for, and a list of products in my database that don't have links or images for.
+                               Your task is to compare the names and decide if any of the existing products is the same product as the new one.
                                Put field 'isSameProduct' to equal true ONLY FOR ONE product for which you know is the same, that means that brand, type and other data must be same.
                                If no same products are found do not put true for any.
 

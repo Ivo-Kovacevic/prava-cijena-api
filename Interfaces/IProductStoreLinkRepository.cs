@@ -6,4 +6,5 @@ public interface IProductStoreLinkRepository
 {
     public Task<ProductStoreLink?> Get(Guid storeId, Guid productId);
     public Task<ProductStoreLink> Create(ProductStoreLink productStoreLink);
+    public Task BulkCreateAsync(List<ProductStoreLink> productStoreLinks);
 }

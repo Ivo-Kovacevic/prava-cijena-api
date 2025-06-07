@@ -42,7 +42,7 @@ public class ProductRepository : IProductRepository
             .Include(ps => ps.StoreLocation)
             .ThenInclude(sl => sl.Store)
             .ToListAsync();
-        
+
         var productStoreLinks = await _context.ProductStoreLinks
             .Where(link => link.ProductId == productId)
             .ToListAsync();
@@ -115,8 +115,8 @@ public class ProductRepository : IProductRepository
             .SqlQuery<Product>(
                 $@"SELECT *
                    FROM ""Products""
-                   WHERE GREATEST(similarity(""Name"", @searchTerm), similarity(""Slug"", @searchTerm)) > 0.3
-                   ORDER BY GREATEST(similarity(""Name"", @searchTerm), similarity(""Slug"", @searchTerm)) DESC
+                   WHERE similarity(""Name"", {searchTerm}) > 0.1
+                   ORDER BY similarity(""Name"", {searchTerm}) DESC
                    LIMIT {limit}
                    OFFSET {offset}"
             ).ToListAsync();
@@ -271,7 +271,7 @@ public class ProductRepository : IProductRepository
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
-                NumberOfStores = productStoreCounts.TryGetValue(p.Id, out var count) ? count : 0,
+                NumberOfStores = productStoreCounts.TryGetValue(p.Id, out var count) ? count : 0
                 // SavedProduct = p.SavedProduct
             })
             .OrderByDescending(p => p.NumberOfStores)

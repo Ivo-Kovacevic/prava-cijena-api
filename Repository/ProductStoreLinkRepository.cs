@@ -1,3 +1,4 @@
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using PravaCijena.Api.Database;
 using PravaCijena.Api.Interfaces;
@@ -26,5 +27,11 @@ public class ProductStoreLinkRepository : IProductStoreLinkRepository
         _context.ProductStoreLinks.Add(productStoreLink);
         await _context.SaveChangesAsync();
         return productStoreLink;
+    }
+
+    public async Task BulkCreateAsync(List<ProductStoreLink> productStoreLinks)
+    {
+        await _context.BulkInsertAsync(productStoreLinks,
+            new BulkConfig { PropertiesToExclude = new List<string> { nameof(ProductStoreLink.Id) } });
     }
 }
