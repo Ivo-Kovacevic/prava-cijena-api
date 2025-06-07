@@ -1,22 +1,21 @@
 # PravaCijena API Documentation
 
-## Description
+## 🧾 Overview
 
-API for retrieving, organizing and collecting products and their prices.
+This API is used to collect, organize, and serve product price data from grocery stores.
 
-API consists of RESTful endpoints for internal use and slug based endpoints for public frontend because of readability.
-There are two automation endpoints that run scraping and analyze catalogues from store websites in database.
+- It exposes RESTful endpoints for internal use and slug-based endpoints for frontend readability.
+- Two automation endpoints are included — one for scraping store websites, and another for analyzing catalogues.
+- The API is intended to work with frontends
+  like [PravaCijena Frontend](https://github.com/Ivo-Kovacevic/prava-cijena-api) to display the collected data.
 
-Frontend like [PravaCijena Frontend](https://github.com/Ivo-Kovacevic/prava-cijena-api) can be used to communicate with
-this API and display data.
+## 🧭 Table of Contents
 
-## Table of Contents
-
-### API Overview
+### 📚 API Overview
 
 - [API Endpoints](#api-endpoints)
 
-### RESTful API Endpoints
+### 🔗 RESTful API Endpoints
 
 - [RESTful API Endpoints (ID-based)](#restful-api-endpoints-id-based)
 - [Category Endpoints](#category-endpoints)
@@ -27,7 +26,7 @@ this API and display data.
 - [Price Endpoints](#price-endpoints)
 - [Value Endpoints](#value-endpoints)
 
-### API slug endpoints
+### 🌐 API slug endpoints
 
 - [Slug Endpoints](#slug-endpoints)
 - [Category Slug Endpoints](#category-slug-endpoints)
@@ -37,15 +36,15 @@ this API and display data.
 - [Automation Endpoints](#automation-endpoints)
 - [Database Structure](#database-structure)
 
-### Guide
+### 🧭 Guide
 
 - [Starting locally](#starting-locally)
 - [Prerequisites](#prerequisites)
 - [How to start](#how-to-start)
 
-## Api Endpoints
+## 📚 Api Endpoints
 
-### RESTful API Endpoints (ID-based)
+### 🔗 RESTful API Endpoints (ID-based)
 
 #### Category Endpoints
 
@@ -115,7 +114,7 @@ this API and display data.
 | PATCH  | `/attributes/{attributeId:guid}/values/{valueId:guid}` | Update a value                  | `attributeId` (GUID), `valueId` (GUID), `UpdateValueRequestDto` (body) 
 | DELETE | `/attributes/{attributeId:guid}/values/{valueId:guid}` | Delete a value                  | `attributeId` (GUID), `valueId` (GUID)                                 
 
-### Slug Endpoints
+### 🌐 Slug Endpoints
 
 #### Category Slug Endpoints
 
@@ -144,21 +143,22 @@ this API and display data.
 |--------|---------------------------|-------------------|----------------------
 | GET    | `/api/stores/{storeSlug}` | Get store by slug | `storeSlug` (string) 
 
-### Automation Endpoints
+### 🤖 Automation Endpoints
 
-| Method | Endpoint                            | Description            | Parameters                     
-|--------|-------------------------------------|------------------------|--------------------------------
-| POST   | `/api/automation/scrape`            | Run the scraper        | None                           
-| POST   | `/api/automation/analyze-catalogue` | Analyze PDF catalogues | `pdfFile` (optional form file) 
+| Method | Endpoint                                  | Description                                             | Parameters                     
+|--------|-------------------------------------------|---------------------------------------------------------|--------------------------------
+| POST   | `/api/automation/scrape`                  | Run the scraper that gets links and images for products | None                           
+| POST   | `/api/automation/analyze-catalogue`       | Analyze PDF catalogues                                  | `pdfFile` (optional form file) 
+| POST   | `/api/automation/process-structured-data` | Process CSV and XML data                                | None 
 
-## Database Structure
+## 🗂️ Database Structure
 
 Database consists of 10 tables connected in following way shown by an image:
 ![Database Structure](./Images/database.png "Database Structure")
 
-## Starting locally
+## 🛠️ Starting locally
 
-### Prerequisites
+### 🔧 Prerequisites
 
 Ensure you have the following installed:
 
@@ -166,7 +166,7 @@ Ensure you have the following installed:
 - PostgreSQL
 - Git
 
-### How to start
+### 🚀 How to start
 
 1. Clone repository:
 
