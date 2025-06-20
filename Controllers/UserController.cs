@@ -26,6 +26,11 @@ public class UserController : ControllerBase
 
         if (!result.IsSuccess)
         {
+            if (result.Error == "Email already exists")
+            {
+                return Conflict(new { error = result.Error });
+            }
+
             return BadRequest(new { error = result.Error });
         }
 
@@ -39,7 +44,7 @@ public class UserController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return BadRequest(new { error = result.Error });
+            return Unauthorized(new { error = result.Error });
         }
 
         return Ok(result.Data);
@@ -60,22 +65,11 @@ public class UserController : ControllerBase
         return Ok(new UserInfoDto { Email = email, Username = username });
     }
 
+    [Authorize]
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        foreach (var c in Request.Cookies) Console.WriteLine($"{c.Key} = {c.Value}");
-
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Expires = DateTimeOffset.UtcNow.AddDays(-1),
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Path = "/",
-            Domain = _env.IsProduction() ? ".pravacijena.eu" : null
-        };
-
-        Response.Cookies.Delete("jwtToken", cookieOptions);
+        Response.Cookies.Delete("jwtToken");
 
         return Ok(new { message = "Logged out successfully" });
     }

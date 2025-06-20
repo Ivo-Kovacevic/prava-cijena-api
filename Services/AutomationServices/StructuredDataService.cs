@@ -858,4 +858,66 @@ public class StructuredDataService : IStructuredDataService
 
         return brandWords.Any(word => nameWords.Contains(word));
     }
+    
+    private List<string> KonzumCategories()
+    {
+        return new List<string>
+        {
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/ulja",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/secer-i-umjetna-sladila",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/brasno",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/ocat-i-dresinzi",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/sol",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-jela/internacionalna-kuhinja",
+            // "https://www.konzum.hr/web/t/kategorije/tjestenina-riza-njoki-tortilje/tjestenina",
+            // "https://www.konzum.hr/web/t/kategorije/tjestenina-riza-njoki-tortilje/riza",
+            // "https://www.konzum.hr/web/t/kategorije/tjestenina-riza-njoki-tortilje/njoki",
+            // "https://www.konzum.hr/web/t/kategorije/tjestenina-riza-njoki-tortilje/tortilje",
+            // "https://www.konzum.hr/web/t/kategorije/delikatesa/mesna-delikatesa",
+            // "https://www.konzum.hr/web/t/kategorije/meso-i-riba/piletina-i-puretina",
+            // "https://www.konzum.hr/web/t/kategorije/meso-i-riba/svinjetina-junetina-ostalo",
+            // "https://www.konzum.hr/web/t/kategorije/riba",
+            // "https://www.konzum.hr/web/t/kategorije/meso-i-riba/spremno-za-rostilj",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-kolaca/gotove-smjese-i-mjesavine",
+            // "https://www.konzum.hr/web/t/kategorije/priprema-kolaca/sastojci",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/higijenski-proizvodi/toaletni-papir",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/higijenski-proizvodi/ulosci-tamponi-intimna-njega",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/higijenski-proizvodi/rupcici-i-vlazne-maramice",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/higijenski-proizvodi/blazinice-stapici-za-usi-flasteri",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/higijenski-proizvodi/njega-ruku-i-zastita",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-tijela/sapuni",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-tijela/kupke-i-gelovi-za-tusiranje",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-tijela/dezodoransi",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-zubi/paste",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-kose/samponi",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-kose/regeneratori-i-tretmani", NEMA
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-lica/kreme",
+            // "https://www.konzum.hr/web/t/kategorije/njega-i-higijena/njega-lica/njega-usana",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/pranje-rublja/deterdzenti",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/pranje-rublja/omeksivaci",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/pranje-rublja/sredstva-za-odstranjivanje-mrlja",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/pranje-posuda",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/sredstva-za-ciscenje",
+            // "https://www.konzum.hr/web/t/kategorije/ciscenje-i-pospremanje/pribor-za-ciscenje"
+            
+            // DONE
+            
+            "https://www.konzum.hr/web/t/kategorije/delikatesa/hrenovke-i-kobasice",
+            "https://www.konzum.hr/web/t/kategorije/delikatesa/sirevi",
+            "https://www.konzum.hr/web/t/kategorije/delikatesa/specijaliteti",
+            "https://www.konzum.hr/web/t/kategorije/delikatesa/plate",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/kave",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/marmelade-pekmezi-dzemovi",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/specijaliteti",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/sirni-i-mlijecni",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/med",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/pastete",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/namazi/cokoladni",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/pahuljice",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/cajevi",
+            "https://www.konzum.hr/web/t/kategorije/pahuljice-namazi-kave-cajevi/cokoladni-napitci",
+            
+        };
+    }
+
 }

@@ -32,6 +32,13 @@ public class AutomationController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("assign-images")]
+    public async Task<IActionResult> AssignImages()
+    {
+        await _scrapingService.AssignImages();
+        return Ok();
+    }
+
     [HttpPost("analyze-catalogue")]
     public async Task<IActionResult> AnalyzePdf(IFormFile? pdfFile)
     {
