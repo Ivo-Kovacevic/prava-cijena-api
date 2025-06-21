@@ -28,7 +28,7 @@ public class UserController : ControllerBase
         {
             if (result.Error == "Email already exists")
             {
-                return Conflict(new { error = result.Error });
+                return Conflict(new { error = $"Email '{registerDto.Email}' je zauzet." });
             }
 
             return BadRequest(new { error = result.Error });

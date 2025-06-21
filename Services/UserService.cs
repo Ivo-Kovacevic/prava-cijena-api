@@ -36,12 +36,10 @@ public class UserService : IUserService
         var createUser = await _userManager.CreateAsync(user, registerDto.Password);
         if (createUser.Succeeded == false)
         {
-            var emailExists = createUser.Errors.Any(e => e.Code == "DuplicateEmail");
+            var emailExists = createUser.Errors.Any(e => e.Code == "DuplicateUserName");
 
             var error = string.Join(", ", createUser.Errors.Select(e => e.Description));
-            return Result<UserInfoDto>.Fail(
-                emailExists ? "Email already exists" : error
-            );
+            return Result<UserInfoDto>.Fail(emailExists ? "Email already exists" : error);
         }
 
         var roleResult = await _userManager.AddToRoleAsync(user, "User");
